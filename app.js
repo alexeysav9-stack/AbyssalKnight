@@ -6,6 +6,7 @@
 'use strict';
 
 const CANVAS_W = 1280, CANVAS_H = 720;
+const UI_FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 const CAMERA_ZOOM = 1.65; // Hollow Knight style close-up
 const TILE = 40;
 const GRAVITY = 1800;
@@ -3509,21 +3510,8 @@ class EnvironmentRenderer {
     const ry = Math.round(y);
     const r = Math.round(radius);
 
-    // 1. Soft atmospheric stained glass candlelight shafts fanning downward
-    const rayPulse = Math.sin(time * 3 + rx * 0.1) * 0.15 + 0.85;
-    ctx.fillStyle = color === '#ff2255'
-      ? `rgba(255, 40, 80, ${0.12 * rayPulse})`
-      : (color === '#ffaa33' ? `rgba(255, 170, 50, ${0.13 * rayPulse})` : `rgba(180, 70, 255, ${0.12 * rayPulse})`);
-    ctx.beginPath();
-    ctx.moveTo(rx - r * 0.6, ry + r * 0.4);
-    ctx.lineTo(rx - r * 1.8, ry + r * 2.8);
-    ctx.lineTo(rx + r * 1.8, ry + r * 2.8);
-    ctx.lineTo(rx + r * 0.6, ry + r * 0.4);
-    ctx.closePath();
-    ctx.fill();
-
-    // 2. Heavy outer dark stone ashlar rosette frame (Cologne Cathedral Werkstein)
-    ctx.fillStyle = '#0c0617';
+    // 1. Heavy outer dark stone ashlar rosette frame (Cologne Cathedral Werkstein - 100% Solid Opaque)
+    ctx.fillStyle = '#0a0514';
     ctx.beginPath();
     ctx.arc(rx, ry, r + 10, 0, Math.PI * 2);
     ctx.fill();
@@ -3543,7 +3531,7 @@ class EnvironmentRenderer {
     ctx.arc(rx, ry, r + 4, 0, Math.PI * 2);
     ctx.fill();
 
-    // 3. 12 Stained Glass Petals with Jewel-Toned Glazing
+    // 2. 12 Stained Glass Petals with Jewel-Toned Glazing (100% Solid Opaque)
     const numPetals = 12;
     const petalAngle = (Math.PI * 2) / numPetals;
     const jewelColors = [
@@ -3558,12 +3546,8 @@ class EnvironmentRenderer {
       const midA = i * petalAngle;
       const col = jewelColors[i % jewelColors.length];
 
-      // Petal flicker
-      const flk = Math.sin(time * 6 + i * 1.5 + rx * 0.2) * 0.12 + 0.88;
-
       // Outer lancet petal slice
       ctx.fillStyle = col;
-      ctx.globalAlpha = 0.82 * flk;
       ctx.beginPath();
       ctx.arc(rx, ry, r, a1, a2);
       ctx.lineTo(rx + Math.cos(midA) * (r * 0.42), ry + Math.sin(midA) * (r * 0.42));
@@ -3572,14 +3556,12 @@ class EnvironmentRenderer {
 
       // Trefoil tracery cusp highlight inside each petal
       ctx.fillStyle = '#ffffff';
-      ctx.globalAlpha = 0.45 * flk;
       const cuspX = rx + Math.cos(midA) * (r * 0.76);
       const cuspY = ry + Math.sin(midA) * (r * 0.76);
       ctx.fillRect(Math.round(cuspX - 2), Math.round(cuspY - 2), 4, 4);
     }
-    ctx.globalAlpha = 1.0;
 
-    // 4. Middle concentric stone ring (binding outer and inner tracery)
+    // 3. Middle concentric stone ring (binding outer and inner tracery)
     ctx.strokeStyle = '#120a1f';
     ctx.lineWidth = 3.5;
     ctx.beginPath();
@@ -3592,21 +3574,18 @@ class EnvironmentRenderer {
     ctx.arc(rx, ry, r * 0.48, 0, Math.PI * 2);
     ctx.stroke();
 
-    // 5. Inner 6-petal rosette
+    // 4. Inner 6-petal rosette (100% Solid Opaque)
     const innerPetals = 6;
     const innerAngle = (Math.PI * 2) / innerPetals;
     for (let i = 0; i < innerPetals; i++) {
       const a = i * innerAngle;
-      const flk = Math.sin(time * 7 + i * 2.1) * 0.15 + 0.85;
       ctx.fillStyle = (i % 2 === 0) ? '#ffcc22' : '#ff3366';
-      ctx.globalAlpha = 0.9 * flk;
       ctx.beginPath();
       ctx.arc(rx + Math.cos(a) * (r * 0.26), ry + Math.sin(a) * (r * 0.26), r * 0.14, 0, Math.PI * 2);
       ctx.fill();
     }
-    ctx.globalAlpha = 1.0;
 
-    // 6. Radiating dark stone mullions / spokes (Maßwerk lace)
+    // 5. Radiating dark stone mullions / spokes (Maßwerk lace)
     ctx.strokeStyle = '#0d071a';
     ctx.lineWidth = 2.5;
     for (let i = 0; i < numPetals; i++) {
@@ -3628,11 +3607,11 @@ class EnvironmentRenderer {
       ctx.stroke();
     }
 
-    // 7. Center Golden Eye / Rosette Boss
+    // 6. Center Golden Eye / Rosette Boss
     const centerPulse = Math.sin(time * 4) * 0.15 + 0.85;
     ctx.fillStyle = '#ffaa11';
     ctx.shadowColor = '#ffbb22';
-    ctx.shadowBlur = 12 * centerPulse;
+    ctx.shadowBlur = 10 * centerPulse;
     ctx.beginPath();
     ctx.arc(rx, ry, r * 0.16, 0, Math.PI * 2);
     ctx.fill();
@@ -3661,6 +3640,28 @@ class EnvironmentRenderer {
     const rh = Math.round(h);
 
     if (style === 'shrine') {
+      // 1. Solid opaque masonry wall backing the entire shrine facade (no transparency)
+      ctx.fillStyle = '#0f091a';
+      ctx.beginPath();
+      ctx.moveTo(rx - rw / 2 - 4, ry + rh);
+      ctx.lineTo(rx - rw / 2 - 4, ry + 56);
+      ctx.lineTo(rx, ry - 72);
+      ctx.lineTo(rx + rw / 2 + 4, ry + 56);
+      ctx.lineTo(rx + rw / 2 + 4, ry + rh);
+      ctx.closePath();
+      ctx.fill();
+
+      // 2. Inner tympanum stone wall (100% solid opaque)
+      ctx.fillStyle = '#160e26';
+      ctx.beginPath();
+      ctx.moveTo(rx - rw / 2 + 20, ry + rh);
+      ctx.lineTo(rx - rw / 2 + 20, ry + 56);
+      ctx.quadraticCurveTo(rx - rw / 4, ry - 18, rx, ry - 38);
+      ctx.quadraticCurveTo(rx + rw / 4, ry - 18, rx + rw / 2 - 20, ry + 56);
+      ctx.lineTo(rx + rw / 2 - 20, ry + rh);
+      ctx.closePath();
+      ctx.fill();
+
       // Cologne Cathedral Sanctuary Shrine (Bonfire canopy)
       // Clustered columns (Bündelpfeiler): three grouped stone shafts on each side
       ctx.fillStyle = '#100a1c';
@@ -3696,17 +3697,6 @@ class EnvironmentRenderer {
       ctx.fillStyle = '#201635';
       ctx.fill();
 
-      // Backing tympanum silhouette
-      ctx.fillStyle = 'rgba(20, 13, 34, 0.55)';
-      ctx.beginPath();
-      ctx.moveTo(rx - rw / 2 + 28, ry + rh);
-      ctx.lineTo(rx - rw / 2 + 28, ry + 56);
-      ctx.quadraticCurveTo(rx - rw / 4, ry - 20, rx, ry - 38);
-      ctx.quadraticCurveTo(rx + rw / 4, ry - 20, rx + rw / 2 - 28, ry + 56);
-      ctx.lineTo(rx + rw / 2 - 28, ry + rh);
-      ctx.closePath();
-      ctx.fill();
-
       // Stone crockets (Krabben) ascending the gable
       ctx.fillStyle = '#2d1f46';
       for (let i = 0; i < 5; i++) {
@@ -3723,7 +3713,7 @@ class EnvironmentRenderer {
       ctx.fillRect(rx - 3, ry - 78, 6, 16);
       ctx.fillRect(rx - 8, ry - 74, 16, 5);
 
-      // Carved stone cross in tympanum
+      // Carved stone cross in tympanum (100% Solid Opaque)
       ctx.fillStyle = '#ffaa33';
       ctx.shadowColor = '#ff9922';
       ctx.shadowBlur = 8;
@@ -3739,6 +3729,12 @@ class EnvironmentRenderer {
       ctx.fillRect(rx + rw / 2 - 16, ry + rh * 0.45, 4, 6 * cFlk2);
     } else if (style === 'arenaThrone') {
       // Grand High Altar & Throne Arch in Boss Arena (Bloodmoon Cathedral)
+      // Solid opaque stone backing wall
+      ctx.fillStyle = '#0b0614';
+      ctx.fillRect(rx - rw / 2, ry, rw, rh);
+      ctx.fillStyle = '#140c20';
+      ctx.fillRect(rx - rw / 2 + 30, ry + 20, rw - 60, rh - 20);
+
       // Clustered columns (Bündelpfeiler)
       ctx.fillStyle = '#0a0614';
       ctx.fillRect(rx - rw / 2, ry, 36, rh);
@@ -3778,7 +3774,10 @@ class EnvironmentRenderer {
       this._drawGargoyle(ctx, rx - rw / 2 + 36, ry + 105, 1, 'folded', time);
       this._drawGargoyle(ctx, rx + rw / 2 - 36, ry + 105, -1, 'folded', time);
     } else if (style === 'arenaColonnade') {
-      // Cologne Cathedral Great Arcade Nave Colonnade
+      // Cologne Cathedral Great Arcade Nave Colonnade - 100% Solid Opaque
+      ctx.fillStyle = '#0c0716';
+      ctx.fillRect(rx - rw / 2, ry, rw, rh);
+
       ctx.fillStyle = '#100a1c';
       ctx.fillRect(rx - rw / 2, ry, 32, rh);
       ctx.fillRect(rx + rw / 2 - 32, ry, 32, rh);
@@ -3798,9 +3797,8 @@ class EnvironmentRenderer {
       ctx.fillStyle = '#1b122e';
       ctx.fill();
 
-      // Candlelit niches in arcade
-      const nFlk = Math.sin(time * 8 + rx) * 0.12 + 0.88;
-      ctx.fillStyle = `rgba(255, 170, 50, ${0.85 * nFlk})`;
+      // Candlelit niches in arcade (solid color)
+      ctx.fillStyle = '#ffaa33';
       ctx.fillRect(rx - 6, ry + 36, 12, 16);
     } else if (style === 'viaductPillar') {
       // Massive multi-tier arched viaduct pillar crossing misty canyon (Reference Image Style!)
@@ -3817,8 +3815,8 @@ class EnvironmentRenderer {
       ctx.closePath();
       ctx.fill();
 
-      // Open lancet cutout in the center letting the purple twilight sky show through!
-      ctx.fillStyle = 'rgba(45, 18, 65, 0.45)';
+      // Open lancet cutout in the center (100% Solid dark recessed shadow)
+      ctx.fillStyle = '#090512';
       ctx.beginPath();
       ctx.moveTo(rx - 16, ry + rh - 40);
       ctx.lineTo(rx - 16, ry + 80);
@@ -3839,7 +3837,7 @@ class EnvironmentRenderer {
         ctx.stroke();
       }
     } else {
-      // Standard ruined gothic arch
+      // Standard ruined gothic arch (100% solid)
       ctx.fillStyle = '#130d22';
       ctx.beginPath();
       ctx.moveTo(rx - rw / 2, ry + rh);
@@ -4004,26 +4002,25 @@ class EnvironmentRenderer {
     ctx.lineTo(x + halfW, sillY);
     ctx.closePath();
 
-    // Warm candlelit glass interior gradient
+    // Warm candlelit glass interior gradient (100% Solid Opaque)
     const winGrad = ctx.createLinearGradient(x, archTopY, x, sillY);
-    const flk = Math.sin(time * 6 + x * 0.2) * 0.08 + 0.92;
     if (color === '#ff2255') {
-      winGrad.addColorStop(0, `rgba(180, 20, 60, ${0.75 * flk})`);
-      winGrad.addColorStop(0.5, `rgba(255, 50, 100, ${0.9 * flk})`);
-      winGrad.addColorStop(1, `rgba(255, 120, 150, ${1.0 * flk})`);
+      winGrad.addColorStop(0, '#991236');
+      winGrad.addColorStop(0.5, '#e62452');
+      winGrad.addColorStop(1, '#ff6688');
     } else if (color === '#cc44ff') {
-      winGrad.addColorStop(0, `rgba(110, 20, 180, ${0.7 * flk})`);
-      winGrad.addColorStop(0.6, `rgba(180, 50, 240, ${0.85 * flk})`);
-      winGrad.addColorStop(1, `rgba(220, 120, 255, ${0.95 * flk})`);
+      winGrad.addColorStop(0, '#58108c');
+      winGrad.addColorStop(0.6, '#9b2ce0');
+      winGrad.addColorStop(1, '#c555ff');
     } else {
-      winGrad.addColorStop(0, `rgba(180, 80, 15, ${0.65 * flk})`);
-      winGrad.addColorStop(0.5, `rgba(255, 140, 30, ${0.88 * flk})`);
-      winGrad.addColorStop(1, `rgba(255, 195, 80, ${0.98 * flk})`);
+      winGrad.addColorStop(0, '#b34e0c');
+      winGrad.addColorStop(0.5, '#f5901a');
+      winGrad.addColorStop(1, '#ffc44d');
     }
     ctx.fillStyle = winGrad;
     if (glow) {
       ctx.shadowColor = color;
-      ctx.shadowBlur = 10 * flk;
+      ctx.shadowBlur = 10;
     }
     ctx.fill();
     ctx.shadowBlur = 0;
@@ -4614,15 +4611,6 @@ class EnvironmentRenderer {
     ctx.shadowBlur = 8 * pulse;
     ctx.font = 'bold 12px monospace';
     ctx.fillText('❖', rx + Math.round(rw / 2) - 6, ry + Math.round(rh / 2) + 4);
-
-    // Ethereal suspension field beneath
-    ctx.fillStyle = `rgba(180, 50, 255, ${0.12 * pulse})`;
-    ctx.beginPath();
-    ctx.moveTo(rx + 10, ry + rh);
-    ctx.lineTo(rx + rw - 10, ry + rh);
-    ctx.lineTo(rx + Math.round(rw / 2), ry + rh + 20);
-    ctx.closePath();
-    ctx.fill();
 
     ctx.restore();
   }
@@ -5404,35 +5392,35 @@ class HUD {
     ctx.fillStyle = '#222233'; ctx.fillRect(smX, smY, smW, smH);
     ctx.fillStyle = '#44aadd'; ctx.fillRect(smX, smY, smW * (player.soul / player.maxSoul), smH);
     ctx.strokeStyle = '#556677'; ctx.lineWidth = 1; ctx.strokeRect(smX, smY, smW, smH);
-    ctx.fillStyle = '#6688aa'; ctx.font = '10px monospace'; ctx.fillText('SOUL', smX, smY - 2);
+    ctx.fillStyle = '#88aacc'; ctx.font = `bold 11px ${UI_FONT}`; ctx.fillText('SOUL', smX, smY - 3);
 
     if (player.soul >= player.healCost && player.hp < player.maxHp) {
       const hk = this.bindings.getKeyLabel(this.bindings.getKeys('heal')[0] || 'Q');
-      ctx.fillStyle = '#66ffaa'; ctx.fillText(`[${hk}] HEAL`, smX + smW + 8, smY + 10);
+      ctx.fillStyle = '#66ffaa'; ctx.font = `bold 12px ${UI_FONT}`; ctx.fillText(`[${hk}] HEAL`, smX + smW + 8, smY + 10);
     }
 
     // Dash cooldown
     const dashReady = player.dashCooldown <= 0;
     ctx.fillStyle = dashReady ? '#66ccff' : '#333344'; ctx.fillRect(30, 78, 24, 24);
     ctx.strokeStyle = '#556677'; ctx.strokeRect(30, 78, 24, 24);
-    ctx.fillStyle = dashReady ? '#fff' : '#666677'; ctx.font = '14px monospace'; ctx.fillText('⚡', 34, 96);
+    ctx.fillStyle = dashReady ? '#fff' : '#666677'; ctx.font = `14px ${UI_FONT}`; ctx.fillText('⚡', 34, 95);
     if (!dashReady) { ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(30, 78, 24, 24 * (player.dashCooldown / player.dashCooldownMax)); }
 
     // Current weapon
-    ctx.fillStyle = '#aabbcc'; ctx.font = 'bold 12px monospace';
-    ctx.fillText(`⚔ ${player.weapon.name}`, 60, 92);
+    ctx.fillStyle = '#ddeeff'; ctx.font = `bold 13px ${UI_FONT}`;
+    ctx.fillText(`⚔ ${player.weapon.name}`, 62, 95);
 
     // Weapon switch notification
     if (this.weaponNotifyTimer > 0) {
       ctx.globalAlpha = Math.min(1, this.weaponNotifyTimer);
-      ctx.fillStyle = '#ccddee'; ctx.font = 'bold 20px monospace'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#ccddee'; ctx.font = `bold 22px ${UI_FONT}`; ctx.textAlign = 'center';
       ctx.fillText(this.weaponNotifyName, CANVAS_W / 2, CANVAS_H - 60);
       ctx.textAlign = 'left'; ctx.globalAlpha = 1;
     }
 
     // Spell slots
     for (let i = 0; i < SPELLS.length; i++) {
-      const sx = 30 + i * 42, sy = 110;
+      const sx = 30 + i * 44, sy = 110;
       const sp = SPELLS[i];
       const ready = player.spellCooldowns[i] <= 0 && player.soul >= sp.soulCost;
       ctx.fillStyle = ready ? '#333355' : '#222233';
@@ -5446,32 +5434,32 @@ class HUD {
       }
       // Key label
       const keyLabel = this.bindings.getKeyLabel(this.bindings.getKeys('spell' + (i + 1))[0] || '');
-      ctx.fillStyle = '#667788'; ctx.font = '9px monospace'; ctx.fillText(keyLabel, sx + 2, sy + 34);
+      ctx.fillStyle = '#8899aa'; ctx.font = `bold 11px ${UI_FONT}`; ctx.fillText(keyLabel, sx + 3, sy + 32);
       // Soul cost
-      ctx.fillStyle = '#4488aa'; ctx.font = '8px monospace'; ctx.fillText(sp.soulCost, sx + 22, sy + 34);
+      ctx.fillStyle = '#55aacc'; ctx.font = `bold 10px ${UI_FONT}`; ctx.fillText(sp.soulCost, sx + 20, sy + 32);
     }
 
     // Boss HP bar
     if (boss && boss.active && !boss.dead) {
       this.bossBarAlpha = Math.min(1, this.bossBarAlpha + 0.02);
       ctx.globalAlpha = this.bossBarAlpha;
-      const bw = 400, bh = 16, bx = CANVAS_W / 2 - bw / 2, by = 24;
-      ctx.fillStyle = '#222233'; ctx.fillRect(bx - 2, by - 2, bw + 4, bh + 4);
+      const bw = 460, bh = 18, bx = CANVAS_W / 2 - bw / 2, by = 26;
+      ctx.fillStyle = '#1a1a26'; ctx.fillRect(bx - 2, by - 2, bw + 4, bh + 4);
       ctx.fillStyle = boss.phase === 2 ? '#dd2244' : '#cc4466'; ctx.fillRect(bx, by, bw * (boss.hp / boss.maxHp), bh);
-      ctx.strokeStyle = '#888899'; ctx.lineWidth = 1; ctx.strokeRect(bx, by, bw, bh);
-      ctx.fillStyle = '#ccccdd'; ctx.font = '12px monospace'; ctx.textAlign = 'center';
-      ctx.fillText(boss.phase === 2 ? '⚔ ABYSSAL WARDEN — PHASE 2 ⚔' : '⚔ ABYSSAL WARDEN ⚔', CANVAS_W / 2, by - 6);
+      ctx.strokeStyle = '#888899'; ctx.lineWidth = 1.5; ctx.strokeRect(bx, by, bw, bh);
+      ctx.fillStyle = '#eeeeff'; ctx.font = `bold 14px ${UI_FONT}`; ctx.textAlign = 'center';
+      ctx.fillText(boss.phase === 2 ? '⚔ ABYSSAL WARDEN — PHASE 2 ⚔' : '⚔ ABYSSAL WARDEN ⚔', CANVAS_W / 2, by - 7);
       ctx.textAlign = 'left'; ctx.globalAlpha = 1;
     } else { this.bossBarAlpha = 0; }
 
     // Death screen
     if (gameState === STATE.DEAD) {
       this.deathAlpha = Math.min(1, this.deathAlpha + 0.015);
-      ctx.fillStyle = `rgba(10,0,0,${this.deathAlpha * 0.7})`; ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-      ctx.globalAlpha = this.deathAlpha; ctx.fillStyle = '#cc2222'; ctx.font = 'bold 72px serif'; ctx.textAlign = 'center';
+      ctx.fillStyle = `rgba(10,0,0,${this.deathAlpha * 0.75})`; ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+      ctx.globalAlpha = this.deathAlpha; ctx.fillStyle = '#ee2222'; ctx.font = 'bold 72px serif'; ctx.textAlign = 'center';
       ctx.fillText('YOU DIED', CANVAS_W / 2, CANVAS_H / 2 - 20);
       const rk = this.bindings.getKeyLabel(this.bindings.getKeys('restart')[0] || 'N');
-      ctx.fillStyle = '#887766'; ctx.font = '20px monospace';
+      ctx.fillStyle = '#eeddcc'; ctx.font = `20px ${UI_FONT}`;
       ctx.fillText(`Press ${rk} to revive at bonfire`, CANVAS_W / 2, CANVAS_H / 2 + 40);
       ctx.textAlign = 'left'; ctx.globalAlpha = 1;
     } else { this.deathAlpha = 0; }
@@ -5479,12 +5467,12 @@ class HUD {
     // Win screen
     if (gameState === STATE.WIN) {
       this.winAlpha = Math.min(1, this.winAlpha + 0.01);
-      ctx.fillStyle = `rgba(5,5,20,${this.winAlpha * 0.7})`; ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-      ctx.globalAlpha = this.winAlpha; ctx.fillStyle = '#66aaff'; ctx.font = 'bold 60px serif'; ctx.textAlign = 'center';
+      ctx.fillStyle = `rgba(5,5,20,${this.winAlpha * 0.75})`; ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+      ctx.globalAlpha = this.winAlpha; ctx.fillStyle = '#77bbff'; ctx.font = 'bold 64px serif'; ctx.textAlign = 'center';
       ctx.fillText('VICTORY', CANVAS_W / 2, CANVAS_H / 2 - 40);
-      ctx.fillStyle = '#aabbcc'; ctx.font = 'italic 24px serif'; ctx.fillText('The Abyss has been sealed', CANVAS_W / 2, CANVAS_H / 2 + 10);
+      ctx.fillStyle = '#ccddee'; ctx.font = 'italic 24px serif'; ctx.fillText('The Abyss has been sealed', CANVAS_W / 2, CANVAS_H / 2 + 10);
       const rk = this.bindings.getKeyLabel(this.bindings.getKeys('restart')[0] || 'N');
-      ctx.fillStyle = '#887766'; ctx.font = '18px monospace'; ctx.fillText(`Press ${rk} to play again`, CANVAS_W / 2, CANVAS_H / 2 + 60);
+      ctx.fillStyle = '#eeddcc'; ctx.font = `18px ${UI_FONT}`; ctx.fillText(`Press ${rk} to play again`, CANVAS_W / 2, CANVAS_H / 2 + 60);
       ctx.textAlign = 'left'; ctx.globalAlpha = 1;
     } else { this.winAlpha = 0; }
 
@@ -5544,11 +5532,11 @@ class BonfireMenu {
     ctx.strokeStyle = '#44557788'; ctx.lineWidth = 2; ctx.strokeRect(px, py, pw, ph);
 
     // Title
-    ctx.fillStyle = '#ffaa44'; ctx.font = 'bold 24px serif'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffaa44'; ctx.font = 'bold 26px serif'; ctx.textAlign = 'center';
     ctx.fillText('🔥 Bonfire 🔥', CANVAS_W / 2, py + 35);
 
     if (this.weaponSub) {
-      ctx.fillStyle = '#8899aa'; ctx.font = '16px monospace';
+      ctx.fillStyle = '#8899aa'; ctx.font = `16px ${UI_FONT}`;
       ctx.fillText('Select Weapon', CANVAS_W / 2, py + 65);
 
       for (let i = 0; i < WEAPONS.length; i++) {
@@ -5558,13 +5546,13 @@ class BonfireMenu {
         ctx.fillStyle = sel ? '#334466' : '#1a1a2e'; ctx.fillRect(px + 20, oy, pw - 40, 45);
         if (sel) { ctx.strokeStyle = '#6688aa'; ctx.lineWidth = 1; ctx.strokeRect(px + 20, oy, pw - 40, 45); }
         ctx.textAlign = 'left';
-        ctx.fillStyle = sel ? '#ddddff' : '#8899aa'; ctx.font = 'bold 14px monospace';
+        ctx.fillStyle = sel ? '#ddddff' : '#8899aa'; ctx.font = `bold 14px ${UI_FONT}`;
         ctx.fillText(WEAPONS[i].name + (equipped ? ' [EQUIPPED]' : ''), px + 40, oy + 18);
-        ctx.fillStyle = '#667788'; ctx.font = '11px monospace';
+        ctx.fillStyle = '#99aabb'; ctx.font = `12px ${UI_FONT}`;
         ctx.fillText(`DMG: ${WEAPONS[i].damage}  RNG: ${WEAPONS[i].range}  SPD: ${(1 / WEAPONS[i].attackDur).toFixed(0)}/s`, px + 40, oy + 35);
       }
       ctx.textAlign = 'center';
-      ctx.fillStyle = '#556677'; ctx.font = '11px monospace';
+      ctx.fillStyle = '#778899'; ctx.font = `12px ${UI_FONT}`;
       ctx.fillText('↑↓ Navigate · Attack/F to select · ESC to go back', CANVAS_W / 2, py + ph - 20);
     } else {
       for (let i = 0; i < this.options.length; i++) {
@@ -5572,13 +5560,13 @@ class BonfireMenu {
         const sel = i === this.selectedIndex;
         ctx.fillStyle = sel ? '#334466' : 'transparent'; ctx.fillRect(px + 30, oy, pw - 60, 38);
         if (sel) { ctx.strokeStyle = '#6688aa'; ctx.lineWidth = 1; ctx.strokeRect(px + 30, oy, pw - 60, 38); }
-        ctx.fillStyle = sel ? '#ddddff' : '#8899aa'; ctx.font = '18px monospace'; ctx.textAlign = 'center';
+        ctx.fillStyle = sel ? '#ddddff' : '#8899aa'; ctx.font = `bold 18px ${UI_FONT}`; ctx.textAlign = 'center';
         ctx.fillText(this.options[i], CANVAS_W / 2, oy + 26);
       }
       // Player status
-      ctx.fillStyle = '#667788'; ctx.font = '12px monospace';
+      ctx.fillStyle = '#8899aa'; ctx.font = `13px ${UI_FONT}`;
       ctx.fillText(`HP: ${player.hp}/${player.maxHp}   Soul: ${Math.floor(player.soul)}/${player.maxSoul}   Weapon: ${player.weapon.name}`, CANVAS_W / 2, py + ph - 40);
-      ctx.fillStyle = '#556677'; ctx.font = '11px monospace';
+      ctx.fillStyle = '#778899'; ctx.font = `12px ${UI_FONT}`;
       ctx.fillText('↑↓ Navigate · Attack/F to select', CANVAS_W / 2, py + ph - 20);
     }
 
@@ -5640,7 +5628,7 @@ class RebindMenu {
     ctx.fillStyle = '#111122'; ctx.fillRect(px, py, pw, ph);
     ctx.strokeStyle = '#44557788'; ctx.lineWidth = 2; ctx.strokeRect(px, py, pw, ph);
 
-    ctx.fillStyle = '#aabbcc'; ctx.font = 'bold 22px monospace'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#aabbcc'; ctx.font = `bold 22px ${UI_FONT}`; ctx.textAlign = 'center';
     ctx.fillText('⌨ REBIND KEYS', CANVAS_W / 2, py + 30);
 
     const startI = this.scrollOffset;
@@ -5656,7 +5644,7 @@ class RebindMenu {
       if (sel) { ctx.fillStyle = '#223344'; ctx.fillRect(px + 10, oy, pw - 20, 30); ctx.strokeStyle = '#5577aa'; ctx.lineWidth = 1; ctx.strokeRect(px + 10, oy, pw - 20, 30); }
 
       ctx.textAlign = 'left';
-      ctx.fillStyle = sel ? '#ddddff' : '#8899aa'; ctx.font = '13px monospace';
+      ctx.fillStyle = sel ? '#ddddff' : '#8899aa'; ctx.font = `14px ${UI_FONT}`;
       ctx.fillText(this.bindings.getActionLabel(action), px + 25, oy + 20);
       ctx.textAlign = 'right';
       if (sel && this.waitingForKey) {
@@ -5670,7 +5658,7 @@ class RebindMenu {
     if (this.scrollOffset > 0) { ctx.fillStyle = '#667788'; ctx.textAlign = 'center'; ctx.fillText('▲', CANVAS_W / 2, py + 45); }
     if (endI < this.actions.length) { ctx.fillStyle = '#667788'; ctx.textAlign = 'center'; ctx.fillText('▼', CANVAS_W / 2, py + ph - 30); }
 
-    ctx.textAlign = 'center'; ctx.fillStyle = '#556677'; ctx.font = '11px monospace';
+    ctx.textAlign = 'center'; ctx.fillStyle = '#778899'; ctx.font = `12px ${UI_FONT}`;
     ctx.fillText('↑↓ Navigate · Enter/J to rebind · Backspace to clear · ESC to close', CANVAS_W / 2, py + ph - 12);
     ctx.textAlign = 'left'; ctx.restore();
   }
@@ -5707,11 +5695,11 @@ class TitleScreen {
     ctx.fillText('Echoes of the Deep', CANVAS_W / 2, CANVAS_H / 2 - 75);
 
     ctx.globalAlpha = 0.5 + 0.5 * Math.sin(this.time * 3);
-    ctx.fillStyle = '#8899bb'; ctx.font = '22px monospace';
+    ctx.fillStyle = '#8899bb'; ctx.font = `20px ${UI_FONT}`;
     ctx.fillText('Press any key to begin', CANVAS_W / 2, CANVAS_H / 2 - 20);
     ctx.globalAlpha = 1;
 
-    ctx.fillStyle = '#445566'; ctx.font = '14px monospace';
+    ctx.fillStyle = '#8899aa'; ctx.font = `14px ${UI_FONT}`;
     const hk = bindings.getKeyLabel;
     const bk = bindings.getKeys.bind(bindings);
     const controls = [
@@ -5755,10 +5743,10 @@ class Game {
       }
     }
     if (this.ctx) {
-      this.ctx.imageSmoothingEnabled = false;
-      this.ctx.webkitImageSmoothingEnabled = false;
-      this.ctx.mozImageSmoothingEnabled = false;
-      this.ctx.msImageSmoothingEnabled = false;
+      this.ctx.imageSmoothingEnabled = true;
+      this.ctx.webkitImageSmoothingEnabled = true;
+      this.ctx.mozImageSmoothingEnabled = true;
+      this.ctx.msImageSmoothingEnabled = true;
     }
 
     this.keyBindings = new KeyBindings();
@@ -5793,10 +5781,10 @@ class Game {
     this.canvas.style.width = `${CANVAS_W * s}px`; this.canvas.style.height = `${CANVAS_H * s}px`;
     if (this.lighting) this.lighting.resize(CANVAS_W, CANVAS_H);
     if (this.ctx) {
-      this.ctx.imageSmoothingEnabled = false;
-      this.ctx.webkitImageSmoothingEnabled = false;
-      this.ctx.mozImageSmoothingEnabled = false;
-      this.ctx.msImageSmoothingEnabled = false;
+      this.ctx.imageSmoothingEnabled = true;
+      this.ctx.webkitImageSmoothingEnabled = true;
+      this.ctx.mozImageSmoothingEnabled = true;
+      this.ctx.msImageSmoothingEnabled = true;
     }
     if (this.pixelCtx) {
       this.pixelCtx.imageSmoothingEnabled = false;
@@ -6270,7 +6258,6 @@ class Game {
     }
 
     if (this.gameState === STATE.TITLE) {
-      this.titleScreen.draw(ctx, this.keyBindings);
       if (ctx !== mainCtx) {
         ctx.restore();
         mainCtx.imageSmoothingEnabled = false;
@@ -6279,6 +6266,13 @@ class Game {
         mainCtx.msImageSmoothingEnabled = false;
         mainCtx.drawImage(this.pixelCanvas, 0, 0, CANVAS_W, CANVAS_H);
       }
+      mainCtx.save();
+      mainCtx.imageSmoothingEnabled = true;
+      mainCtx.webkitImageSmoothingEnabled = true;
+      mainCtx.mozImageSmoothingEnabled = true;
+      mainCtx.msImageSmoothingEnabled = true;
+      this.titleScreen.draw(mainCtx, this.keyBindings);
+      mainCtx.restore();
       return;
     }
 
@@ -6324,18 +6318,7 @@ class Game {
       this.lighting.render(ctx, this.camera, this.player, this.boss, this.enemies, this.bonfires, this.projectiles, this.props, this.time);
     }
 
-    // 12. HUD
-    this.hud.draw(ctx, this.player, this.boss, this.gameState, dt);
-
-    // Bonfire menu
-    if (this.gameState === STATE.BONFIRE) this.bonfireMenu.draw(ctx, this.player);
-
-    // Rebind menu
-    if (this.gameState === STATE.REBIND) this.rebindMenu.draw(ctx);
-
-    // Help overlay
-    if (this.showHelp && this.gameState === STATE.PLAYING) this._drawHelp(ctx);
-
+    // Blit pixelated game world to main canvas (retro 2x pixel art scaling)
     if (ctx !== mainCtx) {
       ctx.restore();
       mainCtx.imageSmoothingEnabled = false;
@@ -6344,15 +6327,36 @@ class Game {
       mainCtx.msImageSmoothingEnabled = false;
       mainCtx.drawImage(this.pixelCanvas, 0, 0, CANVAS_W, CANVAS_H);
     }
+
+    // High-Resolution Smooth UI & HUD Pass (Rendered at full 1280x720 with crisp readable text)
+    mainCtx.save();
+    mainCtx.imageSmoothingEnabled = true;
+    mainCtx.webkitImageSmoothingEnabled = true;
+    mainCtx.mozImageSmoothingEnabled = true;
+    mainCtx.msImageSmoothingEnabled = true;
+
+    // 12. HUD
+    this.hud.draw(mainCtx, this.player, this.boss, this.gameState, dt);
+
+    // Bonfire menu
+    if (this.gameState === STATE.BONFIRE) this.bonfireMenu.draw(mainCtx, this.player);
+
+    // Rebind menu
+    if (this.gameState === STATE.REBIND) this.rebindMenu.draw(mainCtx);
+
+    // Help overlay
+    if (this.showHelp && this.gameState === STATE.PLAYING) this._drawHelp(mainCtx);
+
+    mainCtx.restore();
   }
 
   _drawHelp(ctx) {
-    ctx.fillStyle = 'rgba(0,0,0,0.8)'; ctx.fillRect(CANVAS_W / 2 - 250, 50, 500, 490);
+    ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(CANVAS_W / 2 - 250, 50, 500, 490);
     ctx.strokeStyle = '#556677'; ctx.strokeRect(CANVAS_W / 2 - 250, 50, 500, 490);
-    ctx.fillStyle = '#aabbcc'; ctx.font = 'bold 20px monospace'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#aabbcc'; ctx.font = `bold 20px ${UI_FONT}`; ctx.textAlign = 'center';
     ctx.fillText('CONTROLS & COMBAT', CANVAS_W / 2, 85);
 
-    ctx.font = '13px monospace';
+    ctx.font = `14px ${UI_FONT}`;
     const hk = this.keyBindings.getKeyLabel.bind(this.keyBindings);
     const gk = (a) => this.keyBindings.getKeys(a).map(k => hk(k)).slice(0, 2).join('/');
     const lines = [
