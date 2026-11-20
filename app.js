@@ -824,8 +824,29 @@ class ParticleSystem {
 // ============================================================================
 // WEAPON DEFINITIONS
 // ============================================================================
+const UNARMED_ATTACK = {
+  id: -1,
+  name: 'Unarmed',
+  damage: 1,
+  range: 30,
+  height: 30,
+  attackDur: 0.16,
+  cooldown: 0.12,
+  knockback: 100,
+  color: '#8899aa',
+  guardColor: '#667788',
+  handleColor: '#443322',
+  bladeW: 2, bladeL: 12,
+  swingArc: 1.2,
+  swingStart: -0.6,
+  slashColors: ['#ffffff', '#88aacc', '#334466'],
+  glowColor: '#6688aa',
+  sound: 'swing',
+};
+
 const WEAPONS = [
   {
+    id: 0,
     name: 'Old Nail',
     damage: 1,
     range: 56,         // hitbox width (generous like HK)
@@ -1237,28 +1258,43 @@ function buildLevel() {
   enemies.push({ type: 'crawler', x: 500, y: 1300, patrolRange: 150 });
   enemies.push({ type: 'guard', x: 860, y: 1290 });
 
+  // High viaduct stone walkway crossing over into Watchtower entrance
+  P(1200, 820, 180, 28);
+
   // Watchtower Ascent (x: 1200 - 1800, vertical climbing shaft from y=1340 up to y=500)
   P(1220, 1340, 560, 160);
   enemies.push({ type: 'guard', x: 1480, y: 1290 });
   addStreetlamp(1320, 1340, 55, '#ffaa33');
 
-  // Watchtower walls
-  P(1380, 500, 36, 720);
-  P(1720, 500, 36, 720);
+  // Watchtower walls (with arched doorways at y=740..820 from viaduct, and y=1220..1340 from canal)
+  P(1380, 500, 36, 240); // Upper west wall (y=500..740)
+  P(1380, 820, 36, 400); // Lower west wall (y=820..1220)
+  P(1720, 500, 36, 720); // East fortress wall (y=500..1220)
+
   // Interior climbing ledges
   P(1420, 1180, 140, 20, 'oneway');
   P(1560, 1040, 140, 20, 'oneway');
   P(1420, 900, 140, 20, 'oneway');
   P(1560, 760, 140, 20, 'oneway');
   P(1420, 620, 150, 20, 'oneway');
-  addGothicWindow(1510, 950, 28, 65, '#ffaa33', true);
-  addGothicWindow(1510, 720, 28, 65, '#ff8833', true);
 
-  // Watchtower top roof terrace (Tier 3 entrance)
-  P(1340, 500, 440, 28);
+  // Watchtower top roof terrace (with central oneway hatch so player can jump through onto the roof!)
+  P(1340, 500, 80, 28);
+  P(1420, 500, 280, 28, 'oneway');
+  P(1700, 500, 80, 28);
   addGargoyle(1350, 500, -1, 'spread');
   addGargoyle(1770, 500, 1, 'spread');
-  addStreetlamp(1560, 500, 55, '#ffaa33');
+  addStreetlamp(1440, 500, 55, '#ffaa33');
+
+  // Radiant Ancient Altar with First Sword (Old Nail) on the Watchtower roof terrace
+  const swordPickup = {
+    x: 1560,
+    y: 476,
+    w: 28,
+    h: 46,
+    name: 'Old Nail',
+    collected: false
+  };
 
   // ==========================================================================
   // ZONE 2: THE SPIRES, BELFRY & HIGH VIADUCTS (x: 1800 - 3600, y: 320 - 1500)
@@ -1444,6 +1480,7 @@ function buildLevel() {
 
   return {
     platforms, enemies, bonfires, props, bossSpawn, bossArena, bossTrigger,
+    swordPickup,
     playerStart: { x: 140, y: 836 }, width: 8200, height: 1500
   };
 }
@@ -1491,9 +1528,9 @@ class Player {
     this.recoilVx = 0;
     this.ridingPlatform = null;
 
-    // Weapons
-    this.weaponIndex = 0;
-    this.unlockedWeapons = [true, true, true, true]; // all unlocked for demo
+    // Weapons (Unarmed until finding first sword on tower)
+    this.weaponIndex = -1;
+    this.unlockedWeapons = [false, false, false, false];
 
     // Spells
     this.spellCooldowns = [0, 0, 0];
@@ -1510,7 +1547,10 @@ class Player {
     this.dead = false; this.deathTimer = 0;
   }
 
-  get weapon() { return WEAPONS[this.weaponIndex]; }
+  get weapon() {
+    if (this.weaponIndex < 0 || !this.unlockedWeapons[this.weaponIndex]) return null;
+    return WEAPONS[this.weaponIndex];
+  }
 
   switchWeapon(index) {
     if (index >= 0 && index < WEAPONS.length && this.unlockedWeapons[index] && !this.attacking) {
@@ -1527,7 +1567,10 @@ class Player {
       next = (next + 1) % WEAPONS.length;
       attempts++;
     }
-    return this.switchWeapon(next);
+    if (this.unlockedWeapons[next] && next !== this.weaponIndex) {
+      return this.switchWeapon(next);
+    }
+    return false;
   }
 
   castSpell(index, projectiles, particles, audio, camera) {
@@ -1619,7 +1662,7 @@ class Player {
     }
 
       // ATTACK (Hollow Knight directional system + responsive buffer)
-      const wpn = this.weapon;
+      const wpn = this.weapon || UNARMED_ATTACK;
       if (input.attackPressed()) this.attackBuffer = this.attackBufferMax;
 
       if (this.attackBuffer > 0 && !this.attacking && this.attackCooldown <= 0) {
@@ -1956,7 +1999,7 @@ class Player {
     // Directional slash arc (Hollow Knight style with weapon colors & crescent dynamics)
     const showDownVisual = this.downSlashVisualTimer > 0;
     if (this.attacking || showDownVisual) {
-      const wpn = this.weapon;
+      const wpn = this.weapon || UNARMED_ATTACK;
       let progress = 1 - this.attackTimer / wpn.attackDur;
       const isDown = showDownVisual || (this.attackDir === 'down');
       if (showDownVisual) {
@@ -2130,7 +2173,7 @@ class Player {
   _drawKnight(ctx, isRolling) {
     const x = Math.round(this.x), y = Math.round(this.y);
     const cx = Math.round(x + this.w / 2), cy = Math.round(y + this.h / 2);
-    const wpn = this.weapon;
+    const wpn = this.weapon || UNARMED_ATTACK;
 
     if (isRolling) {
       // Somersault tucked sphere
@@ -2378,7 +2421,7 @@ class Player {
         }
       }
       ctx.restore();
-    } else {
+    } else if (this.weapon) {
       ctx.save();
       ctx.translate(x + this.w + 2, y + 18 + bobY);
       ctx.rotate(0.28 + (isRun ? Math.sin(runPhase) * 0.12 : 0));
@@ -2388,6 +2431,15 @@ class Player {
   }
 
   _renderWeaponBlade(ctx, wpn, isDown, thrustExt = 0) {
+    if (wpn.id === -1) {
+      // Unarmed armored gauntlet fist
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(-3, 0, 6, 8);
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillRect(-2, 2, 4, 3);
+      return;
+    }
+
     const l = wpn.bladeL + thrustExt;
     const w = wpn.bladeW;
 
@@ -4365,6 +4417,516 @@ class EnvironmentRenderer {
     this.dripDroplets = [];
   }
 
+  drawBackWalls(ctx, camera, time, level) {
+    const cw = CANVAS_W / camera.zoom;
+    const ch = CANVAS_H / camera.zoom;
+    const minX = camera.x - 100, maxX = camera.x + cw + 100;
+    const minY = camera.y - 100, maxY = camera.y + ch + 100;
+
+    ctx.save();
+
+    // 1. Bedrock & Crypt Sub-floor Foundations across the map (fills solid underground down to y=1500)
+    // Preserves open abyss death pits at (2340..2540) and (3060..3260)
+    ctx.fillStyle = '#0a0512';
+    if (minX < 2340 && maxY > 1340) {
+      const x1 = Math.max(0, minX);
+      const x2 = Math.min(2340, maxX);
+      if (x2 > x1) ctx.fillRect(x1, 1340, x2 - x1, 160);
+    }
+    if (maxX > 2540 && minX < 3060 && maxY > 1340) {
+      const x1 = Math.max(2540, minX);
+      const x2 = Math.min(3060, maxX);
+      if (x2 > x1) ctx.fillRect(x1, 1340, x2 - x1, 160);
+    }
+    if (maxX > 3260 && minX < 6380 && maxY > 1340) {
+      const x1 = Math.max(3260, minX);
+      const x2 = Math.min(6380, maxX);
+      if (x2 > x1) ctx.fillRect(x1, 1340, x2 - x1, 160);
+    }
+    // Cathedral foundation (from 6380 to 8200, y: 1260 to 1500)
+    if (maxX > 6380 && maxY > 1260) {
+      const x1 = Math.max(6380, minX);
+      const x2 = Math.min(8200, maxX);
+      if (x2 > x1) ctx.fillRect(x1, 1260, x2 - x1, 240);
+    }
+
+    // Foundation ashlar courses & rock strata
+    ctx.strokeStyle = '#150a24';
+    ctx.lineWidth = 1.5;
+    for (let fy = 1380; fy < 1500; fy += 40) {
+      if (fy > minY && fy < maxY) {
+        ctx.beginPath();
+        ctx.moveTo(Math.max(0, minX), fy);
+        ctx.lineTo(Math.min(8200, maxX), fy);
+        ctx.stroke();
+      }
+    }
+
+    // 2. Starting Fortress Left Boundary Wall (x: 0 to 220, y: 180 to 880)
+    if (minX < 220 && maxY > 180 && minY < 880) {
+      this._drawFortressBackWall(ctx, 0, 180, 220, 700);
+    }
+
+    // 3. THE WATCHTOWER BACK WALL (x: 1380 to 1756, y: 500 to 1340)
+    // Solid opaque masonry back wall WITH TRANSPARENT GOTHIC WINDOW APERTURES!
+    if (maxX > 1380 && minX < 1756 && maxY > 500 && minY < 1340) {
+      this._drawWatchtowerBackWall(ctx, 1380, 500, 376, 840, time);
+    }
+
+    // 4. Clocktower Belfry Haven Back Wall (x: 3000 to 3460, y: 240 to 480)
+    if (maxX > 3000 && minX < 3460 && maxY > 240 && minY < 480) {
+      this._drawHavenBackWall(ctx, 3000, 240, 460, 240, time);
+    }
+
+    // 5. Grand Cathedral Antechamber & Nave Back Wall (x: 6380 to 6800, y: 660 to 1260)
+    if (maxX > 6380 && minX < 6800 && maxY > 660 && minY < 1260) {
+      this._drawCathedralAntechamberWall(ctx, 6380, 660, 420, 600, time);
+    }
+
+    // 6. Grand Bloodmoon Cathedral Boss Arena Back Wall (x: 6800 to 8150, y: 660 to 1260)
+    if (maxX > 6800 && minX < 8150 && maxY > 660 && minY < 1260) {
+      this._drawCathedralArenaWall(ctx, 6800, 660, 1350, 600, time);
+    }
+
+    ctx.restore();
+  }
+
+  _drawFortressBackWall(ctx, x, y, w, h) {
+    ctx.save();
+    ctx.fillStyle = '#0f081b';
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = '#090411';
+    ctx.lineWidth = 1.5;
+    for (let cy = y + 26; cy < y + h; cy += 26) {
+      ctx.beginPath();
+      ctx.moveTo(x, cy);
+      ctx.lineTo(x + w, cy);
+      ctx.stroke();
+      const offset = (Math.floor(cy / 26) % 2 === 0) ? 0 : 36;
+      for (let bx = x + offset; bx < x + w; bx += 72) {
+        ctx.beginPath();
+        ctx.moveTo(bx, cy - 26);
+        ctx.lineTo(bx, cy);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  _drawWatchtowerBackWall(ctx, x, y, w, h, time) {
+    ctx.save();
+
+    // 3 Grand Gothic Lancet Windows cutting through the solid rear wall
+    const windows = [
+      { x: x + w / 2, y: y + 120, w: 42, h: 95 },
+      { x: x + w / 2, y: y + 310, w: 42, h: 95 },
+      { x: x + w / 2, y: y + 500, w: 42, h: 95 },
+    ];
+
+    // 1. Solid Opaque Dark Gothic Masonry Back Wall (with evenodd cutouts for windows!)
+    ctx.beginPath();
+    ctx.rect(x, y, w, h);
+
+    for (const win of windows) {
+      const halfW = win.w / 2;
+      const archTopY = win.y;
+      const springY = win.y + win.h * 0.36;
+      const sillY = win.y + win.h;
+
+      ctx.moveTo(win.x - halfW, sillY);
+      ctx.lineTo(win.x - halfW, springY);
+      ctx.quadraticCurveTo(win.x - halfW * 0.5, archTopY, win.x, archTopY - 2);
+      ctx.quadraticCurveTo(win.x + halfW * 0.5, archTopY, win.x + halfW, springY);
+      ctx.lineTo(win.x + halfW, sillY);
+      ctx.closePath();
+    }
+
+    // Base solid dark basalt stone (100% Solid Opaque!)
+    ctx.fillStyle = '#0e0818';
+    ctx.fill('evenodd');
+
+    // Ashlar stone masonry courses on the solid wall (clipped with evenodd)
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x, y, w, h);
+    for (const win of windows) {
+      const halfW = win.w / 2;
+      const archTopY = win.y;
+      const springY = win.y + win.h * 0.36;
+      const sillY = win.y + win.h;
+      ctx.moveTo(win.x - halfW, sillY);
+      ctx.lineTo(win.x - halfW, springY);
+      ctx.quadraticCurveTo(win.x - halfW * 0.5, archTopY, win.x, archTopY - 2);
+      ctx.quadraticCurveTo(win.x + halfW * 0.5, archTopY, win.x + halfW, springY);
+      ctx.lineTo(win.x + halfW, sillY);
+      ctx.closePath();
+    }
+    ctx.clip('evenodd');
+
+    // Dark ashlar course lines
+    ctx.strokeStyle = '#08040f';
+    ctx.lineWidth = 1.5;
+    const courseH = 26;
+    for (let cy = y + courseH; cy < y + h; cy += courseH) {
+      ctx.beginPath();
+      ctx.moveTo(x, cy);
+      ctx.lineTo(x + w, cy);
+      ctx.stroke();
+
+      const offset = (Math.floor(cy / courseH) % 2 === 0) ? 0 : 36;
+      const brickW = 72;
+      for (let bx = x + offset; bx < x + w; bx += brickW) {
+        ctx.beginPath();
+        ctx.moveTo(bx, cy - courseH);
+        ctx.lineTo(bx, cy);
+        ctx.stroke();
+      }
+    }
+
+    // Architectural stone pilasters on left and right inside the tower
+    ctx.fillStyle = '#160d24';
+    ctx.fillRect(x + 36, y, 16, h);
+    ctx.fillRect(x + w - 52, y, 16, h);
+
+    // Subtle stone mouldings across floors
+    ctx.fillStyle = '#1d1230';
+    ctx.fillRect(x, y + 230, w, 6);
+    ctx.fillRect(x, y + 420, w, 6);
+    ctx.fillRect(x, y + 610, w, 6);
+
+    ctx.restore(); // end clip
+
+    // 2. TRANSPARENT WINDOW TRACERY & FRAMES (The sky/moon is visible through the cutouts!)
+    for (const win of windows) {
+      const halfW = win.w / 2;
+      const archTopY = win.y;
+      const springY = win.y + win.h * 0.36;
+      const sillY = win.y + win.h;
+
+      // Recessed stone jambs surround
+      ctx.strokeStyle = '#1b122e';
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.moveTo(win.x - halfW - 2, sillY + 2);
+      ctx.lineTo(win.x - halfW - 2, springY);
+      ctx.quadraticCurveTo(win.x - halfW * 0.5, archTopY - 3, win.x, archTopY - 4);
+      ctx.quadraticCurveTo(win.x + halfW * 0.5, archTopY - 3, win.x + halfW + 2, springY);
+      ctx.lineTo(win.x + halfW + 2, sillY + 2);
+      ctx.stroke();
+
+      // Stone sill
+      ctx.fillStyle = '#221736';
+      ctx.fillRect(win.x - halfW - 4, sillY, win.w + 8, 5);
+      ctx.fillStyle = '#342550';
+      ctx.fillRect(win.x - halfW - 3, sillY, win.w + 6, 1.5);
+
+      // Fine delicate moonlit glass sheen (transparent with faint violet/candle glimmer)
+      const glassGrad = ctx.createLinearGradient(win.x, archTopY, win.x, sillY);
+      const flk = Math.sin(time * 6 + win.y) * 0.03 + 0.12;
+      glassGrad.addColorStop(0, `rgba(255, 180, 80, ${flk})`);
+      glassGrad.addColorStop(0.5, `rgba(180, 100, 255, ${flk * 0.6})`);
+      glassGrad.addColorStop(1, `rgba(255, 150, 40, ${flk * 1.2})`);
+      ctx.fillStyle = glassGrad;
+      ctx.beginPath();
+      ctx.moveTo(win.x - halfW, sillY);
+      ctx.lineTo(win.x - halfW, springY);
+      ctx.quadraticCurveTo(win.x - halfW * 0.5, archTopY, win.x, archTopY - 2);
+      ctx.quadraticCurveTo(win.x + halfW * 0.5, archTopY, win.x + halfW, springY);
+      ctx.lineTo(win.x + halfW, sillY);
+      ctx.closePath();
+      ctx.fill();
+
+      // Stone tracery: central vertical mullion
+      ctx.strokeStyle = '#0d0716';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(win.x, archTopY + 12);
+      ctx.lineTo(win.x, sillY);
+      ctx.stroke();
+
+      // Horizontal transom bars
+      ctx.beginPath();
+      ctx.moveTo(win.x - halfW, springY);
+      ctx.lineTo(win.x + halfW, springY);
+      ctx.moveTo(win.x - halfW, springY + (sillY - springY) * 0.5);
+      ctx.lineTo(win.x + halfW, springY + (sillY - springY) * 0.5);
+      ctx.stroke();
+
+      // Trefoil rosette in arch head
+      ctx.beginPath();
+      ctx.arc(win.x, archTopY + 13, 4.5, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Outer delicate moulding
+      ctx.strokeStyle = '#2f2048';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(win.x - halfW, sillY);
+      ctx.lineTo(win.x - halfW, springY);
+      ctx.quadraticCurveTo(win.x - halfW * 0.5, archTopY, win.x, archTopY - 2);
+      ctx.quadraticCurveTo(win.x + halfW * 0.5, archTopY, win.x + halfW, springY);
+      ctx.lineTo(win.x + halfW, sillY);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  _drawHavenBackWall(ctx, x, y, w, h, time) {
+    ctx.save();
+    ctx.fillStyle = '#0d0718';
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = '#08040f';
+    ctx.lineWidth = 1.5;
+    for (let cy = y + 26; cy < y + h; cy += 26) {
+      ctx.beginPath();
+      ctx.moveTo(x, cy);
+      ctx.lineTo(x + w, cy);
+      ctx.stroke();
+    }
+    // High decorative Belfry blind arcade
+    ctx.strokeStyle = '#1a112c';
+    ctx.lineWidth = 2;
+    for (let ax = x + 30; ax < x + w - 20; ax += 50) {
+      ctx.beginPath();
+      ctx.moveTo(ax - 18, y + h);
+      ctx.lineTo(ax - 18, y + 40);
+      ctx.quadraticCurveTo(ax - 9, y + 10, ax, y);
+      ctx.quadraticCurveTo(ax + 9, y + 10, ax + 18, y + 40);
+      ctx.lineTo(ax + 18, y + h);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  _drawCathedralAntechamberWall(ctx, x, y, w, h, time) {
+    ctx.save();
+    // 100% Solid Opaque Cathedral Stone Wall
+    const grad = ctx.createLinearGradient(x, y, x, y + h);
+    grad.addColorStop(0, '#090512');
+    grad.addColorStop(0.5, '#120b1e');
+    grad.addColorStop(1, '#0b0614');
+    ctx.fillStyle = grad;
+    ctx.fillRect(x, y, w, h);
+
+    // Cologne Cathedral Blind Arches & Triforium Gallery Courses
+    ctx.strokeStyle = '#1b122c';
+    ctx.lineWidth = 2;
+    for (let ax = x + 35; ax < x + w - 30; ax += 70) {
+      // Pointed blind lancet arch in nave wall
+      ctx.beginPath();
+      ctx.moveTo(ax - 24, y + h);
+      ctx.lineTo(ax - 24, y + 160);
+      ctx.quadraticCurveTo(ax - 12, y + 60, ax, y + 40);
+      ctx.quadraticCurveTo(ax + 12, y + 60, ax + 24, y + 160);
+      ctx.lineTo(ax + 24, y + h);
+      ctx.stroke();
+
+      // Inner recess
+      ctx.fillStyle = '#08040e';
+      ctx.beginPath();
+      ctx.moveTo(ax - 20, y + h);
+      ctx.lineTo(ax - 20, y + 165);
+      ctx.quadraticCurveTo(ax - 10, y + 70, ax, y + 52);
+      ctx.quadraticCurveTo(ax + 10, y + 70, ax + 20, y + 165);
+      ctx.lineTo(ax + 20, y + h);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Molded stone stringcourses
+    ctx.fillStyle = '#1c132d';
+    ctx.fillRect(x, y + 170, w, 8);
+    ctx.fillRect(x, y + 360, w, 8);
+
+    ctx.restore();
+  }
+
+  _drawCathedralArenaWall(ctx, x, y, w, h, time) {
+    ctx.save();
+    // Grand High Gothic Nave Wall (1350px wide, 600px high - 100% Solid Opaque)
+    const grad = ctx.createLinearGradient(x, y, x, y + h);
+    grad.addColorStop(0, '#080410');
+    grad.addColorStop(0.35, '#110a1c');
+    grad.addColorStop(1, '#080410');
+    ctx.fillStyle = grad;
+    ctx.fillRect(x, y, w, h);
+
+    // Monumental Clustered Piers (Bündelpfeiler) running from floor to ceiling
+    const pierStep = 180;
+    for (let px = x + 60; px < x + w; px += pierStep) {
+      // Base pilaster
+      ctx.fillStyle = '#160e24';
+      ctx.fillRect(px - 14, y, 28, h);
+      // Shafts
+      ctx.fillStyle = '#1c132e';
+      ctx.fillRect(px - 10, y, 6, h);
+      ctx.fillRect(px + 4, y, 6, h);
+      // Capitals
+      ctx.fillStyle = '#2a1d42';
+      ctx.fillRect(px - 16, y + 110, 32, 10);
+      ctx.fillRect(px - 16, y + 320, 32, 10);
+    }
+
+    // High Cathedral Triforium Gallery Arches
+    ctx.strokeStyle = '#1d1330';
+    ctx.lineWidth = 2.5;
+    for (let px = x + 60; px < x + w - pierStep; px += pierStep) {
+      const midX = px + pierStep / 2;
+      ctx.beginPath();
+      ctx.moveTo(px + 14, y + 110);
+      ctx.quadraticCurveTo(midX - 30, y + 10, midX, y - 10);
+      ctx.quadraticCurveTo(midX + 30, y + 10, px + pierStep - 14, y + 110);
+      ctx.stroke();
+
+      // Recessed choir niche
+      ctx.fillStyle = '#06030c';
+      ctx.beginPath();
+      ctx.moveTo(px + 18, y + 110);
+      ctx.quadraticCurveTo(midX - 25, y + 25, midX, y + 10);
+      ctx.quadraticCurveTo(midX + 25, y + 25, px + pierStep - 18, y + 110);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Cathedral Ashlar Masonry Horizontals
+    ctx.strokeStyle = '#0d0716';
+    ctx.lineWidth = 1;
+    for (let cy = y + 25; cy < y + h; cy += 28) {
+      ctx.beginPath();
+      ctx.moveTo(x, cy);
+      ctx.lineTo(x + w, cy);
+      ctx.stroke();
+    }
+
+    // Heavy vault springlines
+    ctx.fillStyle = '#211636';
+    ctx.fillRect(x, y + 116, w, 6);
+    ctx.fillRect(x, y + 326, w, 6);
+
+    ctx.restore();
+  }
+
+  drawSwordPickup(ctx, pickup, time, player) {
+    if (!pickup || pickup.collected) return;
+    const x = Math.round(pickup.x);
+    const y = Math.round(pickup.y);
+    ctx.save();
+
+    // 1. Ancient Carved Gothic Altar / Pedestal (Basalt stone plinth)
+    ctx.fillStyle = '#100a1c';
+    ctx.fillRect(x - 24, y + 20, 48, 8);
+    ctx.fillStyle = '#1b122e';
+    ctx.fillRect(x - 18, y + 14, 36, 6);
+    ctx.strokeStyle = '#2d1e48';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x - 24, y + 20, 48, 8);
+
+    // Glowing soul runes on altar
+    const runePulse = Math.sin(time * 3.5) * 0.25 + 0.75;
+    ctx.fillStyle = `rgba(0, 240, 255, ${0.85 * runePulse})`;
+    ctx.fillRect(x - 12, y + 22, 24, 2);
+
+    // 2. Vertical Radiant Light Beam / Skyward Pillar (Glowing to the heavens so player spots it immediately!)
+    const beamGrad = ctx.createLinearGradient(x, y + 20, x, y - 280);
+    beamGrad.addColorStop(0, `rgba(0, 240, 255, ${0.48 * runePulse})`);
+    beamGrad.addColorStop(0.35, `rgba(170, 70, 255, ${0.32 * runePulse})`);
+    beamGrad.addColorStop(1, 'rgba(0, 240, 255, 0)');
+    ctx.fillStyle = beamGrad;
+    ctx.beginPath();
+    ctx.moveTo(x - 16, y + 20);
+    ctx.lineTo(x - 30, y - 280);
+    ctx.lineTo(x + 30, y - 280);
+    ctx.lineTo(x + 16, y + 20);
+    ctx.closePath();
+    ctx.fill();
+
+    // 3. Multi-ring Pulsing Radiant Corona Halo
+    const haloSize = 28 + Math.sin(time * 4) * 6;
+    ctx.shadowColor = '#00f0ff';
+    ctx.shadowBlur = 24 * runePulse;
+    ctx.fillStyle = `rgba(0, 240, 255, ${0.25 * runePulse})`;
+    ctx.beginPath();
+    ctx.arc(x, y - 2, haloSize, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = `rgba(180, 80, 255, ${0.35 * runePulse})`;
+    ctx.beginPath();
+    ctx.arc(x, y - 2, haloSize * 0.65, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 4. Shimmering Ascending Sparkles / Magic Motes
+    for (let i = 0; i < 7; i++) {
+      const spProg = ((time * 0.8 + i / 7) % 1.0);
+      const spX = x + Math.sin(time * 3.5 + i * 1.8) * 16;
+      const spY = y + 10 - spProg * 75;
+      const spAlpha = Math.sin(spProg * Math.PI) * 0.9;
+      ctx.fillStyle = i % 2 === 0 ? `rgba(255, 255, 255, ${spAlpha})` : `rgba(0, 240, 255, ${spAlpha})`;
+      ctx.fillRect(Math.round(spX - 1.5), Math.round(spY - 1.5), 3, 3);
+    }
+
+    // 5. The Sword (Old Nail) - Embedded Point-Down
+    // Blade
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = '#00f0ff';
+    ctx.shadowBlur = 14;
+    ctx.beginPath();
+    ctx.moveTo(x, y + 15); // tip embedded in stone
+    ctx.lineTo(x - 4, y - 14);
+    ctx.lineTo(x - 3, y - 16);
+    ctx.lineTo(x + 3, y - 16);
+    ctx.lineTo(x + 4, y - 14);
+    ctx.closePath();
+    ctx.fill();
+
+    // Blade central fuller / fuller highlight
+    ctx.fillStyle = '#66eeff';
+    ctx.fillRect(x - 1, y - 14, 2, 26);
+
+    // Crossguard
+    ctx.fillStyle = '#2a1e44';
+    ctx.fillRect(x - 12, y - 18, 24, 4);
+    ctx.fillStyle = '#00f0ff';
+    ctx.fillRect(x - 10, y - 17, 20, 2);
+
+    // Hilt / Grip
+    ctx.fillStyle = '#443322';
+    ctx.fillRect(x - 2, y - 26, 4, 8);
+    // Pommel
+    ctx.fillStyle = '#aabbdd';
+    ctx.beginPath();
+    ctx.arc(x, y - 28, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+
+    // 6. Floating Interaction Prompt when Player is near
+    const dist = player ? Math.hypot((player.x + player.w / 2) - x, (player.y + player.h / 2) - y) : 999;
+    if (dist < 60) {
+      const promptY = y - 48 + Math.sin(time * 5) * 3;
+      ctx.fillStyle = 'rgba(12, 6, 22, 0.92)';
+      ctx.strokeStyle = '#00f0ff';
+      ctx.lineWidth = 1.5;
+      const pw = 130, ph = 24;
+      ctx.fillRect(x - pw / 2, promptY - ph / 2, pw, ph);
+      ctx.strokeRect(x - pw / 2, promptY - ph / 2, pw, ph);
+
+      ctx.fillStyle = '#ffaa33';
+      ctx.fillRect(x - pw / 2 + 6, promptY - 8, 16, 16);
+      ctx.fillStyle = '#0e051a';
+      ctx.font = `bold 11px ${UI_FONT}`;
+      ctx.textAlign = 'center';
+      ctx.fillText('E', x - pw / 2 + 14, promptY + 4);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `bold 12px ${UI_FONT}`;
+      ctx.textAlign = 'left';
+      ctx.fillText('CLAIM SWORD', x - pw / 2 + 28, promptY + 4);
+    }
+
+    ctx.restore();
+  }
+
   drawBackgroundProps(ctx, props, camera, time) {
     if (!props) return;
     const cw = CANVAS_W / camera.zoom;
@@ -5609,7 +6171,7 @@ class LightingSystem {
     }
   }
 
-  render(ctx, camera, player, boss, enemies, bonfires, projectiles, props, time) {
+  render(ctx, camera, player, boss, enemies, bonfires, projectiles, props, time, swordPickup) {
     if (!this.ctx || !this.canvas) return;
     const lctx = this.ctx;
     const cw = this.width, ch = this.height;
@@ -5742,6 +6304,11 @@ class LightingSystem {
       }
     }
 
+    // H. Radiant Sword Pickup on Watchtower Roof
+    if (swordPickup && !swordPickup.collected) {
+      addLight(swordPickup.x, swordPickup.y, 250, 1.0);
+    }
+
     // 3. Colored light tinting
     lctx.globalCompositeOperation = 'source-over';
 
@@ -5757,6 +6324,11 @@ class LightingSystem {
       lctx.arc(pos.x, pos.y, rad, 0, Math.PI * 2);
       lctx.fill();
     };
+
+    // Sword pickup celestial glow
+    if (swordPickup && !swordPickup.collected) {
+      addColorGlow(swordPickup.x, swordPickup.y, 220, 'rgba(0, 240, 255, 0.38)', 'rgba(0, 240, 255, 0)');
+    }
 
     // Warm golden bonfire light
     if (bonfires) {
@@ -6259,13 +6831,24 @@ class Background {
 // HUD
 // ============================================================================
 class HUD {
-  constructor(bindings) { this.bindings = bindings; this.deathAlpha = 0; this.winAlpha = 0; this.bossBarAlpha = 0; this.weaponNotifyTimer = 0; this.weaponNotifyName = ''; }
+  constructor(bindings) {
+    this.bindings = bindings;
+    this.deathAlpha = 0;
+    this.winAlpha = 0;
+    this.bossBarAlpha = 0;
+    this.weaponNotifyTimer = 0;
+    this.weaponNotifyName = '';
+    this.tipTimer = 0;
+    this.tipText = '';
+  }
 
   showWeaponSwitch(name) { this.weaponNotifyTimer = 2; this.weaponNotifyName = name; }
+  showNotification(text) { this.tipTimer = 3; this.tipText = text; }
 
   draw(ctx, player, boss, gameState, dt) {
     ctx.save();
     if (this.weaponNotifyTimer > 0) this.weaponNotifyTimer -= dt;
+    if (this.tipTimer > 0) this.tipTimer -= dt;
 
     // HP Hearts
     for (let i = 0; i < player.maxHp; i++) {
@@ -6293,8 +6876,9 @@ class HUD {
     if (!dashReady) { ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(30, 78, 24, 24 * (player.dashCooldown / player.dashCooldownMax)); }
 
     // Current weapon
+    const wpnName = player.weapon ? player.weapon.name : 'Unarmed';
     ctx.fillStyle = '#ddeeff'; ctx.font = `bold 13px ${UI_FONT}`;
-    ctx.fillText(`⚔ ${player.weapon.name}`, 62, 95);
+    ctx.fillText(`⚔ ${wpnName}`, 62, 95);
 
     // Weapon switch notification
     if (this.weaponNotifyTimer > 0) {
@@ -6302,6 +6886,22 @@ class HUD {
       ctx.fillStyle = '#ccddee'; ctx.font = `bold 22px ${UI_FONT}`; ctx.textAlign = 'center';
       ctx.fillText(this.weaponNotifyName, CANVAS_W / 2, CANVAS_H - 60);
       ctx.textAlign = 'left'; ctx.globalAlpha = 1;
+    }
+
+    // Guidance / Pickup Notification banner
+    if (this.tipTimer > 0) {
+      ctx.globalAlpha = Math.min(1, this.tipTimer * 2, (3 - this.tipTimer) * 4);
+      ctx.fillStyle = 'rgba(12, 8, 22, 0.92)';
+      ctx.fillRect(CANVAS_W / 2 - 220, 24, 440, 36);
+      ctx.strokeStyle = '#00f0ff';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(CANVAS_W / 2 - 220, 24, 440, 36);
+      ctx.fillStyle = '#00f0ff';
+      ctx.font = `bold 14px ${UI_FONT}`;
+      ctx.textAlign = 'center';
+      ctx.fillText(this.tipText, CANVAS_W / 2, 47);
+      ctx.textAlign = 'left';
+      ctx.globalAlpha = 1;
     }
 
     // Spell slots
@@ -6428,13 +7028,18 @@ class BonfireMenu {
       for (let i = 0; i < WEAPONS.length; i++) {
         const oy = py + 90 + i * 55;
         const sel = i === this.selectedIndex;
+        const unlocked = player.unlockedWeapons && player.unlockedWeapons[i];
         const equipped = i === player.weaponIndex;
-        ctx.fillStyle = sel ? '#334466' : '#1a1a2e'; ctx.fillRect(px + 20, oy, pw - 40, 45);
-        if (sel) { ctx.strokeStyle = '#6688aa'; ctx.lineWidth = 1; ctx.strokeRect(px + 20, oy, pw - 40, 45); }
+        ctx.fillStyle = sel ? (unlocked ? '#334466' : '#222233') : '#1a1a2e';
+        ctx.fillRect(px + 20, oy, pw - 40, 45);
+        if (sel) { ctx.strokeStyle = unlocked ? '#6688aa' : '#444455'; ctx.lineWidth = 1; ctx.strokeRect(px + 20, oy, pw - 40, 45); }
         ctx.textAlign = 'left';
-        ctx.fillStyle = sel ? '#ddddff' : '#8899aa'; ctx.font = `bold 14px ${UI_FONT}`;
-        ctx.fillText(WEAPONS[i].name + (equipped ? ' [EQUIPPED]' : ''), px + 40, oy + 18);
-        ctx.fillStyle = '#99aabb'; ctx.font = `12px ${UI_FONT}`;
+        ctx.fillStyle = unlocked ? (sel ? '#ddddff' : '#8899aa') : '#556677';
+        ctx.font = `bold 14px ${UI_FONT}`;
+        const statusLabel = equipped ? ' [EQUIPPED]' : (unlocked ? '' : ' [LOCKED]');
+        ctx.fillText(WEAPONS[i].name + statusLabel, px + 40, oy + 18);
+        ctx.fillStyle = unlocked ? '#99aabb' : '#445566';
+        ctx.font = `12px ${UI_FONT}`;
         ctx.fillText(`DMG: ${WEAPONS[i].damage}  RNG: ${WEAPONS[i].range}  SPD: ${(1 / WEAPONS[i].attackDur).toFixed(0)}/s`, px + 40, oy + 35);
       }
       ctx.textAlign = 'center';
@@ -6450,8 +7055,9 @@ class BonfireMenu {
         ctx.fillText(this.options[i], CANVAS_W / 2, oy + 26);
       }
       // Player status
+      const curWpnName = player.weapon ? player.weapon.name : 'Unarmed';
       ctx.fillStyle = '#8899aa'; ctx.font = `13px ${UI_FONT}`;
-      ctx.fillText(`HP: ${player.hp}/${player.maxHp}   Soul: ${Math.floor(player.soul)}/${player.maxSoul}   Weapon: ${player.weapon.name}`, CANVAS_W / 2, py + ph - 40);
+      ctx.fillText(`HP: ${player.hp}/${player.maxHp}   Soul: ${Math.floor(player.soul)}/${player.maxSoul}   Weapon: ${curWpnName}`, CANVAS_W / 2, py + ph - 40);
       ctx.fillStyle = '#778899'; ctx.font = `12px ${UI_FONT}`;
       ctx.fillText('↑↓ Navigate · Attack/F to select', CANVAS_W / 2, py + ph - 20);
     }
@@ -6656,10 +7262,14 @@ class Game {
     this.lighting = new LightingSystem();
     this.envRenderer = new EnvironmentRenderer();
     this.props = [];
+    this.swordCollected = false;
+    this.swordPickup = null;
 
     this._resize();
     window.addEventListener('resize', () => this._resize());
-    requestAnimationFrame(t => this._loop(t));
+    if (typeof requestAnimationFrame !== 'undefined') {
+      requestAnimationFrame(t => this._loop(t));
+    }
   }
 
   _resize() {
@@ -6689,6 +7299,11 @@ class Game {
     this.enemies = ld.enemies.map(e => new Enemy(e.x, e.y, e.type, e.patrolRange));
     this.boss = new Boss(ld.bossSpawn.x, ld.bossSpawn.y);
     this.bonfires = ld.bonfires;
+    // Radiant Sword on Watchtower roof
+    this.swordPickup = ld.swordPickup || { x: 1560, y: 476, w: 28, h: 46, name: 'Old Nail', collected: this.swordCollected || false };
+    this.swordPickup.collected = this.swordCollected || false;
+    this.player.unlockedWeapons = [this.swordCollected || false, false, false, false];
+    this.player.weaponIndex = this.swordCollected ? 0 : -1;
     // Light first bonfire
     this.bonfires[0].lit = true;
     this.player.respawnX = this.bonfires[0].x;
@@ -6706,6 +7321,8 @@ class Game {
 
   _respawnAtBonfire() {
     this.player.respawn();
+    this.player.unlockedWeapons = [this.swordCollected || false, false, false, false];
+    this.player.weaponIndex = this.swordCollected ? 0 : -1;
     // Reset non-boss enemies
     for (const e of this.enemies) e.reset();
     // Reset boss if not dead
@@ -6730,7 +7347,9 @@ class Game {
 
     this._update(dt);
     this._draw(dt);
-    requestAnimationFrame(t => this._loop(t));
+    if (typeof requestAnimationFrame !== 'undefined') {
+      requestAnimationFrame(t => this._loop(t));
+    }
   }
 
   _update(dt) {
@@ -6860,8 +7479,22 @@ class Game {
     this.player.update(dt, this.input, this.level, this.particles, this.camera, this.audio);
 
     // Weapon switching
-    for (let i = 1; i <= 4; i++) { if (this.input.weapon(i) && this.player.switchWeapon(i - 1)) { this.audio.weaponSwitch(); this.hud.showWeaponSwitch(WEAPONS[i - 1].name); } }
-    if (this.input.weaponNext() && this.player.nextWeapon()) { this.audio.weaponSwitch(); this.hud.showWeaponSwitch(this.player.weapon.name); }
+    for (let i = 1; i <= 4; i++) {
+      if (this.input.weapon(i)) {
+        if (this.player.switchWeapon(i - 1)) {
+          this.audio.weaponSwitch();
+          this.hud.showWeaponSwitch(WEAPONS[i - 1].name);
+        } else if (!this.player.unlockedWeapons[i - 1]) {
+          this.hud.showNotification(`⚔ ${WEAPONS[i - 1].name} is Locked`);
+        }
+      }
+    }
+    if (this.input.weaponNext()) {
+      if (this.player.nextWeapon()) {
+        this.audio.weaponSwitch();
+        this.hud.showWeaponSwitch(this.player.weapon.name);
+      }
+    }
 
     // Spells
     if (this.input.spell1Pressed()) this.player.castSpell(0, this.projectiles, this.particles, this.audio, this.camera);
@@ -7128,6 +7761,28 @@ class Game {
       }
     }
 
+    // Radiant Ancient Sword Pickup on Watchtower Roof
+    if (this.swordPickup && !this.swordPickup.collected) {
+      const p = this.player;
+      const pcx = p.x + p.w / 2, pcy = p.y + p.h / 2;
+      const dist = Math.hypot(pcx - this.swordPickup.x, pcy - (this.swordPickup.y + 10));
+      if (dist < 48) {
+        if (this.input.interactPressed() || dist < 24) {
+          this.swordPickup.collected = true;
+          this.swordCollected = true;
+          this.player.unlockedWeapons = [true, false, false, false];
+          this.player.weaponIndex = 0;
+          this.audio.bonfire();
+          this.audio.weaponSwitch();
+          this.particles.sparks(this.swordPickup.x, this.swordPickup.y);
+          this.particles.deathBurst(this.swordPickup.x, this.swordPickup.y);
+          this.camera.shake(6, 0.25);
+          this.hud.showWeaponSwitch('⚔ OLD NAIL ACQUIRED! ⚔');
+          this.hud.showNotification('Primary blade claimed. Ready your strike!');
+        }
+      }
+    }
+
     // Player death
     if (this.player.dead && this.player.deathTimer > 0.5) this.gameState = STATE.DEAD;
 
@@ -7181,40 +7836,50 @@ class Game {
     ctx.save();
     this.camera.apply(ctx);
 
-    // 2. Background Props (Cathedral arches, massive chains, hanging lanterns)
+    // 2. Solid Building Back Walls (Watchtower with transparent windows, Cathedral Nave, Sanctuary, Fortress, Foundations)
+    if (this.envRenderer && this.envRenderer.drawBackWalls) {
+      this.envRenderer.drawBackWalls(ctx, this.camera, this.time, this.level);
+    }
+
+    // 3. Background Props (Cathedral arches, massive chains, hanging lanterns)
     if (this.envRenderer) {
       this.envRenderer.drawBackgroundProps(ctx, this.props, this.camera, this.time);
     }
 
-    // 3. Platforms (Stone masonry, flagstones, organic moss & cave grass, runic ledges, fog gate)
+    // 4. Platforms (Stone masonry, flagstones, organic moss & cave grass, runic ledges, fog gate)
     if (this.envRenderer) {
       this.envRenderer.drawPlatforms(ctx, this.level.platforms, this.camera, this.time, this.level);
     }
 
-    // 4. Foreground Props (Glowing crystals, water drips)
+    // 4.5 Radiant Ancient Altar with First Sword on Watchtower Roof
+    if (this.envRenderer && this.envRenderer.drawSwordPickup) {
+      this.envRenderer.drawSwordPickup(ctx, this.swordPickup, this.time, this.player);
+    }
+
+    // 5. Foreground Props (Glowing crystals, water drips)
     if (this.envRenderer) {
       this.envRenderer.drawForegroundProps(ctx, this.props, this.camera, this.time);
     }
 
-    // 5. Bonfires
+    // 6. Bonfires
     for (const b of this.bonfires) b.draw(ctx);
 
-    // 6. Enemies
+    // 7. Enemies
     for (const e of this.enemies) e.draw(ctx);
-    // 7. Boss
+    // 8. Boss
     this.boss.draw(ctx);
-    // 8. Player
+    // 9. Player
     this.player.draw(ctx);
-    // 9. Projectiles
+    // 10. Projectiles
     for (const p of this.projectiles) p.draw(ctx);
-    // 10. Particles
+    // 11. Particles
     this.particles.draw(ctx);
 
     ctx.restore();
 
-    // 11. 2D Dynamic Lighting & Atmospheric Vignette Pass
+    // 12. 2D Dynamic Lighting & Atmospheric Vignette Pass
     if (this.lighting && (this.gameState === STATE.PLAYING || this.gameState === STATE.BONFIRE)) {
-      this.lighting.render(ctx, this.camera, this.player, this.boss, this.enemies, this.bonfires, this.projectiles, this.props, this.time);
+      this.lighting.render(ctx, this.camera, this.player, this.boss, this.enemies, this.bonfires, this.projectiles, this.props, this.time, this.swordPickup);
     }
 
     // Blit pixelated game world to main canvas (retro 2x pixel art scaling)
@@ -7297,5 +7962,5 @@ if (typeof window !== 'undefined' && window.addEventListener) {
   window.addEventListener('load', () => { new Game(); });
 }
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { Player, Enemy, Boss, Particle, ParticleSystem, Projectile, WEAPONS, AudioEngine, Game };
+  module.exports = { Player, Enemy, Boss, Particle, ParticleSystem, Projectile, WEAPONS, AudioEngine, Game, EnvironmentRenderer };
 }
