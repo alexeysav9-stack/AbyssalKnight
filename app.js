@@ -1007,120 +1007,259 @@ function buildLevel() {
   const addLantern = (x, y, chainLen = 40, color = '#ffaa33') => props.push({ type: 'lantern', x, y, chainLen, color });
   const addWaterDrip = (x, y, groundY) => props.push({ type: 'waterDrip', x, y, groundY, timer: rand(0, 3) });
   const addArch = (x, y, w, h, style = 'gothic') => props.push({ type: 'arch', x, y, w, h, style });
+  const addStreetlamp = (x, y, h = 55, color = '#ffaa33') => props.push({ type: 'streetlamp', x, y, h, color });
+  const addGargoyle = (x, y, facing = 1, wings = 'spread') => props.push({ type: 'gargoyle', x, y, facing, wings });
+  const addGothicWindow = (x, y, w = 32, h = 75, color = '#ffaa33', glow = true) => props.push({ type: 'gothicWindow', x, y, w, h, color, glow });
+  const addChandelier = (x, y, w = 150, chainLen = 120) => props.push({ type: 'chandelier', x, y, w, chainLen });
 
-  // ---- Section 1: Starting area ----
-  P(0, 640, 1600, 80);
-  P(0, 400, 40, 240);
-  P(200, 560, 160, 20, 'oneway');
-  P(450, 480, 160, 20, 'oneway');
+  // ==========================================================================
+  // ZONE 1: OVERLOOK TERRACE & THE WEST VIADUCT (x: 0 - 1800, y: 500 - 1500)
+  // ==========================================================================
+  // Left level boundary fortress wall
+  P(0, 200, 40, 800);
 
-  // First bonfire — right at start
-  bonfires.push(new Bonfire(120, 610, 0));
+  // Starting Terrace (Tier 2, y=880)
+  P(0, 880, 520, 80);
+  bonfires.push(new Bonfire(180, 850, 0)); // Starting Bonfire
 
-  enemies.push({ type: 'crawler', x: 600, y: 600, patrolRange: 200 });
-  enemies.push({ type: 'crawler', x: 1000, y: 600, patrolRange: 150 });
+  // Terrace props & overlook architecture
+  addArch(180, 680, 180, 200, 'shrine');
+  addStreetlamp(340, 880, 55, '#ffaa33');
+  addGargoyle(510, 880, 1, 'spread');
+  addGothicWindow(60, 640, 34, 75, '#ffaa33', true);
+  addGothicWindow(60, 480, 34, 75, '#ff8833', true);
+  addCrystal(280, 878, 'purple', 1.1);
 
-  // Section 1 Props
-  addCrystal(70, 638, 'cyan', 1.2);
-  addCrystal(1350, 638, 'blue', 1.0);
-  addLantern(320, 560, 45, '#ffaa33');
-  addLantern(850, 400, 60, '#ffaa33');
-  addWaterDrip(450, 480, 640);
-  addWaterDrip(1150, 400, 640);
-  addArch(350, 400, 180, 240);
+  // Upper overlook balconies
+  P(180, 760, 160, 20, 'oneway');
+  P(360, 660, 150, 20, 'oneway');
+  addLantern(360, 660, 45, '#ffaa33');
 
-  // ---- Section 2: Platforming ----
-  P(1600, 640, 200, 80);
-  P(1850, 560, 140, 20, 'oneway');
-  P(2080, 480, 160, 20, 'oneway');
-  P(2320, 410, 180, 20, 'oneway');
-  platforms.push({ x: 2600, y: 380, w: 130, h: 20, type: 'moving', ox: 2600, oy: 380, mx: 0, my: 140, speed: 80, t: 0 });
-  P(2900, 320, 160, 20, 'oneway');
-  P(3180, 380, 200, 20, 'oneway');
+  // Multi-tier fork: High Viaduct (Tier 2, y=820-840) vs Sunken Canal (Tier 1, y=1340)
+  P(640, 840, 200, 28);
+  P(960, 820, 240, 28);
+  addStreetlamp(1080, 820, 55, '#ffaa33');
+  enemies.push({ type: 'crawler', x: 1000, y: 790, patrolRange: 90 });
+  addGargoyle(1190, 820, 1, 'folded');
 
-  enemies.push({ type: 'flyer', x: 2000, y: 380 });
-  enemies.push({ type: 'flyer', x: 2900, y: 300 });
+  // Intermediate descent steps
+  P(580, 1020, 140, 20, 'oneway');
+  P(820, 1140, 150, 20, 'oneway');
 
-  // Section 2 Props
-  addLantern(1850, 440, 55, '#55ccff');
-  addCrystal(2120, 478, 'purple', 1.1);
-  addLantern(2320, 310, 50, '#55ccff');
-  addCrystal(2920, 318, 'purple', 1.3);
-  addWaterDrip(2080, 480, 720);
-  addWaterDrip(3180, 380, 720);
+  // Sunken Mist Streets / Canals (Tier 1, y=1340)
+  P(320, 1340, 820, 160);
+  addArch(560, 1140, 240, 200, 'viaductPillar');
+  addArch(880, 1140, 240, 200, 'viaductPillar');
+  addWaterDrip(640, 840, 1340);
+  addWaterDrip(960, 820, 1340);
+  addCrystal(360, 1338, 'purple', 1.3);
+  addCrystal(1050, 1338, 'cyan', 1.2);
+  enemies.push({ type: 'crawler', x: 500, y: 1300, patrolRange: 150 });
+  enemies.push({ type: 'guard', x: 860, y: 1290 });
 
-  // ---- Section 3: Enemy gauntlet ----
-  P(3450, 640, 1150, 80); // Floor ends at 4600
-  P(3450, 300, 40, 340);
-  P(3700, 480, 160, 20, 'oneway');
-  P(4000, 400, 160, 20, 'oneway');
-  P(4300, 520, 160, 20, 'oneway');
+  // Watchtower Ascent (x: 1200 - 1800, vertical climbing shaft from y=1340 up to y=500)
+  P(1220, 1340, 560, 160);
+  enemies.push({ type: 'guard', x: 1480, y: 1290 });
+  addStreetlamp(1320, 1340, 55, '#ffaa33');
 
-  // Second bonfire — before gauntlet
-  bonfires.push(new Bonfire(3500, 610, 1));
+  // Watchtower walls
+  P(1380, 500, 36, 720);
+  P(1720, 500, 36, 720);
+  // Interior climbing ledges
+  P(1420, 1180, 140, 20, 'oneway');
+  P(1560, 1040, 140, 20, 'oneway');
+  P(1420, 900, 140, 20, 'oneway');
+  P(1560, 760, 140, 20, 'oneway');
+  P(1420, 620, 150, 20, 'oneway');
+  addGothicWindow(1510, 950, 28, 65, '#ffaa33', true);
+  addGothicWindow(1510, 720, 28, 65, '#ff8833', true);
 
-  // Gauntlet enemies (confined to x <= 4450 so they never leak into bonfire sanctuary)
-  enemies.push({ type: 'crawler', x: 3650, y: 600, patrolRange: 140 });
-  enemies.push({ type: 'guard', x: 3950, y: 592 });
-  enemies.push({ type: 'flyer', x: 4050, y: 350 });
-  enemies.push({ type: 'crawler', x: 4220, y: 600, patrolRange: 100 });
-  enemies.push({ type: 'guard', x: 4400, y: 592 });
+  // Watchtower top roof terrace (Tier 3 entrance)
+  P(1340, 500, 440, 28);
+  addGargoyle(1350, 500, -1, 'spread');
+  addGargoyle(1770, 500, 1, 'spread');
+  addStreetlamp(1560, 500, 55, '#ffaa33');
 
-  // Section 3 Props
-  addArch(3650, 320, 220, 320);
-  addLantern(3700, 400, 45, '#ffaa33');
-  addCrystal(3850, 638, 'cyan', 1.0);
-  addLantern(4150, 340, 60, '#ff8833');
-  addArch(4300, 320, 200, 320);
-  addCrystal(4450, 638, 'purple', 1.2);
+  // ==========================================================================
+  // ZONE 2: THE SPIRES, BELFRY & HIGH VIADUCTS (x: 1800 - 3600, y: 320 - 1500)
+  // ==========================================================================
+  // --- Tier 3: High Slate Rooftops & Belfry Haven ---
+  P(1920, 460, 180, 26);
+  P(2180, 400, 160, 20, 'oneway');
+  P(2420, 360, 200, 26);
+  addGargoyle(2430, 360, -1, 'spread');
+  addGargoyle(2610, 360, 1, 'folded');
 
-  // Archway wall separating Gauntlet from the Boss Sanctuary
-  P(4600, 200, 40, 320); // upper wall (y=200..520), archway open below (y=520..640)
+  // Moving Gothic lift between spires
+  platforms.push({ x: 2700, y: 360, w: 140, h: 22, type: 'moving', ox: 2700, oy: 360, mx: 180, my: 60, speed: 75, t: 0 });
 
-  // ---- Boss Sanctuary / Antechamber (Safe Resting Area) ----
-  P(4600, 640, 600, 80); // Floor from 4600 to 5200
+  // Clocktower Belfry Haven (x: 3000 - 3450, y: 480)
+  P(3020, 480, 420, 32);
+  bonfires.push(new Bonfire(3220, 450, 1)); // Second Bonfire: Belfry Haven
+  addArch(3220, 260, 260, 220, 'shrine');
+  addStreetlamp(3070, 480, 55, '#ffaa33');
+  addStreetlamp(3370, 480, 55, '#ffaa33');
+  addGothicWindow(3220, 350, 36, 85, '#ff9933', true);
+  addCrystal(3120, 478, 'blue', 1.2);
+  addCrystal(3320, 478, 'purple', 1.1);
 
-  // Third bonfire — completely safe resting haven outside the boss arena
-  bonfires.push(new Bonfire(4850, 610, 2));
+  // --- Tier 2: Mid-level Viaduct Bridges (y: 840 - 900) ---
+  P(1900, 880, 280, 28);
+  P(2280, 840, 240, 28);
+  P(2620, 900, 220, 28);
+  P(2940, 860, 280, 28);
+  P(3320, 840, 280, 28);
+  addStreetlamp(2040, 880, 55, '#ffaa33');
+  addStreetlamp(2730, 900, 55, '#ffaa33');
+  addStreetlamp(3460, 840, 55, '#ffaa33');
+  enemies.push({ type: 'crawler', x: 2380, y: 800, patrolRange: 90 });
+  enemies.push({ type: 'guard', x: 3060, y: 810 });
+  enemies.push({ type: 'flyer', x: 2150, y: 620 });
+  enemies.push({ type: 'flyer', x: 2800, y: 560 });
+  enemies.push({ type: 'flyer', x: 3480, y: 500 });
 
-  // Decorative platform in sanctuary
-  P(4780, 510, 140, 16, 'oneway');
+  // --- Tier 1: Sunken Mist Streets & Abyss Pits (y: 1340) ---
+  P(1900, 1340, 440, 160);
+  // Mist death pit: x=2340 to 2540
+  P(2540, 1340, 520, 160);
+  // Mist death pit: x=3060 to 3260
+  P(3260, 1340, 380, 160);
+  addArch(2120, 1140, 240, 200, 'viaductPillar');
+  addArch(2780, 1140, 240, 200, 'viaductPillar');
+  addArch(3420, 1140, 240, 200, 'viaductPillar');
+  enemies.push({ type: 'crawler', x: 2060, y: 1300, patrolRange: 130 });
+  enemies.push({ type: 'crawler', x: 2760, y: 1300, patrolRange: 150 });
+  enemies.push({ type: 'guard', x: 3400, y: 1290 });
+  addWaterDrip(2280, 840, 1340);
+  addWaterDrip(2940, 860, 1340);
+  addCrystal(2600, 1338, 'cyan', 1.3);
+  addCrystal(3300, 1338, 'purple', 1.2);
 
-  // Sanctuary Props
-  addArch(4850, 360, 250, 280, 'shrine');
-  addLantern(4720, 490, 40, '#ffaa44');
-  addLantern(4980, 490, 40, '#ffaa44');
-  addCrystal(4650, 638, 'blue', 1.4);
-  addCrystal(5120, 638, 'cyan', 1.2);
+  // Connecting stair ledges between Tier 2 and Tier 3
+  P(3500, 680, 160, 20, 'oneway');
+  P(3560, 540, 160, 20, 'oneway');
 
-  // ---- Section 4: Boss arena ----
-  P(5200, 640, 1050, 80); // Arena floor from 5200 to 6250
-  P(5200, 180, 1050, 40);  // Arena ceiling
-  P(6210, 180, 40, 460);   // Right wall (back of arena)
-  P(5200, 180, 40, 320);   // Upper left wall (y=180..500)
+  // ==========================================================================
+  // ZONE 3: GRAND AQUEDUCT & VAMPIRE CASTLE GAUNTLET (x: 3600 - 5500, y: 380 - 1500)
+  // ==========================================================================
+  // --- Upper Aqueduct Walkway (y: 680 - 740) ---
+  P(3700, 740, 420, 28);
+  P(4220, 700, 380, 28);
+  P(4700, 680, 440, 28);
+  P(5220, 720, 420, 28);
+  addStreetlamp(3900, 740, 55, '#ffaa33');
+  addStreetlamp(4400, 700, 55, '#ffaa33');
+  addStreetlamp(4920, 680, 55, '#ffaa33');
+  addGargoyle(4230, 700, -1, 'spread');
+  addGargoyle(4590, 700, 1, 'spread');
+  addGargoyle(5130, 680, 1, 'folded');
 
-  // Dynamic Boss Fog Gate (y=500..640, height=140): open before fight, sealed during fight
-  platforms.push({ x: 5200, y: 500, w: 40, h: 140, type: 'solid', isGate: true });
+  // Gauntlet enemies
+  enemies.push({ type: 'guard', x: 3950, y: 690 });
+  enemies.push({ type: 'crawler', x: 4420, y: 660, patrolRange: 110 });
+  enemies.push({ type: 'guard', x: 4880, y: 630 });
+  enemies.push({ type: 'flyer', x: 4300, y: 480 });
+  enemies.push({ type: 'flyer', x: 4950, y: 440 });
+  enemies.push({ type: 'guard', x: 5400, y: 670 });
 
-  const bossSpawn = { x: 5750, y: 480 };
-  const bossArena = { x: 5200, y: 180, w: 1050, h: 540 };
-  const bossTrigger = { x: 5320, y: 200, w: 60, h: 440 };
+  // --- High Spires & Buttress crossings (Tier 3, y: 380 - 500) ---
+  P(3860, 480, 180, 20, 'oneway');
+  P(4120, 400, 200, 20, 'oneway');
+  P(4400, 460, 180, 20, 'oneway');
+  P(4680, 380, 220, 20, 'oneway');
+  // Moving chain elevator connecting Tier 3 to Tier 2
+  platforms.push({ x: 4980, y: 440, w: 130, h: 22, type: 'moving', ox: 4980, oy: 440, mx: 0, my: 180, speed: 80, t: 0 });
 
-  // Arena Props
-  addArch(5420, 180, 240, 460, 'arenaColonnade');
-  addArch(5750, 180, 280, 460, 'arenaThrone');
-  addArch(6080, 180, 240, 460, 'arenaColonnade');
-  addLantern(5350, 180, 85, '#cc44ff');
-  addLantern(5550, 180, 110, '#cc44ff');
-  addLantern(5750, 180, 130, '#ff2255');
-  addLantern(5950, 180, 110, '#cc44ff');
-  addLantern(6150, 180, 85, '#cc44ff');
-  addCrystal(5240, 638, 'purple', 1.5);
-  addCrystal(6180, 638, 'purple', 1.5);
+  // --- Lower Canal / Dungeon Streets (Tier 1, y: 1340) ---
+  P(3740, 1340, 600, 160);
+  P(4440, 1340, 560, 160);
+  P(5100, 1340, 520, 160);
+  addArch(4040, 1140, 260, 200, 'viaductPillar');
+  addArch(4720, 1140, 260, 200, 'viaductPillar');
+  enemies.push({ type: 'crawler', x: 3920, y: 1300, patrolRange: 160 });
+  enemies.push({ type: 'guard', x: 4680, y: 1290 });
+  enemies.push({ type: 'crawler', x: 5260, y: 1300, patrolRange: 130 });
+  addWaterDrip(4220, 700, 1340);
+  addWaterDrip(4700, 680, 1340);
+
+  // ==========================================================================
+  // ZONE 4: CATHEDRAL COURTYARD & SANCTUARY HAVEN (x: 5500 - 6800, y: 650 - 1500)
+  // ==========================================================================
+  // Stepped courtyard terraces leading down to Cathedral entrance
+  P(5660, 780, 260, 28);
+  P(6000, 880, 260, 28);
+  P(6320, 1020, 200, 28);
+  P(5800, 660, 160, 20, 'oneway');
+  P(6140, 750, 160, 20, 'oneway');
+  addStreetlamp(5780, 780, 55, '#ffaa33');
+  addStreetlamp(6120, 880, 55, '#ffaa33');
+  addGargoyle(6250, 880, 1, 'spread');
+
+  // Cathedral Antechamber / Sanctuary Haven (Safe resting zone outside boss arena)
+  P(6380, 1260, 420, 100); // Floor y=1260..1360
+  P(6380, 660, 420, 40);   // Ceiling y=660..700
+  P(6380, 660, 40, 450);   // Exterior wall y=660..1110
+
+  // Third Bonfire: Cathedral Sanctuary Haven
+  bonfires.push(new Bonfire(6540, 1230, 2));
+  addArch(6540, 960, 240, 300, 'shrine');
+  addStreetlamp(6440, 1260, 55, '#ffaa33');
+  addStreetlamp(6680, 1260, 55, '#ffaa33');
+  addGothicWindow(6540, 820, 36, 85, '#ff9933', true);
+  addCrystal(6420, 1258, 'blue', 1.4);
+  addCrystal(6700, 1258, 'cyan', 1.3);
+
+  // Decorative balcony inside sanctuary
+  P(6460, 1120, 160, 18, 'oneway');
+
+  // ==========================================================================
+  // ZONE 5: GRAND BLOODMOON CATHEDRAL BOSS ARENA (x: 6800 - 8150, y: 650 - 1360)
+  // ==========================================================================
+  P(6800, 1260, 1350, 100); // Arena floor from 6800 to 8150
+  P(6800, 660, 1350, 40);   // Arena vaulted ceiling
+  P(8110, 660, 40, 600);    // Right wall (back of cathedral)
+  P(6800, 660, 40, 450);    // Upper left wall (y=660..1110)
+
+  // Dynamic Boss Fog Gate (y=1110..1260, h=150): open before fight, sealed during fight
+  platforms.push({ x: 6800, y: 1110, w: 40, h: 150, type: 'solid', isGate: true });
+
+  const bossSpawn = { x: 7550, y: 1100 };
+  const bossArena = { x: 6800, y: 660, w: 1350, h: 600 };
+  const bossTrigger = { x: 6940, y: 700, w: 80, h: 560 };
+
+  // Multi-tier choir balconies in Boss Arena (Hollow Knight / Dark Souls style!)
+  P(6920, 1080, 200, 20, 'oneway');
+  P(6860, 920, 220, 20, 'oneway');
+  P(7840, 1080, 200, 20, 'oneway');
+  P(7880, 920, 220, 20, 'oneway');
+  P(7380, 840, 200, 20, 'oneway'); // Center organ / chandelier high platform
+
+  // Grand Cathedral Architecture Props
+  addArch(7120, 660, 260, 600, 'arenaColonnade');
+  addArch(7500, 660, 320, 600, 'arenaThrone');
+  addArch(7880, 660, 260, 600, 'arenaColonnade');
+
+  // Vaulted chandeliers hanging from high ceiling
+  addChandelier(7150, 660, 140, 130);
+  addChandelier(7500, 660, 180, 160);
+  addChandelier(7850, 660, 140, 130);
+
+  // Stained glass lancet windows
+  addGothicWindow(7150, 760, 46, 120, '#cc44ff', true);
+  addGothicWindow(7500, 720, 58, 140, '#ff2255', true);
+  addGothicWindow(7850, 760, 46, 120, '#cc44ff', true);
+
+  // Gargoyles perched on high colonnades
+  addGargoyle(7040, 920, 1, 'spread');
+  addGargoyle(7960, 920, -1, 'spread');
+
+  // Abyssal crystals
+  addCrystal(6870, 1258, 'purple', 1.5);
+  addCrystal(8060, 1258, 'purple', 1.5);
 
   return {
     platforms, enemies, bonfires, props, bossSpawn, bossArena, bossTrigger,
-    playerStart: { x: 100, y: 560 }, width: 6350, height: 720
+    playerStart: { x: 140, y: 836 }, width: 8200, height: 1500
   };
 }
 
@@ -3180,14 +3319,22 @@ class EnvironmentRenderer {
   drawBackgroundProps(ctx, props, camera, time) {
     if (!props) return;
     const cw = CANVAS_W / camera.zoom;
+    const ch = CANVAS_H / camera.zoom;
     const minX = camera.x - 200, maxX = camera.x + cw + 200;
+    const minY = camera.y - 200, maxY = camera.y + ch + 200;
 
     for (const p of props) {
-      if (p.x < minX || p.x > maxX) continue;
+      if (p.x < minX || p.x > maxX || p.y < minY || p.y > maxY) continue;
       if (p.type === 'arch') {
         this._drawGothicArch(ctx, p.x, p.y, p.w, p.h, p.style, time);
       } else if (p.type === 'lantern') {
         this._drawHangingLantern(ctx, p.x, p.y, p.chainLen, p.color, time);
+      } else if (p.type === 'streetlamp') {
+        this._drawStreetlamp(ctx, p.x, p.y, p.h, p.color, time);
+      } else if (p.type === 'gothicWindow') {
+        this._drawGothicWindow(ctx, p.x, p.y, p.w, p.h, p.color, p.glow, time);
+      } else if (p.type === 'chandelier') {
+        this._drawChandelier(ctx, p.x, p.y, p.w, p.chainLen, time);
       }
     }
   }
@@ -3196,63 +3343,104 @@ class EnvironmentRenderer {
     ctx.save();
     if (style === 'shrine') {
       // Warm sanctuary shrine arch behind the bonfire
-      ctx.fillStyle = '#181b29';
-      ctx.fillRect(x - w / 2, y, 24, h);
-      ctx.fillRect(x + w / 2 - 24, y, 24, h);
+      ctx.fillStyle = '#161024';
+      ctx.fillRect(x - w / 2, y, 26, h);
+      ctx.fillRect(x + w / 2 - 26, y, 26, h);
       // Arched top
       ctx.beginPath();
       ctx.moveTo(x - w / 2, y + 60);
       ctx.quadraticCurveTo(x - w / 4, y - 40, x, y - 60);
       ctx.quadraticCurveTo(x + w / 4, y - 40, x + w / 2, y + 60);
-      ctx.lineTo(x + w / 2 - 24, y + 60);
+      ctx.lineTo(x + w / 2 - 26, y + 60);
       ctx.quadraticCurveTo(x + w / 4, y - 20, x, y - 36);
-      ctx.quadraticCurveTo(x - w / 4, y - 20, x - w / 2 + 24, y + 60);
+      ctx.quadraticCurveTo(x - w / 4, y - 20, x - w / 2 + 26, y + 60);
       ctx.closePath();
-      ctx.fillStyle = '#202538';
+      ctx.fillStyle = '#221936';
       ctx.fill();
-      // Backing stained glass / hollow silhouette
-      ctx.fillStyle = 'rgba(25, 35, 60, 0.4)';
+      // Backing silhouette
+      ctx.fillStyle = 'rgba(25, 18, 42, 0.45)';
       ctx.beginPath();
-      ctx.moveTo(x - w / 2 + 24, y + h);
-      ctx.lineTo(x - w / 2 + 24, y + 60);
+      ctx.moveTo(x - w / 2 + 26, y + h);
+      ctx.lineTo(x - w / 2 + 26, y + 60);
       ctx.quadraticCurveTo(x - w / 4, y - 20, x, y - 36);
-      ctx.quadraticCurveTo(x + w / 4, y - 20, x + w / 2 - 24, y + 60);
-      ctx.lineTo(x + w / 2 - 24, y + h);
+      ctx.quadraticCurveTo(x + w / 4, y - 20, x + w / 2 - 26, y + 60);
+      ctx.lineTo(x + w / 2 - 26, y + h);
       ctx.closePath();
       ctx.fill();
-      // Subtle carved shrine motif
-      ctx.strokeStyle = '#323c57';
+      // Carved shrine circle motif
+      ctx.strokeStyle = '#392858';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(x, y + 40, 22, 0, Math.PI * 2);
+      ctx.arc(x, y + 40, 24, 0, Math.PI * 2);
       ctx.stroke();
     } else if (style === 'arenaThrone') {
       // Grand Throne Arch in Boss Arena
-      ctx.fillStyle = '#121422';
-      ctx.fillRect(x - 20, y, 40, h);
+      ctx.fillStyle = '#100a1c';
+      ctx.fillRect(x - 24, y, 48, h);
       // High arches
       ctx.beginPath();
       ctx.moveTo(x - w / 2, y + h);
-      ctx.lineTo(x - w / 2, y + 80);
-      ctx.quadraticCurveTo(x - w / 4, y - 20, x, y - 40);
-      ctx.quadraticCurveTo(x + w / 4, y - 20, x + w / 2, y + 80);
+      ctx.lineTo(x - w / 2, y + 90);
+      ctx.quadraticCurveTo(x - w / 4, y - 20, x, y - 50);
+      ctx.quadraticCurveTo(x + w / 4, y - 20, x + w / 2, y + 90);
       ctx.lineTo(x + w / 2, y + h);
-      ctx.lineTo(x + w / 2 - 28, y + h);
-      ctx.lineTo(x + w / 2 - 28, y + 85);
-      ctx.quadraticCurveTo(x + w / 4, y + 6, x, y - 12);
-      ctx.quadraticCurveTo(x - w / 4, y + 6, x - w / 2 + 28, y + 85);
-      ctx.lineTo(x - w / 2 + 28, y + h);
+      ctx.lineTo(x + w / 2 - 32, y + h);
+      ctx.lineTo(x + w / 2 - 32, y + 95);
+      ctx.quadraticCurveTo(x + w / 4, y + 10, x, y - 18);
+      ctx.quadraticCurveTo(x - w / 4, y + 10, x - w / 2 + 32, y + 95);
+      ctx.lineTo(x - w / 2 + 32, y + h);
       ctx.closePath();
-      ctx.fillStyle = '#1a1d30';
+      ctx.fillStyle = '#181028';
       ctx.fill();
-      // Massive chains dangling
-      ctx.strokeStyle = '#222538';
-      ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.moveTo(x - 60, y); ctx.lineTo(x - 60, y + h - 100); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(x + 60, y); ctx.lineTo(x + 60, y + h - 100); ctx.stroke();
+      // Heavy iron chains dangling
+      ctx.strokeStyle = '#221838';
+      ctx.lineWidth = 3.5;
+      ctx.beginPath(); ctx.moveTo(x - 70, y); ctx.lineTo(x - 70, y + h - 120); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x + 70, y); ctx.lineTo(x + 70, y + h - 120); ctx.stroke();
+    } else if (style === 'arenaColonnade') {
+      // Cathedral colonnade arch
+      ctx.fillStyle = '#140c22';
+      ctx.fillRect(x - w / 2, y, 28, h);
+      ctx.fillRect(x + w / 2 - 28, y, 28, h);
+      ctx.beginPath();
+      ctx.moveTo(x - w / 2, y + 80);
+      ctx.quadraticCurveTo(x - w / 4, y, x, y - 25);
+      ctx.quadraticCurveTo(x + w / 4, y, x + w / 2, y + 80);
+      ctx.lineTo(x + w / 2 - 28, y + 80);
+      ctx.quadraticCurveTo(x + w / 4, y + 20, x, y - 2);
+      ctx.quadraticCurveTo(x - w / 4, y + 20, x - w / 2 + 28, y + 80);
+      ctx.closePath();
+      ctx.fillStyle = '#1e1432';
+      ctx.fill();
+    } else if (style === 'viaductPillar') {
+      // Massive multi-tier arched viaduct pillar crossing misty canyon
+      ctx.fillStyle = '#120d1e';
+      ctx.beginPath();
+      ctx.moveTo(x - w / 2, y + h);
+      ctx.lineTo(x - w / 2, y);
+      ctx.lineTo(x + w / 2, y);
+      ctx.lineTo(x + w / 2, y + h);
+      ctx.lineTo(x + w / 2 - 32, y + h);
+      ctx.lineTo(x + w / 2 - 32, y + 40);
+      ctx.quadraticCurveTo(x, y - 10, x - w / 2 + 32, y + 40);
+      ctx.lineTo(x - w / 2 + 32, y + h);
+      ctx.closePath();
+      ctx.fill();
+
+      // Stone ashlar bands
+      ctx.strokeStyle = '#221936';
+      ctx.lineWidth = 2;
+      for (let ly = y + 40; ly < y + h; ly += 36) {
+        ctx.beginPath();
+        ctx.moveTo(x - w / 2, ly);
+        ctx.lineTo(x - w / 2 + 32, ly);
+        ctx.moveTo(x + w / 2 - 32, ly);
+        ctx.lineTo(x + w / 2, ly);
+        ctx.stroke();
+      }
     } else {
       // Standard ruined gothic arch
-      ctx.fillStyle = '#151928';
+      ctx.fillStyle = '#150f24';
       ctx.beginPath();
       ctx.moveTo(x - w / 2, y + h);
       ctx.lineTo(x - w / 2, y + 50);
@@ -3272,27 +3460,24 @@ class EnvironmentRenderer {
 
   _drawHangingLantern(ctx, x, y, chainLen, color, time) {
     ctx.save();
-    // Chain
     const sway = Math.sin(time * 2.4 + x * 0.1) * 0.05;
     ctx.translate(x, y);
     ctx.rotate(sway);
 
-    ctx.strokeStyle = '#2d3345';
+    ctx.strokeStyle = '#261b3a';
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.lineTo(0, chainLen);
     ctx.stroke();
 
-    // Lantern cage
     const ly = chainLen;
-    ctx.fillStyle = '#1b1f2e';
+    ctx.fillStyle = '#170f26';
     ctx.fillRect(-8, ly, 16, 20);
-    ctx.strokeStyle = '#3d4661';
+    ctx.strokeStyle = '#32234e';
     ctx.lineWidth = 1.5;
     ctx.strokeRect(-8, ly, 16, 20);
 
-    // Inner glowing flame
     const flk = Math.sin(time * 14 + x) * 0.15 + 0.85;
     ctx.fillStyle = color;
     ctx.shadowColor = color;
@@ -3308,17 +3493,266 @@ class EnvironmentRenderer {
     ctx.restore();
   }
 
+  _drawStreetlamp(ctx, x, y, h = 55, color = '#ffaa33', time) {
+    ctx.save();
+    // Iron base
+    ctx.fillStyle = '#120d1e';
+    ctx.fillRect(x - 6, y - 6, 12, 6);
+    ctx.fillStyle = '#261b3d';
+    ctx.fillRect(x - 5, y - 6, 10, 2);
+
+    // Slender tapered iron post
+    const topY = y - h;
+    const postGrad = ctx.createLinearGradient(x - 2, 0, x + 2, 0);
+    postGrad.addColorStop(0, '#110c1c');
+    postGrad.addColorStop(0.5, '#2b1f42');
+    postGrad.addColorStop(1, '#0e0917');
+    ctx.fillStyle = postGrad;
+    ctx.fillRect(x - 2, topY + 22, 4, h - 28);
+
+    // Decorative mid-post collar ring
+    ctx.fillStyle = '#392956';
+    ctx.fillRect(x - 4, y - h * 0.5, 8, 3);
+
+    // Ornate curved iron brackets supporting the lantern
+    ctx.strokeStyle = '#251b3a';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x - 2, topY + 24);
+    ctx.quadraticCurveTo(x - 10, topY + 18, x - 1, topY + 14);
+    ctx.moveTo(x + 2, topY + 24);
+    ctx.quadraticCurveTo(x + 10, topY + 18, x + 1, topY + 14);
+    ctx.stroke();
+
+    // Lantern base cap
+    ctx.fillStyle = '#181126';
+    ctx.fillRect(x - 7, topY + 14, 14, 3);
+
+    // Glass lantern cage
+    const cageW = 12, cageH = 14;
+    const cageY = topY;
+    ctx.strokeStyle = '#2d2146';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(x - cageW / 2, cageY, cageW, cageH);
+
+    // Warm flickering gaslight flame
+    const flk = Math.sin(time * 11 + x * 0.1) * 0.12 + 0.88;
+    ctx.fillStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 12 * flk;
+    ctx.beginPath();
+    ctx.arc(x, cageY + cageH * 0.55, 3.5 * flk, 0, Math.PI * 2);
+    ctx.fill();
+
+    // White-hot core
+    ctx.fillStyle = '#fff6d9';
+    ctx.beginPath();
+    ctx.arc(x, cageY + cageH * 0.5, 1.6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Iron roof cap & spire needle
+    ctx.fillStyle = '#150f24';
+    ctx.beginPath();
+    ctx.moveTo(x - 8, cageY);
+    ctx.lineTo(x, cageY - 8);
+    ctx.lineTo(x + 8, cageY);
+    ctx.closePath();
+    ctx.fill();
+
+    // Finial needle
+    ctx.strokeStyle = '#2b1f42';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x, cageY - 8);
+    ctx.lineTo(x, cageY - 14);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  _drawGothicWindow(ctx, x, y, w = 32, h = 75, color = '#ff9933', glow = true, time) {
+    ctx.save();
+    const halfW = w / 2;
+    const archTopY = y;
+    const springY = y + h * 0.38;
+    const sillY = y + h;
+
+    // Deep recessed stone shadow
+    ctx.fillStyle = '#0a0612';
+    ctx.beginPath();
+    ctx.moveTo(x - halfW - 3, sillY + 4);
+    ctx.lineTo(x - halfW - 3, springY);
+    ctx.quadraticCurveTo(x - halfW * 0.5, archTopY - 4, x, archTopY - 6);
+    ctx.quadraticCurveTo(x + halfW * 0.5, archTopY - 4, x + halfW + 3, springY);
+    ctx.lineTo(x + halfW + 3, sillY + 4);
+    ctx.closePath();
+    ctx.fill();
+
+    // Stone sill
+    ctx.fillStyle = '#231a36';
+    ctx.fillRect(x - halfW - 5, sillY, w + 10, 5);
+    ctx.fillStyle = '#342750';
+    ctx.fillRect(x - halfW - 4, sillY, w + 8, 1.5);
+
+    // Lancet window aperture path
+    ctx.beginPath();
+    ctx.moveTo(x - halfW, sillY);
+    ctx.lineTo(x - halfW, springY);
+    ctx.quadraticCurveTo(x - halfW * 0.5, archTopY, x, archTopY - 2);
+    ctx.quadraticCurveTo(x + halfW * 0.5, archTopY, x + halfW, springY);
+    ctx.lineTo(x + halfW, sillY);
+    ctx.closePath();
+
+    // Warm candlelit glass interior gradient
+    const winGrad = ctx.createLinearGradient(x, archTopY, x, sillY);
+    const flk = Math.sin(time * 6 + x * 0.2) * 0.08 + 0.92;
+    if (color === '#ff2255') {
+      winGrad.addColorStop(0, `rgba(180, 20, 60, ${0.75 * flk})`);
+      winGrad.addColorStop(0.5, `rgba(255, 50, 100, ${0.9 * flk})`);
+      winGrad.addColorStop(1, `rgba(255, 120, 150, ${1.0 * flk})`);
+    } else if (color === '#cc44ff') {
+      winGrad.addColorStop(0, `rgba(110, 20, 180, ${0.7 * flk})`);
+      winGrad.addColorStop(0.6, `rgba(180, 50, 240, ${0.85 * flk})`);
+      winGrad.addColorStop(1, `rgba(220, 120, 255, ${0.95 * flk})`);
+    } else {
+      winGrad.addColorStop(0, `rgba(180, 80, 15, ${0.65 * flk})`);
+      winGrad.addColorStop(0.5, `rgba(255, 140, 30, ${0.88 * flk})`);
+      winGrad.addColorStop(1, `rgba(255, 195, 80, ${0.98 * flk})`);
+    }
+    ctx.fillStyle = winGrad;
+    if (glow) {
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 10 * flk;
+    }
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Dark stone tracery (vertical mullion & crossbars)
+    ctx.strokeStyle = '#140e21';
+    ctx.lineWidth = 2;
+    // Central vertical mullion
+    ctx.beginPath();
+    ctx.moveTo(x, archTopY + 12);
+    ctx.lineTo(x, sillY);
+    ctx.stroke();
+
+    // Horizontal transom bars
+    ctx.beginPath();
+    ctx.moveTo(x - halfW, springY);
+    ctx.lineTo(x + halfW, springY);
+    ctx.moveTo(x - halfW, springY + (sillY - springY) * 0.5);
+    ctx.lineTo(x + halfW, springY + (sillY - springY) * 0.5);
+    ctx.stroke();
+
+    // Rosette / trefoil in lancet head
+    ctx.beginPath();
+    ctx.arc(x, archTopY + 12, 4, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Outer stone frame mouldings
+    ctx.strokeStyle = '#2b2040';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x - halfW, sillY);
+    ctx.lineTo(x - halfW, springY);
+    ctx.quadraticCurveTo(x - halfW * 0.5, archTopY, x, archTopY - 2);
+    ctx.quadraticCurveTo(x + halfW * 0.5, archTopY, x + halfW, springY);
+    ctx.lineTo(x + halfW, sillY);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  _drawChandelier(ctx, x, y, w = 150, chainLen = 120, time) {
+    ctx.save();
+    const sway = Math.sin(time * 1.6 + x * 0.05) * 0.025;
+    ctx.translate(x, y);
+    ctx.rotate(sway);
+
+    // Hanging iron chain links
+    ctx.strokeStyle = '#221936';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(0, chainLen);
+    ctx.stroke();
+
+    const cy = chainLen;
+    // Main wrought iron chandelier hoop
+    ctx.fillStyle = '#140e22';
+    ctx.fillRect(-w / 2, cy, w, 7);
+    ctx.strokeStyle = '#2f2347';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(-w / 2, cy, w, 7);
+
+    // Decorative curved iron braces connecting chain to hoop
+    ctx.strokeStyle = '#261b3a';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, cy - 35);
+    ctx.quadraticCurveTo(-w * 0.25, cy - 10, -w * 0.45, cy);
+    ctx.moveTo(0, cy - 35);
+    ctx.quadraticCurveTo(w * 0.25, cy - 10, w * 0.45, cy);
+    ctx.stroke();
+
+    // Candles and glowing flames on the hoop
+    const numCandles = 6;
+    const step = (w - 20) / (numCandles - 1);
+    for (let i = 0; i < numCandles; i++) {
+      const cx = -w / 2 + 10 + i * step;
+      // Wax candle shaft
+      ctx.fillStyle = '#dcd4c2';
+      ctx.fillRect(cx - 2, cy - 12, 4, 12);
+      ctx.fillStyle = '#221936'; // iron drip saucer
+      ctx.fillRect(cx - 4, cy, 8, 2);
+
+      // Flickering flame
+      const flk = Math.sin(time * 12 + i * 2.3 + x) * 0.15 + 0.85;
+      ctx.fillStyle = '#ff9922';
+      ctx.shadowColor = '#ffaa33';
+      ctx.shadowBlur = 8 * flk;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy - 16, 2.5 * flk, 4.5 * flk, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fff4cc';
+      ctx.beginPath();
+      ctx.arc(cx, cy - 15, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+
+    // Hanging ornamental teardrop pendants beneath chandelier
+    ctx.fillStyle = '#1b132c';
+    for (let i = 0; i < numCandles - 1; i++) {
+      const px = -w / 2 + 10 + (i + 0.5) * step;
+      ctx.beginPath();
+      ctx.moveTo(px, cy + 7);
+      ctx.lineTo(px - 3, cy + 18);
+      ctx.lineTo(px, cy + 24);
+      ctx.lineTo(px + 3, cy + 18);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
   drawForegroundProps(ctx, props, camera, time) {
     if (!props) return;
     const cw = CANVAS_W / camera.zoom;
+    const ch = CANVAS_H / camera.zoom;
     const minX = camera.x - 100, maxX = camera.x + cw + 100;
+    const minY = camera.y - 100, maxY = camera.y + ch + 100;
 
     for (const p of props) {
-      if (p.x < minX || p.x > maxX) continue;
+      if (p.x < minX || p.x > maxX || p.y < minY || p.y > maxY) continue;
       if (p.type === 'crystal') {
         this._drawCrystals(ctx, p.x, p.y, p.color, p.scale, time);
       } else if (p.type === 'waterDrip') {
         this._drawWaterDrip(ctx, p, time);
+      } else if (p.type === 'gargoyle') {
+        this._drawGargoyle(ctx, p.x, p.y, p.facing, p.wings, time);
       }
     }
   }
@@ -3420,6 +3854,116 @@ class EnvironmentRenderer {
     }
   }
 
+  _drawGargoyle(ctx, x, y, facing = 1, wings = 'spread', time) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(facing, 1);
+
+    // Stone cornice pedestal beneath gargoyle
+    ctx.fillStyle = '#140f20';
+    ctx.fillRect(-14, 0, 28, 8);
+    ctx.fillStyle = '#261c38';
+    ctx.fillRect(-12, 0, 24, 2);
+
+    // Crouched stone beast body
+    ctx.fillStyle = '#1a1329';
+    ctx.beginPath();
+    ctx.ellipse(0, -14, 11, 8, -0.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Taloned feet gripping the ledge
+    ctx.fillStyle = '#110c1c';
+    ctx.beginPath();
+    ctx.moveTo(4, 0); ctx.lineTo(10, -2); ctx.lineTo(12, 0); ctx.lineTo(14, 2); ctx.lineTo(4, 2);
+    ctx.closePath();
+    ctx.fill();
+
+    // Stone claws highlight
+    ctx.fillStyle = '#2f2347';
+    ctx.fillRect(8, -2, 4, 2);
+
+    // Muscular hunched shoulders & back
+    ctx.fillStyle = '#231a38';
+    ctx.beginPath();
+    ctx.arc(-4, -18, 7, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Horned gargoyle head
+    ctx.fillStyle = '#201833';
+    ctx.beginPath();
+    ctx.ellipse(6, -22, 6, 5, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Snout / jaw
+    ctx.beginPath();
+    ctx.moveTo(9, -24); ctx.lineTo(16, -21); ctx.lineTo(11, -17);
+    ctx.closePath();
+    ctx.fill();
+
+    // Curved demonic horns
+    ctx.strokeStyle = '#2d2249';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(3, -25);
+    ctx.quadraticCurveTo(-1, -33, -6, -35);
+    ctx.moveTo(6, -25);
+    ctx.quadraticCurveTo(3, -34, -2, -37);
+    ctx.stroke();
+
+    // Glowing crimson eye slit
+    const eyeGlint = Math.sin(time * 3 + x) * 0.25 + 0.75;
+    ctx.fillStyle = `rgba(255, 34, 68, ${0.85 * eyeGlint})`;
+    ctx.shadowColor = '#ff2244';
+    ctx.shadowBlur = 6;
+    ctx.fillRect(9, -23, 2.5, 1.5);
+    ctx.shadowBlur = 0;
+
+    // Bat-like gargoyle wings
+    if (wings === 'spread') {
+      ctx.fillStyle = '#160f24';
+      ctx.strokeStyle = '#2b1f42';
+      ctx.lineWidth = 1.5;
+
+      // Fore wing (spread wide)
+      ctx.beginPath();
+      ctx.moveTo(-4, -20);
+      ctx.quadraticCurveTo(-15, -42, -26, -46); // upper wing thumb
+      ctx.quadraticCurveTo(-18, -32, -28, -24); // wing scallop 1
+      ctx.quadraticCurveTo(-16, -20, -22, -10); // wing scallop 2
+      ctx.quadraticCurveTo(-10, -12, -2, -14);  // wing scallop 3
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Wing rib bones
+      ctx.beginPath();
+      ctx.moveTo(-4, -20); ctx.lineTo(-26, -46);
+      ctx.moveTo(-4, -20); ctx.lineTo(-28, -24);
+      ctx.moveTo(-4, -20); ctx.lineTo(-22, -10);
+      ctx.stroke();
+    } else {
+      // Folded bat wings against back
+      ctx.fillStyle = '#150e22';
+      ctx.beginPath();
+      ctx.moveTo(-6, -22);
+      ctx.lineTo(-18, -32);
+      ctx.lineTo(-14, -12);
+      ctx.lineTo(-4, -10);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#2a1e3f';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    // Weathered stone chisel highlights
+    ctx.fillStyle = '#3c2c5c';
+    ctx.fillRect(-2, -20, 2, 2);
+    ctx.fillRect(4, -16, 2, 2);
+
+    ctx.restore();
+  }
+
   drawPlatforms(ctx, platforms, camera, time, level) {
     const cw = CANVAS_W / camera.zoom;
     const ch = CANVAS_H / camera.zoom;
@@ -3445,16 +3989,16 @@ class EnvironmentRenderer {
     const { x, y, w, h } = p;
     ctx.save();
 
-    // 1. Base dark stone fill
+    // 1. Base dark vampire-gothic stone gradient
     const grad = ctx.createLinearGradient(x, y, x, y + h);
-    grad.addColorStop(0, '#222838');
-    grad.addColorStop(0.3, '#1a1f2c');
-    grad.addColorStop(1, '#10131c');
+    grad.addColorStop(0, '#1c152a');
+    grad.addColorStop(0.35, '#150f22');
+    grad.addColorStop(1, '#0c0715');
     ctx.fillStyle = grad;
     ctx.fillRect(x, y, w, h);
 
-    // 2. Stone brick masonry courses
-    ctx.strokeStyle = '#0e1118';
+    // 2. Ashlar Stone Masonry Courses
+    ctx.strokeStyle = '#090510';
     ctx.lineWidth = 1.5;
     const courseH = 22;
     const numCourses = Math.floor(h / courseH);
@@ -3462,15 +4006,13 @@ class EnvironmentRenderer {
     for (let c = 0; c < numCourses; c++) {
       const cy = y + (c + 1) * courseH;
       if (cy >= y + h) break;
-      // Horizontal mortar seam
       ctx.beginPath();
       ctx.moveTo(x, cy);
       ctx.lineTo(x + w, cy);
       ctx.stroke();
 
-      // Staggered vertical seams
-      const offset = (c % 2 === 0) ? 0 : 24;
-      const brickW = 48;
+      const offset = (c % 2 === 0) ? 0 : 26;
+      const brickW = 52;
       for (let bx = x + offset; bx < x + w; bx += brickW) {
         if (bx > x && bx < x + w) {
           ctx.beginPath();
@@ -3478,67 +4020,66 @@ class EnvironmentRenderer {
           ctx.lineTo(bx, cy);
           ctx.stroke();
 
-          // Subtle stone highlight on upper-left of block
-          ctx.fillStyle = 'rgba(70, 90, 130, 0.12)';
+          // Violet moonlight chisel rim on stone block
+          ctx.fillStyle = 'rgba(75, 55, 105, 0.16)';
           ctx.fillRect(bx + 1, cy - courseH + 1, brickW - 2, 2);
         }
       }
     }
 
-    // 3. Top Flagstone Cap (Weathered stone slab)
-    ctx.fillStyle = '#2d384d';
+    // 3. Top Flagstone & Cobblestone Curb
+    ctx.fillStyle = '#261d36';
     ctx.fillRect(x, y, w, 7);
-    ctx.fillStyle = '#455673';
-    ctx.fillRect(x, y, w, 2); // Highlight bevel
-    ctx.fillStyle = '#171c26';
-    ctx.fillRect(x, y + 6, w, 1); // Shadow under cap
+    ctx.fillStyle = '#3c2e55';
+    ctx.fillRect(x, y, w, 2); // Violet stone highlight
+    ctx.fillStyle = '#100a1b';
+    ctx.fillRect(x, y + 6, w, 1); // Mortar shadow under curb
 
-    // 4. Overgrown Cavern Moss & Lichen
-    const mossH = 5;
-    ctx.fillStyle = '#1c382b';
-    ctx.fillRect(x, y, w, mossH);
-    ctx.fillStyle = '#2d5945';
-    ctx.fillRect(x, y, w, 2);
+    // 4. Gothic Balustrade / Battlements on Bridges & Elevated Platforms
+    if (w >= 140 && h <= 50 && y < 1100) {
+      ctx.fillStyle = '#1e162d';
+      const postStep = 44;
+      for (let px = x + 10; px < x + w - 20; px += postStep) {
+        // Baluster pillar
+        ctx.fillRect(px, y - 10, 8, 10);
+        ctx.fillStyle = '#2e2245';
+        ctx.fillRect(px - 1, y - 12, 10, 2); // Cap
+        ctx.fillStyle = '#1e162d';
+      }
+      // Top handrail running along balusters
+      ctx.fillStyle = '#241a37';
+      ctx.fillRect(x + 8, y - 12, w - 16, 3);
+      ctx.fillStyle = '#3b2c55';
+      ctx.fillRect(x + 8, y - 12, w - 16, 1);
+    }
 
-    // Procedural tufts of moss & blades of cave grass
-    const seed = (p.ox || x) * 11 + (p.oy || y) * 7;
-    ctx.fillStyle = '#3f7d61';
-    for (let gx = 6; gx < w - 6; gx += 16) {
-      const sway = Math.sin(time * 3 + seed + gx * 0.2) * 1.5;
+    // 5. Creeping Gothic Brambles / Dark Ivy
+    const seed = (p.ox || x) * 13 + (p.oy || y) * 7;
+    ctx.fillStyle = '#150f1c';
+    for (let gx = 8; gx < w - 8; gx += 20) {
+      const sway = Math.sin(time * 2 + seed + gx * 0.15) * 1.2;
       ctx.beginPath();
       ctx.moveTo(x + gx, y);
-      ctx.lineTo(x + gx - 2 + sway, y - 6);
-      ctx.lineTo(x + gx + 1, y);
+      ctx.lineTo(x + gx - 3 + sway, y - 5);
+      ctx.lineTo(x + gx + 2, y);
       ctx.fill();
     }
 
-    // Tiny glowing cave mushrooms occasionally on long platforms
-    if (w >= 100) {
-      const shroomX = x + ((seed % 7) * 14 + 20) % (w - 30);
-      ctx.fillStyle = '#44ddbb';
-      ctx.beginPath();
-      ctx.arc(shroomX, y - 4, 3, Math.PI, 0);
-      ctx.fill();
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(shroomX - 0.5, y - 4, 1, 4);
-    }
-
-    // 5. Jagged underside & hanging stalactites (if not floor)
-    if (y + h < 710) {
-      ctx.fillStyle = '#131620';
-      for (let sx = 12; sx < w - 12; sx += 32) {
-        const sLen = 8 + ((seed + sx) % 11);
+    // 6. Jagged Underside & Carved Stone Corbels (if not floor)
+    if (y + h < 1480 && h <= 60) {
+      ctx.fillStyle = '#110b1a';
+      for (let sx = 14; sx < w - 14; sx += 40) {
         ctx.beginPath();
-        ctx.moveTo(x + sx - 5, y + h);
-        ctx.lineTo(x + sx, y + h + sLen);
-        ctx.lineTo(x + sx + 5, y + h);
+        ctx.moveTo(x + sx - 8, y + h);
+        ctx.lineTo(x + sx + 8, y + h);
+        ctx.lineTo(x + sx, y + h + 10);
         ctx.closePath();
         ctx.fill();
       }
     }
 
-    // 6. Outer border stroke for crisp pixel silhouette
-    ctx.strokeStyle = '#0d1017';
+    // 7. Outer stroke for crisp pixel definition
+    ctx.strokeStyle = '#08040d';
     ctx.lineWidth = 1.5;
     ctx.strokeRect(x, y, w, h);
 
@@ -3549,44 +4090,55 @@ class EnvironmentRenderer {
     const { x, y, w, h } = p;
     ctx.save();
 
-    // Carved gothic stone beam
+    // Weathered dark carved stone walkway
     const grad = ctx.createLinearGradient(x, y, x, y + h);
-    grad.addColorStop(0, '#3a465c');
-    grad.addColorStop(0.5, '#262f3f');
-    grad.addColorStop(1, '#1a202c');
+    grad.addColorStop(0, '#2d2242');
+    grad.addColorStop(0.5, '#1e162e');
+    grad.addColorStop(1, '#130c1e');
     ctx.fillStyle = grad;
     ctx.fillRect(x, y, w, h);
 
-    // Stone brackets (corbels) on left and right
-    ctx.fillStyle = '#1f2533';
+    // Carved gothic stone corbels (brackets) underneath on left and right
+    ctx.fillStyle = '#140c20';
     ctx.beginPath();
     ctx.moveTo(x, y + h);
-    ctx.lineTo(x, y + h + 12);
-    ctx.lineTo(x + 16, y + h);
+    ctx.lineTo(x, y + h + 14);
+    ctx.lineTo(x + 18, y + h);
     ctx.closePath();
     ctx.fill();
 
     ctx.beginPath();
     ctx.moveTo(x + w, y + h);
-    ctx.lineTo(x + w, y + h + 12);
-    ctx.lineTo(x + w - 16, y + h);
+    ctx.lineTo(x + w, y + h + 14);
+    ctx.lineTo(x + w - 18, y + h);
     ctx.closePath();
     ctx.fill();
 
-    // Upper highlight & center glowing rune line
-    ctx.fillStyle = '#55698a';
+    // Upper violet stone highlight
+    ctx.fillStyle = '#493766';
     ctx.fillRect(x, y, w, 2);
 
+    // Wrought-iron filigree balustrade railing rising above the walkway
+    ctx.strokeStyle = '#181126';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x, y - 8);
+    ctx.lineTo(x + w, y - 8);
+    ctx.stroke();
+
+    for (let rx = x + 8; rx < x + w - 4; rx += 14) {
+      ctx.beginPath();
+      ctx.moveTo(rx, y);
+      ctx.lineTo(rx, y - 8);
+      ctx.stroke();
+    }
+
+    // Subtle ambient soul runes
     const runePulse = Math.sin(time * 3 + x) * 0.15 + 0.35;
-    ctx.fillStyle = `rgba(100, 200, 255, ${runePulse})`;
-    ctx.fillRect(x + 12, y + h / 2 - 1, w - 24, 2);
+    ctx.fillStyle = `rgba(180, 100, 255, ${runePulse})`;
+    ctx.fillRect(x + 16, y + h / 2 - 1, w - 32, 2);
 
-    // Subtle moss on ledge
-    ctx.fillStyle = '#3a6e54';
-    ctx.fillRect(x + 4, y, 16, 2);
-    ctx.fillRect(x + w - 20, y, 16, 2);
-
-    ctx.strokeStyle = '#0e1219';
+    ctx.strokeStyle = '#090510';
     ctx.lineWidth = 1;
     ctx.strokeRect(x, y, w, h);
 
@@ -3597,35 +4149,50 @@ class EnvironmentRenderer {
     const { x, y, w, h } = p;
     ctx.save();
 
-    // Levitating runic slab
-    ctx.fillStyle = '#22293b';
+    // Heavy iron chains hanging from above
+    ctx.strokeStyle = '#191126';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(x + 8, y - 200);
+    ctx.lineTo(x + 8, y);
+    ctx.moveTo(x + w - 8, y - 200);
+    ctx.lineTo(x + w - 8, y);
+    ctx.stroke();
+
+    // Gothic iron-reinforced stone carriage slab
+    ctx.fillStyle = '#1c152a';
     ctx.fillRect(x, y, w, h);
-    ctx.strokeStyle = '#4b5c7e';
+    ctx.strokeStyle = '#392a54';
     ctx.lineWidth = 2;
     ctx.strokeRect(x, y, w, h);
 
-    // Glowing energy conduits
-    const pulse = Math.sin(time * 6) * 0.2 + 0.8;
-    ctx.strokeStyle = `rgba(0, 240, 255, ${0.75 * pulse})`;
+    // Side iron brackets
+    ctx.fillStyle = '#261b3a';
+    ctx.fillRect(x + 4, y - 4, 8, 4);
+    ctx.fillRect(x + w - 12, y - 4, 8, 4);
+
+    // Glowing vampire-runic conduits
+    const pulse = Math.sin(time * 5) * 0.2 + 0.8;
+    ctx.strokeStyle = `rgba(190, 70, 255, ${0.75 * pulse})`;
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(x + 6, y + h / 2);
-    ctx.lineTo(x + w - 6, y + h / 2);
+    ctx.moveTo(x + 12, y + h / 2);
+    ctx.lineTo(x + w - 12, y + h / 2);
     ctx.stroke();
 
     // Center runic glyph
     ctx.fillStyle = '#ffffff';
-    ctx.shadowColor = '#00f0ff';
+    ctx.shadowColor = '#bb44ff';
     ctx.shadowBlur = 8 * pulse;
     ctx.font = 'bold 12px monospace';
-    ctx.fillText('⚡', x + w / 2 - 5, y + h / 2 + 4);
+    ctx.fillText('❖', x + w / 2 - 6, y + h / 2 + 4);
 
     // Ethereal suspension field beneath
-    ctx.fillStyle = `rgba(0, 240, 255, ${0.15 * pulse})`;
+    ctx.fillStyle = `rgba(180, 50, 255, ${0.12 * pulse})`;
     ctx.beginPath();
     ctx.moveTo(x + 10, y + h);
     ctx.lineTo(x + w - 10, y + h);
-    ctx.lineTo(x + w / 2, y + h + 24);
+    ctx.lineTo(x + w / 2, y + h + 20);
     ctx.closePath();
     ctx.fill();
 
@@ -3730,11 +4297,11 @@ class LightingSystem {
     const lctx = this.ctx;
     const cw = this.width, ch = this.height;
 
-    // 1. Subterranean ambient darkness (deeper in boss arena)
-    const isNearArena = player.x > 5100;
-    const darknessAlpha = isNearArena ? 0.76 : 0.65;
+    // 1. Vampire City Ambient Darkness (Deep night-violet atmosphere)
+    const isNearArena = player.x > 6700;
+    const darknessAlpha = isNearArena ? 0.78 : 0.70;
     lctx.globalCompositeOperation = 'source-over';
-    lctx.fillStyle = `rgba(5, 7, 16, ${darknessAlpha})`;
+    lctx.fillStyle = `rgba(14, 8, 22, ${darknessAlpha})`;
     lctx.fillRect(0, 0, cw, ch);
 
     // 2. Cut out light sources using destination-out
@@ -3780,7 +4347,7 @@ class LightingSystem {
     // C. Boss aura
     if (boss && boss.active && !boss.dead) {
       const bFlk = Math.sin(time * 6) * 0.1;
-      addLight(boss.x + boss.w / 2, boss.y + boss.h / 2, 270, 0.85, bFlk);
+      addLight(boss.x + boss.w / 2, boss.y + boss.h / 2, 280, 0.88, bFlk);
     }
 
     // D. Projectiles
@@ -3793,14 +4360,22 @@ class LightingSystem {
       }
     }
 
-    // E. Environmental props (lanterns, crystals)
+    // E. Environmental props (streetlamps, gothic windows, chandeliers, lanterns, crystals)
     if (props) {
       for (const pr of props) {
-        if (pr.type === 'lantern') {
+        if (pr.type === 'streetlamp') {
+          const lFlk = Math.sin(time * 9 + pr.x) * 0.07;
+          addLight(pr.x, pr.y - (pr.h || 55) + 12, 150, 0.9, lFlk);
+        } else if (pr.type === 'gothicWindow') {
+          addLight(pr.x, pr.y + (pr.h || 75) / 2, 115, 0.75);
+        } else if (pr.type === 'chandelier') {
+          const cFlk = Math.sin(time * 8 + pr.x) * 0.05;
+          addLight(pr.x, pr.y + (pr.chainLen || 120) + 15, 200, 0.92, cFlk);
+        } else if (pr.type === 'lantern') {
           const lFlk = Math.sin(time * 10 + pr.x) * 0.06;
           addLight(pr.x, pr.y + 12, 120, 0.85, lFlk);
         } else if (pr.type === 'crystal') {
-          addLight(pr.x, pr.y, 70, 0.65);
+          addLight(pr.x, pr.y, 75, 0.65);
         }
       }
     }
@@ -3832,19 +4407,33 @@ class LightingSystem {
     // Pale ethereal soul light on player
     addColorGlow(player.x + player.w / 2, player.y + player.h * 0.35, 110, 'rgba(120, 200, 255, 0.14)', 'rgba(80, 140, 255, 0)');
 
+    // Environmental props colored glow
+    if (props) {
+      for (const pr of props) {
+        if (pr.type === 'streetlamp') {
+          addColorGlow(pr.x, pr.y - (pr.h || 55) + 12, 130, 'rgba(255, 170, 50, 0.25)', 'rgba(255, 110, 20, 0)');
+        } else if (pr.type === 'gothicWindow' && pr.glow) {
+          const c = pr.color === '#ff2255' ? 'rgba(255, 40, 80, 0.28)' : (pr.color === '#cc44ff' ? 'rgba(190, 60, 255, 0.25)' : 'rgba(255, 160, 40, 0.22)');
+          addColorGlow(pr.x, pr.y + (pr.h || 75) / 2, 100, c, 'rgba(200, 80, 20, 0)');
+        } else if (pr.type === 'chandelier') {
+          addColorGlow(pr.x, pr.y + (pr.chainLen || 120) + 15, 170, 'rgba(255, 150, 40, 0.24)', 'rgba(255, 70, 10, 0)');
+        }
+      }
+    }
+
     // Menacing void purple glow on boss
     if (boss && boss.active && !boss.dead) {
-      addColorGlow(boss.x + boss.w / 2, boss.y + boss.h / 2, 240, 'rgba(160, 40, 230, 0.22)', 'rgba(120, 0, 180, 0)');
+      addColorGlow(boss.x + boss.w / 2, boss.y + boss.h / 2, 250, 'rgba(170, 40, 240, 0.24)', 'rgba(120, 0, 180, 0)');
     }
 
     // 4. Draw lighting canvas to main screen
     ctx.drawImage(this.canvas, 0, 0);
 
     // 5. Cinematic Radial Vignette
-    const vigGrad = ctx.createRadialGradient(cw / 2, ch / 2, cw * 0.35, cw / 2, ch / 2, cw * 0.72);
+    const vigGrad = ctx.createRadialGradient(cw / 2, ch / 2, cw * 0.35, cw / 2, ch / 2, cw * 0.74);
     vigGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
-    vigGrad.addColorStop(0.7, 'rgba(0, 0, 0, 0.32)');
-    vigGrad.addColorStop(1, 'rgba(2, 3, 8, 0.72)');
+    vigGrad.addColorStop(0.68, 'rgba(0, 0, 0, 0.35)');
+    vigGrad.addColorStop(1, 'rgba(8, 4, 16, 0.78)');
     ctx.fillStyle = vigGrad;
     ctx.fillRect(0, 0, cw, ch);
   }
@@ -3855,11 +4444,11 @@ class LightingSystem {
 // ============================================================================
 class Background {
   constructor(levelWidth) {
-    this.levelWidth = levelWidth;
+    this.levelWidth = levelWidth || 8200;
 
-    // Celestial stars / motes in upper cavern
+    // Atmospheric night stars / celestial motes
     this.stars = [];
-    for (let i = 0; i < 75; i++) {
+    for (let i = 0; i < 85; i++) {
       this.stars.push({
         x: rand(0, CANVAS_W),
         y: rand(0, CANVAS_H * 0.55),
@@ -3869,128 +4458,157 @@ class Background {
       });
     }
 
-    // Atmospheric floating spores
+    // Atmospheric floating embers / violet spores
     this.spores = [];
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < 45; i++) {
       this.spores.push({
         x: rand(0, CANVAS_W),
         y: rand(40, CANVAS_H - 40),
-        vx: rand(-12, -28),
+        vx: rand(-10, -25),
         vy: rand(-4, 4),
         size: rand(1.5, 3.5),
         phase: rand(0, Math.PI * 2),
-        color: Math.random() < 0.6 ? '#66ddff' : (Math.random() < 0.5 ? '#b854ff' : '#ffaa44')
+        color: Math.random() < 0.5 ? '#b854ff' : (Math.random() < 0.6 ? '#66ddff' : '#ffaa44')
       });
     }
 
-    // Layer 1: Distant Gothic Cathedral Ruins (Parallax 0.14)
+    // Volumetric purple clouds drifting across sky
+    this.clouds = [];
+    for (let i = 0; i < 12; i++) {
+      this.clouds.push({
+        x: rand(0, CANVAS_W * 1.5),
+        y: rand(40, CANVAS_H * 0.45),
+        w: rand(180, 360),
+        h: rand(60, 110),
+        speed: rand(4, 12),
+        alpha: rand(0.18, 0.38)
+      });
+    }
+
+    // Layer 1: Distant Gothic Skyline & Cathedral Spires (Parallax X: 0.12, Parallax Y: 0.10)
     this.distantSpires = [];
-    const numSpires = 16;
+    const numSpires = 32;
     for (let i = 0; i < numSpires; i++) {
       this.distantSpires.push({
-        x: (this.levelWidth / numSpires) * i + rand(-120, 120),
-        h: rand(320, 560),
-        w: rand(120, 260),
-        spireH: rand(80, 160),
-        type: i % 3 // 0: twin spires, 1: grand dome/arch, 2: ruined buttress tower
+        x: (this.levelWidth / numSpires) * i + rand(-100, 100),
+        h: rand(420, 680),
+        w: rand(140, 280),
+        spireH: rand(120, 220),
+        type: i % 4 // 0: twin needle spires, 1: grand cathedral dome, 2: stepped buttress, 3: needle tower with cross
       });
     }
 
-    // Layer 2: Mid-distance Subterranean Arches & Aqueducts (Parallax 0.32)
+    // Layer 2: Mid-distance Gothic Viaducts & Arched Bridges (Parallax X: 0.28, Parallax Y: 0.22)
     this.midArches = [];
-    const numArches = 20;
+    const numArches = 28;
     for (let i = 0; i < numArches; i++) {
       this.midArches.push({
-        x: (this.levelWidth / numArches) * i + rand(-100, 100),
-        h: rand(240, 420),
-        w: rand(160, 320),
-        pillarW: rand(28, 48),
-        hasWindow: Math.random() < 0.6,
-        hasChain: Math.random() < 0.4
+        x: (this.levelWidth / numArches) * i + rand(-80, 80),
+        h: rand(300, 520),
+        w: rand(200, 380),
+        pillarW: rand(32, 54),
+        hasWindow: Math.random() < 0.7,
+        hasGargoyle: Math.random() < 0.4,
+        windowColor: Math.random() < 0.8 ? '#ffaa33' : '#ff4466'
       });
     }
 
-    // Layer 3: Near Cavern Rock Columns (Parallax 0.52)
+    // Layer 3: Closer City Skyline - Gables, Chimneys & Battlements (Parallax X: 0.48, Parallax Y: 0.38)
     this.nearColumns = [];
-    const numColumns = 18;
+    const numColumns = 26;
     for (let i = 0; i < numColumns; i++) {
       this.nearColumns.push({
-        x: (this.levelWidth / numColumns) * i + rand(-80, 80),
-        h: rand(180, 340),
-        w: rand(40, 80),
-        stalactiteLen: rand(40, 100)
+        x: (this.levelWidth / numColumns) * i + rand(-60, 60),
+        h: rand(220, 440),
+        w: rand(80, 160),
+        roofH: rand(60, 120),
+        hasFinial: Math.random() < 0.6
       });
     }
   }
 
   draw(ctx, camera, time) {
-    // 1. Deep Cavern Sky Gradient
+    // 1. Deep Midnight-Violet Vampire Sky Gradient (Strictly matching reference image)
     const skyGrad = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
-    skyGrad.addColorStop(0, '#020308');
-    skyGrad.addColorStop(0.35, '#070b16');
-    skyGrad.addColorStop(0.7, '#0d1526');
-    skyGrad.addColorStop(1, '#151d32');
+    skyGrad.addColorStop(0, '#080410');
+    skyGrad.addColorStop(0.3, '#140924');
+    skyGrad.addColorStop(0.65, '#2b1442');
+    skyGrad.addColorStop(1, '#3d1a58');
     ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-    // 2. Fractured Ethereal Eclipse / Abyssal Moon
-    const moonX = CANVAS_W * 0.72 - camera.x * 0.02;
-    const moonY = 120 - camera.y * 0.02;
+    // 2. Volumetric Mauve/Purple Storm Clouds drifting in background
+    for (const cl of this.clouds) {
+      const cx = ((cl.x - time * cl.speed - camera.x * 0.04) % (CANVAS_W + cl.w * 2)) - cl.w;
+      const cy = cl.y - camera.y * 0.03;
+      ctx.fillStyle = `rgba(55, 25, 82, ${cl.alpha})`;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, cl.w * 0.5, cl.h * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(cx + cl.w * 0.25, cy - cl.h * 0.2, cl.w * 0.35, cl.h * 0.4, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
-    // Radiant outer halo
-    const halo = ctx.createRadialGradient(moonX, moonY, 15, moonX, moonY, 110);
-    halo.addColorStop(0, 'rgba(80, 140, 240, 0.28)');
-    halo.addColorStop(0.5, 'rgba(50, 90, 190, 0.12)');
-    halo.addColorStop(1, 'rgba(10, 20, 60, 0)');
+    // 3. Eerie Pale Bloodmoon breaking through the storm clouds
+    const moonX = CANVAS_W * 0.68 - camera.x * 0.02;
+    const moonY = 130 - camera.y * 0.02;
+
+    // Radiant outer lavender/mauve halo
+    const halo = ctx.createRadialGradient(moonX, moonY, 15, moonX, moonY, 130);
+    halo.addColorStop(0, 'rgba(180, 140, 240, 0.30)');
+    halo.addColorStop(0.4, 'rgba(120, 60, 180, 0.16)');
+    halo.addColorStop(1, 'rgba(30, 10, 50, 0)');
     ctx.fillStyle = halo;
     ctx.beginPath();
-    ctx.arc(moonX, moonY, 110, 0, Math.PI * 2);
+    ctx.arc(moonX, moonY, 130, 0, Math.PI * 2);
     ctx.fill();
 
-    // Dark lunar sphere with glowing rim
-    ctx.fillStyle = '#060814';
+    // Pale moon sphere
+    ctx.fillStyle = '#1c152a';
     ctx.beginPath();
-    ctx.arc(moonX, moonY, 44, 0, Math.PI * 2);
+    ctx.arc(moonX, moonY, 46, 0, Math.PI * 2);
     ctx.fill();
 
-    // Glowing crescent rim & fractures
-    ctx.strokeStyle = '#88ccee';
-    ctx.lineWidth = 2.5;
-    ctx.shadowColor = '#66bbee';
-    ctx.shadowBlur = 12;
+    // Glowing lunar crescent rim
+    ctx.strokeStyle = '#dfccff';
+    ctx.lineWidth = 3;
+    ctx.shadowColor = '#b888ff';
+    ctx.shadowBlur = 14;
     ctx.beginPath();
-    ctx.arc(moonX, moonY, 44, -Math.PI * 0.65, Math.PI * 0.45);
+    ctx.arc(moonX, moonY, 46, -Math.PI * 0.7, Math.PI * 0.4);
     ctx.stroke();
 
-    // Fracture lines across the dark face
+    // Lunar crater fractures
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(moonX - 20, moonY - 15);
-    ctx.lineTo(moonX, moonY + 5);
-    ctx.lineTo(moonX + 18, moonY - 2);
+    ctx.moveTo(moonX - 22, moonY - 14);
+    ctx.lineTo(moonX - 2, moonY + 6);
+    ctx.lineTo(moonX + 16, moonY - 2);
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    // 3. Twinkling celestial motes/stars in upper cavern
+    // 4. Twinkling celestial motes/stars in upper cavern/sky
     for (const s of this.stars) {
       const a = 0.3 + 0.7 * Math.abs(Math.sin(time * s.speed + s.blink));
-      ctx.fillStyle = `rgba(180, 210, 255, ${a})`;
+      ctx.fillStyle = `rgba(220, 200, 255, ${a})`;
       ctx.fillRect(s.x, s.y, s.size, s.size);
     }
 
-    // 4. Layer 1: Distant Gothic Cathedral Spires (Parallax 0.14)
-    ctx.fillStyle = '#0a1024';
+    // 5. Layer 1: Distant Gothic Spires & Cathedral Towers (Parallax X: 0.12, Parallax Y: 0.10)
+    ctx.fillStyle = '#120822';
+    const baseY1 = CANVAS_H * 0.90 - camera.y * 0.10;
     for (const d of this.distantSpires) {
-      const sx = d.x - camera.x * 0.14;
-      if (sx + d.w < -100 || sx - d.w > CANVAS_W + 100) continue;
+      const sx = d.x - camera.x * 0.12;
+      if (sx + d.w < -120 || sx - d.w > CANVAS_W + 120) continue;
 
+      const baseTop = baseY1 - d.h;
       ctx.beginPath();
-      const baseTop = CANVAS_H - d.h;
-      ctx.fillRect(sx - d.w / 2, baseTop, d.w, d.h);
+      ctx.fillRect(sx - d.w / 2, baseTop, d.w, d.h + 200);
 
       // Gothic spires
       if (d.type === 0) {
-        // Twin slender spires
+        // Twin needle spires
         ctx.moveTo(sx - d.w * 0.35, baseTop);
         ctx.lineTo(sx - d.w * 0.25, baseTop - d.spireH);
         ctx.lineTo(sx - d.w * 0.15, baseTop);
@@ -3998,81 +4616,117 @@ class Background {
         ctx.lineTo(sx + d.w * 0.25, baseTop - d.spireH);
         ctx.lineTo(sx + d.w * 0.35, baseTop);
       } else if (d.type === 1) {
-        // Massive grand cathedral dome & center needle
+        // Grand cathedral dome & central pinnacle
         ctx.arc(sx, baseTop, d.w * 0.35, Math.PI, 0);
         ctx.moveTo(sx - 8, baseTop - d.w * 0.35);
-        ctx.lineTo(sx, baseTop - d.spireH - 20);
+        ctx.lineTo(sx, baseTop - d.spireH - 30);
         ctx.lineTo(sx + 8, baseTop - d.w * 0.35);
-      } else {
-        // Stepped ruined tower
+      } else if (d.type === 2) {
+        // Stepped buttress tower
         ctx.moveTo(sx - d.w / 2, baseTop);
-        ctx.lineTo(sx, baseTop - d.spireH * 0.7);
+        ctx.lineTo(sx, baseTop - d.spireH * 0.8);
         ctx.lineTo(sx + d.w / 2, baseTop);
+      } else {
+        // Slender needle tower with cathedral cross
+        ctx.moveTo(sx - d.w * 0.25, baseTop);
+        ctx.lineTo(sx, baseTop - d.spireH);
+        ctx.lineTo(sx + d.w * 0.25, baseTop);
+        // Cross finial
+        ctx.rect(sx - 1.5, baseTop - d.spireH - 14, 3, 14);
+        ctx.rect(sx - 6, baseTop - d.spireH - 10, 12, 3);
       }
       ctx.fill();
     }
 
-    // Volumetric fog over layer 1
-    const fog1 = ctx.createLinearGradient(0, CANVAS_H * 0.65, 0, CANVAS_H);
-    fog1.addColorStop(0, 'rgba(10, 16, 36, 0)');
-    fog1.addColorStop(1, 'rgba(12, 18, 40, 0.65)');
+    // Atmospheric violet haze over Layer 1
+    const fog1 = ctx.createLinearGradient(0, CANVAS_H * 0.60, 0, CANVAS_H);
+    fog1.addColorStop(0, 'rgba(28, 12, 45, 0)');
+    fog1.addColorStop(1, 'rgba(38, 16, 58, 0.65)');
     ctx.fillStyle = fog1;
-    ctx.fillRect(0, CANVAS_H * 0.65, CANVAS_W, CANVAS_H * 0.35);
+    ctx.fillRect(0, CANVAS_H * 0.60, CANVAS_W, CANVAS_H * 0.40);
 
-    // 5. Layer 2: Subterranean Arches & Aqueducts (Parallax 0.32)
-    ctx.fillStyle = '#121a35';
+    // 6. Layer 2: Mid-distance Gothic Viaducts & Arched Bridges (Parallax X: 0.28, Parallax Y: 0.22)
+    ctx.fillStyle = '#1a0d30';
+    const baseY2 = CANVAS_H * 0.95 - camera.y * 0.22;
     for (const a of this.midArches) {
-      const sx = a.x - camera.x * 0.32;
-      if (sx + a.w < -100 || sx - a.w > CANVAS_W + 100) continue;
+      const sx = a.x - camera.x * 0.28;
+      if (sx + a.w < -120 || sx - a.w > CANVAS_W + 120) continue;
 
-      const topY = CANVAS_H - a.h;
-      // Main arch structure
+      const topY = baseY2 - a.h;
+      // Main viaduct bridge arch
       ctx.beginPath();
-      ctx.moveTo(sx - a.w / 2, CANVAS_H);
+      ctx.moveTo(sx - a.w / 2, baseY2 + 200);
       ctx.lineTo(sx - a.w / 2, topY);
       ctx.lineTo(sx + a.w / 2, topY);
-      ctx.lineTo(sx + a.w / 2, CANVAS_H);
-      ctx.lineTo(sx + a.w / 2 - a.pillarW, CANVAS_H);
-      ctx.lineTo(sx + a.w / 2 - a.pillarW, topY + a.h * 0.4);
-      ctx.quadraticCurveTo(sx, topY + a.h * 0.15, sx - a.w / 2 + a.pillarW, topY + a.h * 0.4);
-      ctx.lineTo(sx - a.w / 2 + a.pillarW, CANVAS_H);
+      ctx.lineTo(sx + a.w / 2, baseY2 + 200);
+      ctx.lineTo(sx + a.w / 2 - a.pillarW, baseY2 + 200);
+      ctx.lineTo(sx + a.w / 2 - a.pillarW, topY + a.h * 0.45);
+      ctx.quadraticCurveTo(sx, topY + a.h * 0.18, sx - a.w / 2 + a.pillarW, topY + a.h * 0.45);
+      ctx.lineTo(sx - a.w / 2 + a.pillarW, baseY2 + 200);
       ctx.closePath();
       ctx.fill();
 
-      // Gothic window cutout
+      // Glowing warm lancet window inside the mid tower
       if (a.hasWindow) {
-        ctx.fillStyle = '#080d1d';
+        ctx.fillStyle = a.windowColor;
+        ctx.shadowColor = a.windowColor;
+        ctx.shadowBlur = 6;
         ctx.beginPath();
-        const winX = sx, winY = topY + 25, winW = 18, winH = 42;
+        const winX = sx, winY = topY + 28, winW = 16, winH = 36;
         ctx.moveTo(winX - winW / 2, winY + winH);
-        ctx.lineTo(winX - winW / 2, winY + 12);
-        ctx.quadraticCurveTo(winX, winY, winX + winW / 2, winY + 12);
+        ctx.lineTo(winX - winW / 2, winY + 10);
+        ctx.quadraticCurveTo(winX, winY, winX + winW / 2, winY + 10);
         ctx.lineTo(winX + winW / 2, winY + winH);
         ctx.closePath();
         ctx.fill();
-        ctx.fillStyle = '#121a35';
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#1a0d30';
+      }
+
+      // Perched silhouette gargoyle on bridge cornice
+      if (a.hasGargoyle) {
+        ctx.fillStyle = '#140a24';
+        ctx.beginPath();
+        const gx = sx - a.w * 0.35, gy = topY;
+        ctx.ellipse(gx, gy - 8, 6, 5, 0, 0, Math.PI * 2); // body
+        ctx.moveTo(gx - 4, gy - 12); ctx.lineTo(gx - 12, gy - 20); ctx.lineTo(gx - 8, gy - 6); // wing
+        ctx.fill();
+        ctx.fillStyle = '#1a0d30';
       }
     }
 
-    // 6. Layer 3: Near Cavern Pillars & Ceiling Stalactites (Parallax 0.52)
-    ctx.fillStyle = '#162242';
+    // 7. Layer 3: Closer City Skyline - Steep Gables, Chimneys & Battlements (Parallax X: 0.48, Parallax Y: 0.38)
+    ctx.fillStyle = '#241240';
+    const baseY3 = CANVAS_H * 1.05 - camera.y * 0.38;
     for (const c of this.nearColumns) {
-      const sx = c.x - camera.x * 0.52;
-      if (sx + c.w < -80 || sx - c.w > CANVAS_W + 80) continue;
+      const sx = c.x - camera.x * 0.48;
+      if (sx + c.w < -100 || sx - c.w > CANVAS_W + 100) continue;
 
-      // Ground column rising up
-      ctx.fillRect(sx - c.w / 2, CANVAS_H - c.h, c.w, c.h);
+      const topY = baseY3 - c.h;
+      // Building facade
+      ctx.fillRect(sx - c.w / 2, topY, c.w, c.h + 200);
 
-      // Ceiling stalactite hanging down
+      // Steep slate roof gable
       ctx.beginPath();
-      ctx.moveTo(sx - c.w * 0.4, 0);
-      ctx.lineTo(sx, c.stalactiteLen);
-      ctx.lineTo(sx + c.w * 0.4, 0);
+      ctx.moveTo(sx - c.w / 2 - 6, topY);
+      ctx.lineTo(sx, topY - c.roofH);
+      ctx.lineTo(sx + c.w / 2 + 6, topY);
       ctx.closePath();
       ctx.fill();
+
+      // Chimney stack & finial
+      if (c.hasFinial) {
+        ctx.fillRect(sx + c.w * 0.25 - 4, topY - c.roofH * 0.6 - 16, 8, 16);
+        ctx.beginPath();
+        ctx.moveTo(sx, topY - c.roofH);
+        ctx.lineTo(sx, topY - c.roofH - 18);
+        ctx.strokeStyle = '#241240';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
     }
 
-    // 7. Ambient Drifting Spores / Dust Motes
+    // 8. Ambient Drifting Embers / Spores
     for (const sp of this.spores) {
       sp.x += sp.vx * 0.016;
       sp.y += Math.sin(time * 2 + sp.phase) * 0.4;
@@ -4088,13 +4742,14 @@ class Background {
     }
     ctx.globalAlpha = 1.0;
 
-    // 8. Low-lying Volumetric Mist
-    const mistGrad = ctx.createLinearGradient(0, CANVAS_H * 0.72, 0, CANVAS_H);
-    mistGrad.addColorStop(0, 'rgba(16, 25, 48, 0)');
-    mistGrad.addColorStop(0.6, 'rgba(20, 32, 60, 0.35)');
-    mistGrad.addColorStop(1, 'rgba(15, 24, 45, 0.7)');
+    // 9. Volumetric Purple Mist in low canyon areas (Strictly matching reference image)
+    const mistY = Math.max(CANVAS_H * 0.62, CANVAS_H * 0.78 - camera.y * 0.25);
+    const mistGrad = ctx.createLinearGradient(0, mistY, 0, CANVAS_H);
+    mistGrad.addColorStop(0, 'rgba(38, 16, 58, 0)');
+    mistGrad.addColorStop(0.5, 'rgba(48, 20, 72, 0.40)');
+    mistGrad.addColorStop(1, 'rgba(40, 16, 62, 0.82)');
     ctx.fillStyle = mistGrad;
-    ctx.fillRect(0, CANVAS_H * 0.72, CANVAS_W, CANVAS_H * 0.28);
+    ctx.fillRect(0, mistY, CANVAS_W, CANVAS_H - mistY);
   }
 }
 
