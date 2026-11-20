@@ -202,18 +202,134 @@ class AudioEngine {
       bossThrustGlint: 'assets/sounds/boss_thrust_glint.wav',
       bossVoidCharge: 'assets/sounds/boss_void_charge.wav',
     };
+
+    // Background Music Tracks
+    this.musicTracks = {
+      level: 'MUS_Ambient_ForgottenSouls.wav',
+      boss: 'short_The Enchanting Haunted Ballroom.mp3',
+    };
+    this.musicElements = {};
+    this.currentMusicKey = null;
+    this.targetMusicKey = null;
+    this.musicVolumes = { level: 0, boss: 0 };
+    this.musicTargets = { level: 0, boss: 0 };
+    this.maxMusicVolumes = { level: 0.45, boss: 0.55 };
+    this.musicCrossfadeSpeed = 0.9;
+    this.musicStarted = false;
+
+    if (typeof window !== 'undefined' && window.addEventListener) {
+      const unlockAudio = () => {
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+        if (this.targetMusicKey) {
+          const el = this._getMusicElement(this.targetMusicKey);
+          if (el && el.paused) {
+            el.play().catch(() => {});
+          }
+        }
+      };
+      window.addEventListener('click', unlockAudio, { passive: true });
+      window.addEventListener('keydown', unlockAudio, { passive: true });
+      window.addEventListener('touchstart', unlockAudio, { passive: true });
+    }
+
     this.preload();
+  }
+
+  _getMusicElement(key) {
+    if (typeof Audio === 'undefined') return null;
+    if (!this.musicElements[key] && this.musicTracks[key]) {
+      try {
+        const audio = new Audio(this.musicTracks[key]);
+        audio.loop = true;
+        audio.volume = 0;
+        audio.preload = 'auto';
+        this.musicElements[key] = audio;
+      } catch (e) {
+        // Safe fallback
+      }
+    }
+    return this.musicElements[key];
+  }
+
+  playLevelMusic() {
+    this.switchMusic('level');
+  }
+
+  playBossMusic() {
+    this.switchMusic('boss');
+  }
+
+  stopMusic() {
+    this.switchMusic(null);
+  }
+
+  switchMusic(key) {
+    if (!this.enabled) return;
+    this.targetMusicKey = key;
+    this.musicStarted = true;
+
+    if (key) {
+      const el = this._getMusicElement(key);
+      if (el) {
+        if (el.paused) {
+          el.play().catch(() => {});
+        }
+      }
+      this.musicTargets[key] = this.maxMusicVolumes[key] || 0.5;
+    }
+
+    for (const k of Object.keys(this.musicTracks)) {
+      if (k !== key) {
+        this.musicTargets[k] = 0;
+      }
+    }
+  }
+
+  update(dt = 0.016) {
+    if (!this.enabled || !this.musicStarted) return;
+    for (const [k, el] of Object.entries(this.musicElements)) {
+      if (!el) continue;
+      const target = this.musicTargets[k] || 0;
+      let cur = this.musicVolumes[k] || 0;
+      if (Math.abs(cur - target) > 0.005) {
+        cur = lerp(cur, target, Math.min(1.0, this.musicCrossfadeSpeed * 2.5 * dt));
+        this.musicVolumes[k] = cur;
+        try {
+          el.volume = clamp(cur, 0, 1);
+        } catch (e) {}
+      } else {
+        cur = target;
+        this.musicVolumes[k] = cur;
+        try {
+          el.volume = clamp(cur, 0, 1);
+          if (cur <= 0.005 && !el.paused) {
+            el.pause();
+            if (k === 'boss') {
+              el.currentTime = 0; // Rewind boss music for dramatic intro
+            }
+          }
+        } catch (e) {}
+      }
+    }
   }
 
   preload() {
     try {
-      if (!this.ctx) {
-        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-        this.masterGain = this.ctx.createGain();
-        this.masterGain.gain.value = 0.35;
-        this.masterGain.connect(this.ctx.destination);
+      if (typeof window !== 'undefined' && !this.ctx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          this.ctx = new AudioCtx();
+          this.masterGain = this.ctx.createGain();
+          this.masterGain.gain.value = 0.35;
+          this.masterGain.connect(this.ctx.destination);
+        }
       }
       this.loadSounds();
+      // Preload music elements
+      this._getMusicElement('level');
+      this._getMusicElement('boss');
     } catch (e) {
       console.warn('AudioContext preloading skipped:', e);
     }
@@ -221,17 +337,26 @@ class AudioEngine {
 
   init() {
     try {
-      if (!this.ctx) {
-        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-        this.masterGain = this.ctx.createGain();
-        this.masterGain.gain.value = 0.35;
-        this.masterGain.connect(this.ctx.destination);
+      if (typeof window !== 'undefined' && !this.ctx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          this.ctx = new AudioCtx();
+          this.masterGain = this.ctx.createGain();
+          this.masterGain.gain.value = 0.35;
+          this.masterGain.connect(this.ctx.destination);
+        }
       }
-      if (this.ctx.state === 'suspended') {
+      if (this.ctx && this.ctx.state === 'suspended') {
         this.ctx.resume();
       }
       if (!this.loaded && !this.loading) {
         this.loadSounds();
+      }
+      if (this.targetMusicKey) {
+        const el = this._getMusicElement(this.targetMusicKey);
+        if (el && el.paused) {
+          el.play().catch(() => {});
+        }
       }
     } catch (e) {
       this.enabled = false;
@@ -6576,6 +6701,7 @@ class Game {
     this.particles.clear(); this.projectiles = [];
     this.bossActivated = false; this.freezeFrame = 0;
     this.gameState = STATE.PLAYING;
+    this.audio.playLevelMusic();
   }
 
   _respawnAtBonfire() {
@@ -6590,12 +6716,15 @@ class Game {
     this.projectiles = []; this.particles.clear();
     this.camera.x = this.player.x - CANVAS_W / (2 * CAMERA_ZOOM); this.camera.y = this.player.y - CANVAS_H / (2 * CAMERA_ZOOM);
     this.gameState = STATE.PLAYING;
+    this.audio.playLevelMusic();
   }
 
   _loop(timestamp) {
     const dt = Math.min((timestamp - this.lastTime) / 1000, 0.05);
     this.lastTime = timestamp; this.time += dt;
     this.input.update();
+
+    if (this.audio && this.audio.update) this.audio.update(dt);
 
     if (this.freezeFrame > 0) { this.freezeFrame -= dt; requestAnimationFrame(t => this._loop(t)); return; }
 
@@ -6780,6 +6909,7 @@ class Game {
         this.level.gateClosed = true;
         this.boss.activate(this.level.bossArena, this.audio);
         this.camera.shake(8, 0.5);
+        this.audio.playBossMusic();
       }
     }
 
@@ -6846,7 +6976,11 @@ class Game {
           this.boss.takeDamage(proj.damage, proj.vx > 0 ? 1 : -1, this.particles, this.camera, this.audio);
           proj.dead = true;
           this.particles.sparks(proj.x, proj.y);
-          if (this.boss.dead) { this.player.soul = this.player.maxSoul; setTimeout(() => { this.gameState = STATE.WIN; }, 1500); }
+          if (this.boss.dead) {
+            this.player.soul = this.player.maxSoul;
+            this.audio.playLevelMusic();
+            setTimeout(() => { this.gameState = STATE.WIN; }, 1500);
+          }
         }
       }
     }
@@ -6935,6 +7069,7 @@ class Game {
 
         if (isBoss && target.dead) {
           p.soul = p.maxSoul;
+          this.audio.playLevelMusic();
           setTimeout(() => { this.gameState = STATE.WIN; }, 1500);
         }
       };
@@ -7162,5 +7297,5 @@ if (typeof window !== 'undefined' && window.addEventListener) {
   window.addEventListener('load', () => { new Game(); });
 }
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { Player, Enemy, Boss, Particle, ParticleSystem, Projectile, WEAPONS };
+  module.exports = { Player, Enemy, Boss, Particle, ParticleSystem, Projectile, WEAPONS, AudioEngine, Game };
 }
