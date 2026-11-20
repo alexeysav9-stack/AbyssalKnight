@@ -1,0 +1,10 @@
+{
+  "name": "abyssal-knight",
+  "version": "1.0.0",
+  "description": "2D Action Platformer",
+  "scripts": {
+    "start": "npx serve -l 3000 .",
+    "generate-sounds": "python3 scripts/generate_sounds.py"
+  }
+}
+
