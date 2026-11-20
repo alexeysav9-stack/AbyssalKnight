@@ -651,6 +651,16 @@ class ParticleSystem {
       this.add(new Particle(x, y, Math.cos(a) * s, Math.sin(a) * s, rand(0.12, 0.28), c, rand(2, 4), 160, true));
     }
   }
+  stoneCrumble(x, y) {
+    for (let i = 0; i < 20; i++) {
+      const a = rand(0, Math.PI * 2), s = rand(60, 220);
+      const col = ['#1e293b', '#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1'][randInt(0, 5)];
+      this.add(new Particle(x, y, Math.cos(a) * s, Math.sin(a) * s - 30, rand(0.35, 0.8), col, rand(3, 6), 360, true));
+    }
+    for (let i = 0; i < 8; i++) {
+      this.add(new Particle(x + rand(-10, 10), y + rand(-10, 10), rand(-40, 40), rand(-50, -10), rand(0.2, 0.5), '#94a3b8', rand(2, 4), 180));
+    }
+  }
   soulBurst(x, y) { for (let i = 0; i < 12; i++) { const a = rand(0, Math.PI * 2), s = rand(40, 120); this.add(new Particle(x, y, Math.cos(a) * s, Math.sin(a) * s, rand(0.6, 1.5), '#66ddff', rand(3, 6), -50, true, 'soul')); } }
   dashTrail(x, y, w, h, f) { for (let i = 0; i < 3; i++) this.add(new Particle(x + rand(0, w), y + rand(0, h), -f * rand(10, 40), rand(-20, 20), rand(0.1, 0.25), 'rgba(100,200,255,0.6)', rand(4, 8), 0)); }
   shockwave(x, y, dir) { for (let i = 0; i < 15; i++) this.add(new Particle(x + dir * i * 20, y - 5, dir * rand(60, 150), rand(-80, -20), rand(0.3, 0.6), '#ffaa44', rand(3, 6), 300)); }
@@ -820,8 +830,8 @@ class Projectile {
     if (this.type === 'fireball') particles.fireballTrail(this.x, this.y);
     if (this.type === 'shadowbolt') particles.shadowTrail(this.x, this.y);
     if (this.type === 'acid_spit') {
-      if (Math.random() < 0.4) {
-        particles.add(new Particle(this.x + this.w / 2, this.y + this.h / 2, rand(-15, 15), rand(-15, 15), 0.2, this.reflected ? '#55ccff' : '#66ff33', rand(2, 4), 0, true));
+      if (Math.random() < 0.45) {
+        particles.add(new Particle(this.x + this.w / 2, this.y + this.h / 2, rand(-15, 15), rand(-15, 15), 0.2, this.reflected ? '#38bdf8' : '#c084fc', rand(2, 4), 0, true));
       }
     }
     if (this.type === 'void_wave') {
@@ -856,12 +866,23 @@ class Projectile {
       ctx.fillStyle = '#cc77ff';
       ctx.beginPath(); ctx.arc(this.x + this.w / 2, this.y + this.h / 2, 3, 0, Math.PI * 2); ctx.fill();
     } else if (this.type === 'acid_spit') {
-      ctx.fillStyle = this.reflected ? '#33aaff' : '#55dd22';
-      ctx.shadowColor = this.reflected ? '#66ccff' : '#88ff33';
-      ctx.shadowBlur = 8;
-      ctx.beginPath(); ctx.arc(this.x + this.w / 2, this.y + this.h / 2, 6, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath(); ctx.arc(this.x + this.w / 2, this.y + this.h / 2, 2.5, 0, Math.PI * 2); ctx.fill();
+      const px = this.x + this.w / 2, py = this.y + this.h / 2;
+      const glow = this.reflected ? '#38bdf8' : '#a855f7';
+      ctx.fillStyle = this.reflected ? '#00f0ff' : '#9333ea';
+      ctx.shadowColor = glow;
+      ctx.shadowBlur = 10;
+      // Diamond stone shard
+      ctx.beginPath();
+      ctx.moveTo(px + 7, py);
+      ctx.lineTo(px, py - 5);
+      ctx.lineTo(px - 7, py);
+      ctx.lineTo(px, py + 5);
+      ctx.closePath();
+      ctx.fill();
+      // Weathered stone core
+      ctx.fillStyle = this.reflected ? '#ffffff' : '#cbd5e1';
+      ctx.fillRect(px - 2.5, py - 2.5, 5, 5);
+      ctx.shadowBlur = 0;
     } else if (this.type === 'void_wave') {
       ctx.fillStyle = '#9922ee';
       ctx.shadowColor = '#cc44ff';
@@ -2741,8 +2762,14 @@ class Enemy {
     camera.shake(4, 0.15);
     audio.hit();
     particles.sparks(this.x + this.w / 2, this.y + this.h / 2);
+    if (this.type === 'flyer' || this.type === 'crawler') {
+      particles.dustLand(this.x + this.w / 2, this.y + this.h / 2);
+    }
     if (this.hp <= 0) {
       this.dead = true;
+      if (this.type === 'flyer' || this.type === 'crawler') {
+        if (particles.stoneCrumble) particles.stoneCrumble(this.x + this.w / 2, this.y + this.h / 2);
+      }
       particles.soulBurst(this.x + this.w / 2, this.y + this.h / 2);
       audio.enemyDeath();
     }
@@ -2940,145 +2967,222 @@ class Enemy {
     const cx = x + this.w / 2;
     ctx.translate(cx, 0); ctx.scale(this.facing, 1); ctx.translate(-cx, 0);
 
-    // Gothic Belfry Gargoyle palette
-    const bodyBase = isFlashing ? '#ffffff' : (isAiming ? '#3b124d' : '#231238');
-    const bodyPlate = isFlashing ? '#ffffff' : (isAiming ? '#5b2278' : '#3f1f61');
-    const wingBone = isFlashing ? '#ffffff' : '#6b2d8f';
-    const wingWeb = isFlashing ? '#ffffff' : '#8a3cb8';
+    // Weathered Cathedral Stone & Granite Palette
+    const stoneDark = isFlashing ? '#ffffff' : (isAiming ? '#27303f' : '#1e2634');
+    const stoneBase = isFlashing ? '#ffffff' : (isAiming ? '#3a4454' : '#334155');
+    const stonePlate = isFlashing ? '#ffffff' : (isAiming ? '#525e73' : '#475569');
+    const stoneHighlight = isFlashing ? '#ffffff' : (isAiming ? '#73829c' : '#64748b');
+    const stoneBevel = isFlashing ? '#ffffff' : '#94a3b8';
+    const runeEnergy = isFlashing ? '#ffffff' : '#c084fc';
 
-    // Bat Wing Flap Kinematics (Dual-wave kinematics)
-    const flapSpeed = isDiving ? 24 : isAiming ? 18 : 11;
+    // Stone Gargoyle Heavy Wing Kinematics
+    const flapSpeed = isDiving ? 22 : isAiming ? 16 : 9;
     const flapWave = Math.sin(this.animTimer * flapSpeed);
-    const wingYOff = flapWave * 8;
+    const wingYOff = flapWave * 7.5;
+    const hoverBob = Math.sin(this.animTimer * 2.8) * 2;
 
-    // 1. Clutches & Barbed Tail
-    ctx.strokeStyle = bodyPlate;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(cx, y + 20);
-    ctx.quadraticCurveTo(cx - 8, y + 26, cx - 12 + flapWave * 2, y + 30);
-    ctx.stroke();
-    // Tail barb
-    ctx.fillStyle = bodyPlate;
-    ctx.beginPath();
-    ctx.moveTo(cx - 12 + flapWave * 2, y + 30);
-    ctx.lineTo(cx - 15 + flapWave * 2, y + 27);
-    ctx.lineTo(cx - 15 + flapWave * 2, y + 33);
-    ctx.closePath();
-    ctx.fill();
-
-    // Clutched talons
-    ctx.fillStyle = isFlashing ? '#ffffff' : '#94a3b8';
-    ctx.fillRect(cx - 4, y + 22, 3, 4);
-    ctx.fillRect(cx + 1, y + 22, 3, 4);
-
-    // 2. Articulated Leathery Bat Wings (Scalloped gothic sails)
-    if (isDiving && this.state === 'dive') {
-      // Swept-back aerodynamic delta wings during dive!
-      ctx.fillStyle = wingWeb;
-      ctx.strokeStyle = wingBone;
-      ctx.lineWidth = 2;
-
+    // 1. Back Stone Wing (Articulated Cathedral Wing Slabs)
+    if (!isDiving || this.state === 'dive_windup') {
+      ctx.fillStyle = stoneDark;
+      ctx.strokeStyle = stoneBase;
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.moveTo(cx - 2, y + 10);
-      ctx.lineTo(cx - 22, y - 6);
-      ctx.lineTo(cx - 14, y + 6);
-      ctx.lineTo(cx - 4, y + 16);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(cx + 2, y + 10);
-      ctx.lineTo(cx + 22, y - 6);
-      ctx.lineTo(cx + 14, y + 6);
-      ctx.lineTo(cx + 4, y + 16);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-    } else {
-      // Normal soaring / hovering bat wings with articulated joints
-      ctx.fillStyle = wingWeb;
-      ctx.strokeStyle = wingBone;
-      ctx.lineWidth = 2;
-
-      // Left (back) Wing
-      ctx.beginPath();
-      ctx.moveTo(cx - 4, y + 12);
-      ctx.lineTo(cx - 18, y + 2 + wingYOff);
-      ctx.lineTo(cx - 30, y + 6 + wingYOff * 1.3);
-      // Scalloped arches
-      ctx.quadraticCurveTo(cx - 22, y + 16 + wingYOff, cx - 18, y + 18 + wingYOff);
-      ctx.quadraticCurveTo(cx - 10, y + 18 + wingYOff, cx - 4, y + 16);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-
-      // Right (front) Wing
-      ctx.beginPath();
-      ctx.moveTo(cx + 4, y + 12);
-      ctx.lineTo(cx + 18, y + 2 - wingYOff);
-      ctx.lineTo(cx + 30, y + 6 - wingYOff * 1.3);
-      ctx.quadraticCurveTo(cx + 22, y + 16 - wingYOff, cx + 18, y + 18 - wingYOff);
-      ctx.quadraticCurveTo(cx + 10, y + 18 - wingYOff, cx + 4, y + 16);
+      ctx.moveTo(cx - 3, y + 10 + hoverBob);
+      ctx.lineTo(cx - 16, y - 2 + hoverBob + wingYOff);
+      ctx.lineTo(cx - 30, y + 4 + hoverBob + wingYOff * 1.25); // Top stone pinion
+      // Scalloped stone feathers
+      ctx.lineTo(cx - 24, y + 15 + hoverBob + wingYOff);
+      ctx.lineTo(cx - 18, y + 18 + hoverBob + wingYOff * 0.8);
+      ctx.lineTo(cx - 3, y + 16 + hoverBob);
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
     }
 
-    // 3. Gargoyle Demon Torso
-    ctx.fillStyle = bodyBase;
+    // 2. Segmented Carved Stone Tail
+    ctx.strokeStyle = stoneBase;
+    ctx.lineWidth = 2.5;
     ctx.beginPath();
-    ctx.ellipse(cx, y + 14, 11, 10, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = bodyPlate;
+    ctx.moveTo(cx, y + 20 + hoverBob);
+    const tailSway = Math.sin(this.animTimer * 5) * 3;
+    ctx.quadraticCurveTo(cx - 6, y + 26 + hoverBob, cx - 11 + tailSway, y + 31 + hoverBob);
+    ctx.stroke();
+    // Arrowhead stone barb
+    ctx.fillStyle = stonePlate;
     ctx.beginPath();
-    ctx.ellipse(cx, y + 13, 8, 7, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 4. PULSATING TOXIC VENOM GLAND (Under throat / belly)
-    const sacPulse = Math.sin(this.animTimer * (isAiming ? 18 : 6)) * 0.25 + 0.75;
-    const sacCol = isAiming ? '#22c55e' : 'rgba(74, 222, 128, 0.85)';
-    ctx.fillStyle = sacCol;
-    ctx.shadowColor = isAiming ? '#22c55e' : '#10b981';
-    ctx.shadowBlur = (isAiming ? 14 : 6) * sacPulse;
-    ctx.beginPath();
-    ctx.arc(cx, y + 18, isAiming ? 7 : 5.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(cx - 1, y + 17, 2, 2); // Core glint
-    ctx.shadowBlur = 0;
-
-    // 5. Bat-Demon Horned Skull
-    ctx.fillStyle = bodyPlate;
-    ctx.fillRect(cx - 6, y + 4, 12, 9);
-    // Horns
-    ctx.fillStyle = bodyBase;
-    ctx.beginPath();
-    ctx.moveTo(cx - 4, y + 4); ctx.lineTo(cx - 8, y - 5); ctx.lineTo(cx - 1, y + 2);
-    ctx.moveTo(cx + 4, y + 4); ctx.lineTo(cx + 8, y - 5); ctx.lineTo(cx + 1, y + 2);
+    ctx.moveTo(cx - 11 + tailSway, y + 31 + hoverBob);
+    ctx.lineTo(cx - 15 + tailSway, y + 27 + hoverBob);
+    ctx.lineTo(cx - 17 + tailSway, y + 33 + hoverBob);
     ctx.closePath();
     ctx.fill();
 
-    // Pointed fanged beak / snout
-    ctx.fillStyle = isFlashing ? '#ffffff' : '#e2e8f0';
+    // 3. Crouching Stone Chimera Talons (Perched gargoyle stance)
+    ctx.fillStyle = stonePlate;
+    ctx.fillRect(cx - 5, y + 21 + hoverBob, 4, 6);
+    ctx.fillRect(cx + 1, y + 21 + hoverBob, 4, 6);
+    // Pointed stone claws
+    ctx.fillStyle = isFlashing ? '#ffffff' : stoneBevel;
+    ctx.fillRect(cx - 5, y + 26 + hoverBob, 2, 2);
+    ctx.fillRect(cx - 2, y + 26 + hoverBob, 2, 2);
+    ctx.fillRect(cx + 1, y + 26 + hoverBob, 2, 2);
+    ctx.fillRect(cx + 4, y + 26 + hoverBob, 2, 2);
+
+    // 4. Carved Granite Torso (Mimicking gothic cathedral masonry)
+    ctx.fillStyle = stoneBase;
     ctx.beginPath();
-    ctx.moveTo(cx + 2, y + 9);
-    ctx.lineTo(cx + 8, y + 11);
-    ctx.lineTo(cx + 2, y + 13);
+    ctx.ellipse(cx, y + 14 + hoverBob, 11, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = stonePlate;
+    ctx.beginPath();
+    ctx.ellipse(cx, y + 13 + hoverBob, 8, 7.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Gothic vaulting rib lines carved across the chest
+    ctx.fillStyle = stoneDark;
+    ctx.fillRect(cx - 7, y + 12 + hoverBob, 14, 1.5);
+    ctx.fillRect(cx - 5, y + 16 + hoverBob, 10, 1.5);
+    ctx.fillStyle = stoneHighlight;
+    ctx.fillRect(cx - 7, y + 13.5 + hoverBob, 14, 1);
+
+    // Stone throat & chest runic crack (Glows when channeling stone shard!)
+    if (isAiming) {
+      const crackPulse = Math.sin(this.animTimer * 20) * 0.3 + 0.7;
+      ctx.fillStyle = runeEnergy;
+      ctx.shadowColor = '#c084fc';
+      ctx.shadowBlur = 10 * crackPulse;
+      ctx.beginPath();
+      ctx.ellipse(cx, y + 16 + hoverBob, 5, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(cx - 1, y + 15 + hoverBob, 2, 2);
+      ctx.shadowBlur = 0;
+    }
+
+    // 5. Grotesque Carved Stone Gargoyle Head
+    const jawOpen = isAiming ? 4 : 0;
+    // Skull dome
+    ctx.fillStyle = stoneBase;
+    ctx.fillRect(cx - 6, y + 3 + hoverBob, 13, 10);
+    ctx.fillStyle = stonePlate;
+    ctx.fillRect(cx - 4, y + 2 + hoverBob, 10, 2);
+    // Brow ridge
+    ctx.fillStyle = stoneHighlight;
+    ctx.fillRect(cx - 6, y + 5 + hoverBob, 13, 2);
+
+    // Curved Stone Demon / Ram Horns (Swept back from crown)
+    ctx.fillStyle = stoneDark;
+    ctx.beginPath();
+    ctx.moveTo(cx - 3, y + 3 + hoverBob);
+    ctx.lineTo(cx - 9, y - 6 + hoverBob);
+    ctx.lineTo(cx - 1, y + 1 + hoverBob);
+    ctx.moveTo(cx + 3, y + 3 + hoverBob);
+    ctx.lineTo(cx - 3, y - 8 + hoverBob);
+    ctx.lineTo(cx + 5, y + 1 + hoverBob);
+    ctx.closePath();
+    ctx.fill();
+    // Horn ridge highlights
+    ctx.fillStyle = stoneBevel;
+    ctx.fillRect(cx - 9, y - 6 + hoverBob, 2, 3);
+    ctx.fillRect(cx - 3, y - 8 + hoverBob, 2, 3);
+
+    // Pointed stone ears
+    ctx.fillStyle = stonePlate;
+    ctx.beginPath();
+    ctx.moveTo(cx - 6, y + 7 + hoverBob);
+    ctx.lineTo(cx - 11, y + 4 + hoverBob);
+    ctx.lineTo(cx - 6, y + 9 + hoverBob);
     ctx.closePath();
     ctx.fill();
 
-    // Piercing Crimson Eyes
-    const eyeCol = isFlashing ? '#ffffff' : (isAiming ? '#ffffff' : '#ef4444');
+    // Grotesque Snout & Granite Fangs
+    ctx.fillStyle = stonePlate;
+    ctx.fillRect(cx + 3, y + 8 + hoverBob, 7, 5);
+    // Upper stone fangs
+    ctx.fillStyle = isFlashing ? '#ffffff' : '#f8fafc';
+    ctx.fillRect(cx + 6, y + 12 + hoverBob, 2, 2.5);
+    ctx.fillRect(cx + 9, y + 12 + hoverBob, 2, 2.5);
+
+    // Gaping lower jaw when aiming
+    if (jawOpen > 0) {
+      ctx.fillStyle = stoneDark;
+      ctx.fillRect(cx + 2, y + 12 + hoverBob + jawOpen, 7, 3);
+      ctx.fillStyle = isFlashing ? '#ffffff' : '#f8fafc';
+      ctx.fillRect(cx + 5, y + 10 + hoverBob + jawOpen, 2, 2); // Lower fang
+      // Gathering stone soul ember in mouth
+      ctx.fillStyle = runeEnergy;
+      ctx.shadowColor = '#c084fc';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(cx + 7, y + 12 + hoverBob + jawOpen * 0.5, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // PIERCING SPECTRAL STONE EYES (Glowing cyan soul light)
+    const eyeCol = isFlashing ? '#ffffff' : (isAiming ? '#ffffff' : '#38bdf8');
     ctx.fillStyle = eyeCol;
-    ctx.shadowColor = eyeCol;
+    ctx.shadowColor = '#38bdf8';
     ctx.shadowBlur = 8;
-    ctx.fillRect(cx - 2, y + 6, 3, 3);
-    ctx.fillRect(cx + 3, y + 6, 3, 3);
+    ctx.fillRect(cx - 1, y + 6 + hoverBob, 3, 3);
+    ctx.fillRect(cx + 4, y + 6 + hoverBob, 3, 3);
+    // White pupil core
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(cx, y + 7 + hoverBob, 1.5, 1.5);
+    ctx.fillRect(cx + 5, y + 7 + hoverBob, 1.5, 1.5);
     ctx.shadowBlur = 0;
 
-    // Telegraph cues
+    // 6. Front Stone Wing (Articulated Cathedral Wing Slabs)
+    if (isDiving && this.state === 'dive') {
+      // Swept-back aerodynamic stone wedge during high-velocity dive!
+      ctx.fillStyle = stonePlate;
+      ctx.strokeStyle = stoneBase;
+      ctx.lineWidth = 2;
+
+      ctx.beginPath();
+      ctx.moveTo(cx - 1, y + 8 + hoverBob);
+      ctx.lineTo(cx - 24, y - 8 + hoverBob); // Sharp stone wedge tip
+      ctx.lineTo(cx - 14, y + 5 + hoverBob);
+      ctx.lineTo(cx - 3, y + 16 + hoverBob);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Wing stone bevel highlight
+      ctx.strokeStyle = stoneBevel;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(cx - 1, y + 8 + hoverBob);
+      ctx.lineTo(cx - 24, y - 8 + hoverBob);
+      ctx.stroke();
+    } else {
+      // Normal majestic stone wing with sculpted feathers & gothic bevels
+      ctx.fillStyle = stonePlate;
+      ctx.strokeStyle = stoneDark;
+      ctx.lineWidth = 1.5;
+
+      ctx.beginPath();
+      ctx.moveTo(cx + 3, y + 11 + hoverBob);
+      ctx.lineTo(cx + 17, y - 1 + hoverBob - wingYOff);
+      ctx.lineTo(cx + 32, y + 4 + hoverBob - wingYOff * 1.3); // Outer stone feather
+      // Scalloped arch feathers
+      ctx.lineTo(cx + 25, y + 14 + hoverBob - wingYOff);
+      ctx.lineTo(cx + 18, y + 18 + hoverBob - wingYOff * 0.8);
+      ctx.lineTo(cx + 4, y + 16 + hoverBob);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Stone feather bevel highlights
+      ctx.strokeStyle = stoneBevel;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(cx + 5, y + 12 + hoverBob);
+      ctx.lineTo(cx + 17, y - 1 + hoverBob - wingYOff);
+      ctx.lineTo(cx + 32, y + 4 + hoverBob - wingYOff * 1.3);
+      ctx.stroke();
+    }
+
+    // 7. Dive telegraph indicator
     if (this.state === 'dive_windup') {
       ctx.fillStyle = '#ff2222';
       ctx.font = 'bold 16px monospace';
