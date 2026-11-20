@@ -2340,31 +2340,64 @@ class Enemy {
   _drawCrawler(ctx) {
     const x = this.x, y = this.y;
     const isAggro = (this.state === 'aggro' || this.state === 'leap' || this.state === 'leap_windup');
-    const c = this.flashTimer > 0 ? '#fff' : (isAggro ? '#993333' : '#773333');
-    const c2 = this.flashTimer > 0 ? '#fff' : (isAggro ? '#cc4444' : '#994444');
-    ctx.fillStyle = c; ctx.fillRect(x + 2, y + 4, this.w - 4, this.h - 8);
+    const isFlashing = this.flashTimer > 0;
 
-    // Spiky carapace when aggro
+    // Body chitin colors (high contrast, clearly visible against dark stone)
+    const baseCol = isFlashing ? '#ffffff' : (isAggro ? '#c53030' : '#a03535');
+    const plateCol = isFlashing ? '#ffffff' : (isAggro ? '#e53e3e' : '#c54242');
+
+    // Outer silhouette outline for crisp readability
+    ctx.strokeStyle = '#1a0505';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(x + 2, y + 4, this.w - 4, this.h - 8);
+
+    // Main carapace
+    ctx.fillStyle = baseCol;
+    ctx.fillRect(x + 2, y + 4, this.w - 4, this.h - 8);
+
+    // Carapace plate ridges (segmented chitin)
+    ctx.fillStyle = plateCol;
+    ctx.fillRect(x + 4, y + 5, this.w - 8, 3);
+    ctx.fillRect(x + 6, y + 10, this.w - 12, 3);
+
+    // Spiky carapace spikes when aggro
     if (isAggro) {
-      ctx.fillStyle = '#ff5544';
+      ctx.fillStyle = '#ff6b6b';
       ctx.beginPath();
-      ctx.moveTo(x + 6, y + 4); ctx.lineTo(x + 10, y - 4); ctx.lineTo(x + 14, y + 4);
-      ctx.moveTo(x + 16, y + 4); ctx.lineTo(x + 20, y - 5); ctx.lineTo(x + 24, y + 4);
-      ctx.closePath(); ctx.fill();
+      ctx.moveTo(x + 5, y + 4); ctx.lineTo(x + 9, y - 5); ctx.lineTo(x + 13, y + 4);
+      ctx.moveTo(x + 15, y + 4); ctx.lineTo(x + 19, y - 6); ctx.lineTo(x + 23, y + 4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#2b0000';
+      ctx.lineWidth = 1;
+      ctx.stroke();
     }
 
+    // Skittering legs with bright joint tips
     const la = Math.sin(this.animTimer * (isAggro ? 18 : 10));
-    ctx.fillStyle = c2;
-    ctx.fillRect(x, y + this.h - 6 + la * 2, 6, 6); ctx.fillRect(x + 10, y + this.h - 6 - la * 2, 6, 6);
-    ctx.fillRect(x + this.w - 16, y + this.h - 6 + la * 2, 6, 6); ctx.fillRect(x + this.w - 6, y + this.h - 6 - la * 2, 6, 6);
+    ctx.fillStyle = plateCol;
+    ctx.fillRect(x, y + this.h - 6 + la * 2, 6, 6);
+    ctx.fillRect(x + 10, y + this.h - 6 - la * 2, 6, 6);
+    ctx.fillRect(x + this.w - 16, y + this.h - 6 + la * 2, 6, 6);
+    ctx.fillRect(x + this.w - 6, y + this.h - 6 - la * 2, 6, 6);
 
-    // Glowing eyes
-    ctx.fillStyle = this.flashTimer > 0 ? '#fff' : (isAggro ? '#ff1100' : '#ffaa00');
+    // Bright glowing predator eyes with luminous halo
+    const eyeCol = isFlashing ? '#ffffff' : (isAggro ? '#ff2200' : '#ffaa00');
+    ctx.fillStyle = eyeCol;
+    ctx.shadowColor = eyeCol;
+    ctx.shadowBlur = 8;
     const ex = this.facing === 1 ? x + this.w - 10 : x + 4;
-    ctx.fillRect(ex, y + 6, 4, 4); ctx.fillRect(ex - 7 * this.facing, y + 6, 4, 4);
+    ctx.fillRect(ex, y + 6, 4, 4);
+    ctx.fillRect(ex - 7 * this.facing, y + 6, 4, 4);
+    // White-hot pupil centers
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(ex + 1, y + 7, 2, 2);
+    ctx.fillRect(ex - 7 * this.facing + 1, y + 7, 2, 2);
+    ctx.shadowBlur = 0;
 
     // Mandibles / jaw
-    ctx.fillStyle = c2; const px = this.facing === 1 ? x + this.w : x;
+    ctx.fillStyle = isFlashing ? '#ffffff' : '#e2e8f0';
+    const px = this.facing === 1 ? x + this.w : x;
     const jawOpen = (this.state === 'leap' || this.state === 'leap_windup') ? 4 : 0;
     ctx.beginPath();
     ctx.moveTo(px, y + 6 - jawOpen);
@@ -2373,11 +2406,14 @@ class Enemy {
     ctx.closePath();
     ctx.fill();
 
-    // Leap telegraph
+    // Leap telegraph exclamation
     if (this.state === 'leap_windup') {
       ctx.fillStyle = '#ff2222';
-      ctx.font = 'bold 15px monospace';
+      ctx.font = 'bold 16px monospace';
+      ctx.shadowColor = '#ff0000';
+      ctx.shadowBlur = 6;
       ctx.fillText('!', x + this.w / 2 - 4, y - 8);
+      ctx.shadowBlur = 0;
     }
   }
 
@@ -2385,89 +2421,159 @@ class Enemy {
     const x = this.x, y = this.y;
     const isAiming = (this.state === 'aim');
     const isDiving = (this.state === 'dive' || this.state === 'dive_windup');
-    const c = this.flashTimer > 0 ? '#fff' : (isAiming ? '#8833bb' : '#553388');
-    ctx.fillStyle = c;
-    ctx.beginPath(); ctx.arc(x + this.w / 2, y + this.h / 2, 13, 0, Math.PI * 2); ctx.fill();
+    const isFlashing = this.flashTimer > 0;
 
-    // Glowing belly / acid sac when aiming
-    if (isAiming) {
-      const pulse = Math.sin(this.stateTimer * 25) * 0.3 + 0.7;
-      ctx.fillStyle = `rgba(100, 255, 50, ${pulse})`;
-      ctx.beginPath(); ctx.arc(x + this.w / 2, y + this.h / 2 + 3, 7, 0, Math.PI * 2); ctx.fill();
-    }
+    // Body colors (vibrant demonic bat/gargoyle contrast)
+    const bodyCol = isFlashing ? '#ffffff' : (isAiming ? '#9f55d6' : '#7b3db2');
+    const wingCol = isFlashing ? '#ffffff' : '#b779e8';
 
+    // Outer silhouette definition
+    ctx.strokeStyle = '#180728';
+    ctx.lineWidth = 1.5;
+
+    // Bat wings with flapping animation
     const wa = Math.sin(this.animTimer * (isDiving ? 20 : 12)) * 8;
-    ctx.fillStyle = this.flashTimer > 0 ? '#fff' : '#7755aa';
-    ctx.beginPath(); ctx.ellipse(x + this.w / 2 - 14, y + this.h / 2 - 6 + wa, 11, 5, -0.3, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(x + this.w / 2 + 14, y + this.h / 2 - 6 - wa, 11, 5, 0.3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = wingCol;
+    ctx.beginPath();
+    ctx.ellipse(x + this.w / 2 - 14, y + this.h / 2 - 6 + wa, 12, 6, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
 
-    // Eyes
-    ctx.fillStyle = this.flashTimer > 0 ? '#fff' : (isAiming ? '#66ff22' : '#ff3344');
-    ctx.fillRect(x + this.w / 2 - 4, y + this.h / 2 - 3, 3, 3); ctx.fillRect(x + this.w / 2 + 2, y + this.h / 2 - 3, 3, 3);
+    ctx.beginPath();
+    ctx.ellipse(x + this.w / 2 + 14, y + this.h / 2 - 6 - wa, 12, 6, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
 
-    // Telegraph
+    // Main demonic orb body
+    ctx.fillStyle = bodyCol;
+    ctx.beginPath();
+    ctx.arc(x + this.w / 2, y + this.h / 2, 13, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Luminous glowing toxic acid belly sac
+    const sacPulse = Math.sin(this.animTimer * 6) * 0.2 + 0.8;
+    ctx.fillStyle = isAiming ? '#55ff22' : 'rgba(80, 255, 120, 0.85)';
+    ctx.shadowColor = isAiming ? '#55ff22' : '#33ee88';
+    ctx.shadowBlur = (isAiming ? 12 : 7) * sacPulse;
+    ctx.beginPath();
+    ctx.arc(x + this.w / 2, y + this.h / 2 + 4, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Piercing glowing eyes
+    const eyeCol = isFlashing ? '#ffffff' : (isAiming ? '#ffffff' : '#ff2255');
+    ctx.fillStyle = eyeCol;
+    ctx.shadowColor = eyeCol;
+    ctx.shadowBlur = 6;
+    ctx.fillRect(x + this.w / 2 - 5, y + this.h / 2 - 3, 3.5, 3.5);
+    ctx.fillRect(x + this.w / 2 + 1.5, y + this.h / 2 - 3, 3.5, 3.5);
+    ctx.shadowBlur = 0;
+
+    // Dive telegraph
     if (this.state === 'dive_windup') {
-      ctx.fillStyle = '#ff3333'; ctx.font = 'bold 15px monospace';
-      ctx.fillText('▼', x + this.w / 2 - 5, y - 8);
+      ctx.fillStyle = '#ff3333';
+      ctx.font = 'bold 16px monospace';
+      ctx.shadowColor = '#ff2222';
+      ctx.shadowBlur = 8;
+      ctx.fillText('▼', x + this.w / 2 - 6, y - 8);
+      ctx.shadowBlur = 0;
     }
   }
 
   _drawGuard(ctx) {
     const x = this.x, y = this.y;
-    const c = this.flashTimer > 0 ? '#fff' : '#4a5568';
-    const c2 = this.flashTimer > 0 ? '#fff' : '#2d3748';
+    const isFlashing = this.flashTimer > 0;
+    // Dark gothic plate armor with polished steel bevels
+    const plateCol = isFlashing ? '#ffffff' : '#64748b';
+    const darkPlate = isFlashing ? '#ffffff' : '#334155';
+    const highlightCol = isFlashing ? '#ffffff' : '#cbd5e1';
     const bobY = Math.sin(this.animTimer * 2);
 
     ctx.save();
     const cx = x + this.w / 2; ctx.translate(cx, 0); ctx.scale(this.facing, 1); ctx.translate(-cx, 0);
 
-    // Body & armor
-    ctx.fillStyle = c; ctx.fillRect(x + 4, y + 10 + bobY, this.w - 8, 26);
-    ctx.fillStyle = c2; ctx.fillRect(x + 4, y + bobY, this.w - 8, 14);
-    // Helmet eye slit
-    ctx.fillStyle = this.flashTimer > 0 ? '#fff' : '#ff7700'; ctx.fillRect(x + 22, y + 4 + bobY, 8, 3);
-    // Legs
-    ctx.fillStyle = c2; ctx.fillRect(x + 6, y + 36 + bobY, 8, 14); ctx.fillRect(x + 20, y + 36 + bobY, 8, 14);
+    // Torso / breastplate
+    ctx.fillStyle = plateCol;
+    ctx.fillRect(x + 4, y + 10 + bobY, this.w - 8, 26);
+    // Steel bevel highlight
+    ctx.fillStyle = highlightCol;
+    ctx.fillRect(x + 4, y + 10 + bobY, 3, 26);
+    ctx.fillRect(x + 4, y + 10 + bobY, this.w - 8, 2);
 
-    // Shield (blocking stance)
+    // Gothic Greathelm
+    ctx.fillStyle = darkPlate;
+    ctx.fillRect(x + 4, y + bobY, this.w - 8, 14);
+    ctx.fillStyle = highlightCol;
+    ctx.fillRect(x + 4, y + bobY, 2, 14);
+    ctx.fillRect(x + 4, y + bobY, this.w - 8, 2);
+
+    // BURNING SPECTRAL VISOR (High visibility beacon in the dark!)
+    ctx.fillStyle = isFlashing ? '#ffffff' : '#ff9900';
+    ctx.shadowColor = '#ff8800';
+    ctx.shadowBlur = 10;
+    ctx.fillRect(x + 20, y + 4 + bobY, 10, 3.5);
+    ctx.fillStyle = '#fff4cc';
+    ctx.fillRect(x + 22, y + 5 + bobY, 6, 1.5);
+    ctx.shadowBlur = 0;
+
+    // Armored greaves (legs)
+    ctx.fillStyle = darkPlate;
+    ctx.fillRect(x + 6, y + 36 + bobY, 8, 14);
+    ctx.fillRect(x + 20, y + 36 + bobY, 8, 14);
+    ctx.fillStyle = highlightCol;
+    ctx.fillRect(x + 6, y + 36 + bobY, 2, 14);
+    ctx.fillRect(x + 20, y + 36 + bobY, 2, 14);
+
+    // Heavy Gothic Tower Shield (with polished golden border)
     if (this.shieldUp) {
-      ctx.fillStyle = '#2b394a';
-      ctx.fillRect(x + this.w - 4, y + 4 + bobY, 9, 38);
-      ctx.fillStyle = '#4a627a';
-      ctx.fillRect(x + this.w - 2, y + 6 + bobY, 5, 34);
-      // Crest
-      ctx.fillStyle = '#e2b344';
-      ctx.fillRect(x + this.w - 1, y + 18 + bobY, 3, 8);
+      // Dark iron body
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(x + this.w - 4, y + 4 + bobY, 10, 38);
+      // Polished gold rim
+      ctx.fillStyle = '#f59e0b';
+      ctx.strokeRect(x + this.w - 4, y + 4 + bobY, 10, 38);
+      ctx.fillRect(x + this.w - 3, y + 5 + bobY, 2, 36);
+      // Gold royal cross crest
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillRect(x + this.w - 1, y + 16 + bobY, 4, 12);
+      ctx.fillRect(x + this.w - 3, y + 20 + bobY, 8, 4);
     }
 
-    // Weapon
+    // Gleaming Silver Broadsword
     ctx.save();
     if (this.state === 'combo1_windup') {
       ctx.translate(x + this.w, y + 14 + bobY);
       ctx.rotate(-1.2);
-      ctx.fillStyle = '#cbd5e0'; ctx.fillRect(-2, 0, 4, 38);
+      ctx.fillStyle = '#f1f5f9'; ctx.fillRect(-2, 0, 4, 38);
+      ctx.fillStyle = '#f59e0b'; ctx.fillRect(-4, 0, 8, 4); // gold hilt
     } else if (this.state === 'combo1_slash') {
       ctx.translate(x + this.w + 6, y + 18 + bobY);
       ctx.rotate(1.4);
-      ctx.fillStyle = '#cbd5e0'; ctx.fillRect(-2, 0, 4, 40);
+      ctx.fillStyle = '#f1f5f9'; ctx.fillRect(-2, 0, 4, 40);
+      ctx.fillStyle = '#f59e0b'; ctx.fillRect(-4, 0, 8, 4);
     } else if (this.state === 'combo2_thrust') {
       ctx.translate(x + this.w + 14, y + 20 + bobY);
       ctx.rotate(0.0);
-      ctx.fillStyle = '#cbd5e0'; ctx.fillRect(0, -2, 42, 4);
+      ctx.fillStyle = '#f1f5f9'; ctx.fillRect(0, -2, 42, 4);
+      ctx.fillStyle = '#f59e0b'; ctx.fillRect(0, -4, 4, 8);
     } else {
       ctx.translate(x - 2, y + 14 + bobY);
       ctx.rotate(0.3);
-      ctx.fillStyle = '#a0aec0'; ctx.fillRect(-2, 0, 4, 34);
+      ctx.fillStyle = '#e2e8f0'; ctx.fillRect(-2, 0, 4, 34);
+      ctx.fillStyle = '#f59e0b'; ctx.fillRect(-4, 0, 8, 4);
     }
     ctx.restore();
 
     // Stun indicator
     if (this.stunned > 0) {
-      ctx.fillStyle = '#ffdd44'; ctx.font = 'bold 14px monospace';
+      ctx.fillStyle = '#ffdd44'; ctx.font = 'bold 15px monospace';
       ctx.fillText('💫', x + this.w / 2 - 7, y - 8);
     } else if (this.state === 'combo1_windup' || this.state === 'shield_bash_windup') {
-      ctx.fillStyle = '#ff2222'; ctx.font = 'bold 15px monospace';
+      ctx.fillStyle = '#ff2222'; ctx.font = 'bold 16px monospace';
+      ctx.shadowColor = '#ff2222'; ctx.shadowBlur = 8;
       ctx.fillText('!', x + this.w / 2 - 4, y - 8);
+      ctx.shadowBlur = 0;
     }
 
     ctx.restore();
@@ -4292,17 +4398,34 @@ class LightingSystem {
     }
   }
 
-  render(ctx, camera, player, boss, bonfires, projectiles, props, time) {
+  render(ctx, camera, player, boss, enemies, bonfires, projectiles, props, time) {
     if (!this.ctx || !this.canvas) return;
     const lctx = this.ctx;
     const cw = this.width, ch = this.height;
 
-    // 1. Vampire City Ambient Darkness (Deep night-violet atmosphere)
-    const isNearArena = player.x > 6700;
-    const darknessAlpha = isNearArena ? 0.78 : 0.70;
+    // 1. Vampire City Ambient Darkness
+    // The open night sky, stars and moon above are the natural SOURCE of light and are never shrouded in shadow!
+    // Darkness only pools softly down in the lower viaducts, streets, and inside the enclosed cathedral.
+    const isInsideArena = player.x > 6750;
     lctx.globalCompositeOperation = 'source-over';
-    lctx.fillStyle = `rgba(14, 8, 22, ${darknessAlpha})`;
-    lctx.fillRect(0, 0, cw, ch);
+    lctx.clearRect(0, 0, cw, ch);
+
+    if (isInsideArena) {
+      // Inside cathedral: atmospheric enclosed twilight darkness
+      lctx.fillStyle = 'rgba(14, 8, 24, 0.44)';
+      lctx.fillRect(0, 0, cw, ch);
+    } else {
+      // Outdoors: Sky & Moon at top are luminous and completely clear (alpha = 0)!
+      // Darkness increases smoothly towards ground/canyons, but stays soft (max ~0.38).
+      const darkGrad = lctx.createLinearGradient(0, 0, 0, ch);
+      darkGrad.addColorStop(0, 'rgba(14, 8, 22, 0)');        // Top open sky & moon: 100% CLEAR
+      darkGrad.addColorStop(0.24, 'rgba(14, 8, 22, 0.04)');  // Upper clouds & moon halo: clear
+      darkGrad.addColorStop(0.55, 'rgba(14, 8, 22, 0.22)');  // Mid rooftops / viaducts: soft twilight
+      darkGrad.addColorStop(0.85, 'rgba(14, 8, 22, 0.36)');  // Lower streets: moody gothic shadow
+      darkGrad.addColorStop(1.0, 'rgba(14, 8, 22, 0.42)');
+      lctx.fillStyle = darkGrad;
+      lctx.fillRect(0, 0, cw, ch);
+    }
 
     // 2. Cut out light sources using destination-out
     lctx.globalCompositeOperation = 'destination-out';
@@ -4329,53 +4452,81 @@ class LightingSystem {
       lctx.fill();
     };
 
-    // A. Player light (Knight's glowing mask & soul aura)
-    addLight(player.x + player.w / 2, player.y + player.h * 0.35, 145, 0.95);
+    // A. CELESTIAL MOONLIGHT CUTOUT
+    // Cut out radiant moonlight directly so moon and night sky are always shining bright!
+    if (!isInsideArena) {
+      const moonX = cw * 0.68 - camera.x * 0.02;
+      const moonY = 130 - camera.y * 0.02;
+      const mRad = 340;
+      const mGrad = lctx.createRadialGradient(moonX, moonY, 30, moonX, moonY, mRad);
+      mGrad.addColorStop(0, 'rgba(255, 255, 255, 1.0)');
+      mGrad.addColorStop(0.4, 'rgba(255, 255, 255, 0.85)');
+      mGrad.addColorStop(0.8, 'rgba(255, 255, 255, 0.35)');
+      mGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      lctx.fillStyle = mGrad;
+      lctx.beginPath();
+      lctx.arc(moonX, moonY, mRad, 0, Math.PI * 2);
+      lctx.fill();
+    }
 
-    // B. Bonfires
+    // B. Player light (Knight's glowing mask & soul aura)
+    addLight(player.x + player.w / 2, player.y + player.h * 0.35, 160, 0.98);
+
+    // C. Bonfires
     if (bonfires) {
       for (const b of bonfires) {
         if (b.lit) {
           const flk = Math.sin(time * 12 + b.id) * 0.07 + Math.cos(time * 23 + b.id) * 0.03;
-          addLight(b.x + b.w / 2, b.y + 10, 220, 1.0, flk);
+          addLight(b.x + b.w / 2, b.y + 10, 240, 1.0, flk);
         } else {
-          addLight(b.x + b.w / 2, b.y + 18, 65, 0.35);
+          addLight(b.x + b.w / 2, b.y + 18, 70, 0.35);
         }
       }
     }
 
-    // C. Boss aura
-    if (boss && boss.active && !boss.dead) {
-      const bFlk = Math.sin(time * 6) * 0.1;
-      addLight(boss.x + boss.w / 2, boss.y + boss.h / 2, 280, 0.88, bFlk);
+    // D. Enemies Visibility Light (Guarantees enemies are always clearly visible in any darkness!)
+    if (enemies) {
+      for (const e of enemies) {
+        if (!e.dead) {
+          const ecx = e.x + e.w / 2, ecy = e.y + e.h / 2;
+          const r = e.type === 'guard' ? 110 : (e.type === 'crawler' ? 85 : 95);
+          addLight(ecx, ecy, r, 0.75);
+        }
+      }
     }
 
-    // D. Projectiles
+    // E. Boss aura
+    if (boss && boss.active && !boss.dead) {
+      const bFlk = Math.sin(time * 6) * 0.1;
+      addLight(boss.x + boss.w / 2, boss.y + boss.h / 2, 300, 0.92, bFlk);
+    }
+
+    // F. Projectiles
     if (projectiles) {
       for (const p of projectiles) {
         if (!p.dead) {
-          const r = p.type === 'fireball' ? 140 : (p.type === 'ice_nova' ? 160 : 90);
-          addLight(p.x, p.y, r, 0.85);
+          const r = p.type === 'fireball' ? 150 : (p.type === 'ice_nova' ? 170 : 100);
+          addLight(p.x, p.y, r, 0.9);
         }
       }
     }
 
-    // E. Environmental props (streetlamps, gothic windows, chandeliers, lanterns, crystals)
+    // G. Environmental props (streetlamps, gothic windows, chandeliers, lanterns, crystals)
     if (props) {
       for (const pr of props) {
         if (pr.type === 'streetlamp') {
           const lFlk = Math.sin(time * 9 + pr.x) * 0.07;
-          addLight(pr.x, pr.y - (pr.h || 55) + 12, 150, 0.9, lFlk);
+          addLight(pr.x, pr.y - (pr.h || 55) + 12, 170, 0.95, lFlk);
         } else if (pr.type === 'gothicWindow') {
-          addLight(pr.x, pr.y + (pr.h || 75) / 2, 115, 0.75);
+          addLight(pr.x, pr.y + (pr.h || 75) / 2, 130, 0.85);
         } else if (pr.type === 'chandelier') {
           const cFlk = Math.sin(time * 8 + pr.x) * 0.05;
-          addLight(pr.x, pr.y + (pr.chainLen || 120) + 15, 200, 0.92, cFlk);
+          addLight(pr.x, pr.y + (pr.chainLen || 120) + 15, 230, 0.95, cFlk);
         } else if (pr.type === 'lantern') {
           const lFlk = Math.sin(time * 10 + pr.x) * 0.06;
-          addLight(pr.x, pr.y + 12, 120, 0.85, lFlk);
+          addLight(pr.x, pr.y + 12, 130, 0.9, lFlk);
         } else if (pr.type === 'crystal') {
-          addLight(pr.x, pr.y, 75, 0.65);
+          addLight(pr.x, pr.y, 85, 0.7);
         }
       }
     }
@@ -4400,40 +4551,56 @@ class LightingSystem {
     if (bonfires) {
       for (const b of bonfires) {
         if (b.lit) {
-          addColorGlow(b.x + b.w / 2, b.y + 10, 180, 'rgba(255, 140, 40, 0.22)', 'rgba(255, 80, 0, 0)');
+          addColorGlow(b.x + b.w / 2, b.y + 10, 190, 'rgba(255, 140, 40, 0.24)', 'rgba(255, 80, 0, 0)');
         }
       }
     }
     // Pale ethereal soul light on player
-    addColorGlow(player.x + player.w / 2, player.y + player.h * 0.35, 110, 'rgba(120, 200, 255, 0.14)', 'rgba(80, 140, 255, 0)');
+    addColorGlow(player.x + player.w / 2, player.y + player.h * 0.35, 115, 'rgba(120, 200, 255, 0.16)', 'rgba(80, 140, 255, 0)');
+
+    // Enemy distinctive aura / eye glow in darkness
+    if (enemies) {
+      for (const e of enemies) {
+        if (!e.dead) {
+          const ecx = e.x + e.w / 2, ecy = e.y + e.h / 2;
+          if (e.type === 'crawler') {
+            addColorGlow(ecx, ecy, 70, 'rgba(255, 80, 30, 0.22)', 'rgba(255, 40, 0, 0)');
+          } else if (e.type === 'guard') {
+            addColorGlow(ecx, ecy, 90, 'rgba(255, 150, 40, 0.22)', 'rgba(255, 90, 0, 0)');
+          } else if (e.type === 'flyer') {
+            addColorGlow(ecx, ecy, 80, 'rgba(180, 70, 255, 0.24)', 'rgba(120, 20, 200, 0)');
+          }
+        }
+      }
+    }
 
     // Environmental props colored glow
     if (props) {
       for (const pr of props) {
         if (pr.type === 'streetlamp') {
-          addColorGlow(pr.x, pr.y - (pr.h || 55) + 12, 130, 'rgba(255, 170, 50, 0.25)', 'rgba(255, 110, 20, 0)');
+          addColorGlow(pr.x, pr.y - (pr.h || 55) + 12, 140, 'rgba(255, 175, 60, 0.26)', 'rgba(255, 110, 20, 0)');
         } else if (pr.type === 'gothicWindow' && pr.glow) {
           const c = pr.color === '#ff2255' ? 'rgba(255, 40, 80, 0.28)' : (pr.color === '#cc44ff' ? 'rgba(190, 60, 255, 0.25)' : 'rgba(255, 160, 40, 0.22)');
-          addColorGlow(pr.x, pr.y + (pr.h || 75) / 2, 100, c, 'rgba(200, 80, 20, 0)');
+          addColorGlow(pr.x, pr.y + (pr.h || 75) / 2, 110, c, 'rgba(200, 80, 20, 0)');
         } else if (pr.type === 'chandelier') {
-          addColorGlow(pr.x, pr.y + (pr.chainLen || 120) + 15, 170, 'rgba(255, 150, 40, 0.24)', 'rgba(255, 70, 10, 0)');
+          addColorGlow(pr.x, pr.y + (pr.chainLen || 120) + 15, 180, 'rgba(255, 150, 40, 0.25)', 'rgba(255, 70, 10, 0)');
         }
       }
     }
 
     // Menacing void purple glow on boss
     if (boss && boss.active && !boss.dead) {
-      addColorGlow(boss.x + boss.w / 2, boss.y + boss.h / 2, 250, 'rgba(170, 40, 240, 0.24)', 'rgba(120, 0, 180, 0)');
+      addColorGlow(boss.x + boss.w / 2, boss.y + boss.h / 2, 260, 'rgba(170, 40, 240, 0.26)', 'rgba(120, 0, 180, 0)');
     }
 
     // 4. Draw lighting canvas to main screen
     ctx.drawImage(this.canvas, 0, 0);
 
-    // 5. Cinematic Radial Vignette
-    const vigGrad = ctx.createRadialGradient(cw / 2, ch / 2, cw * 0.35, cw / 2, ch / 2, cw * 0.74);
+    // 5. Cinematic Radial Vignette (Gentle edge darkening that leaves the sky & center clear)
+    const vigGrad = ctx.createRadialGradient(cw / 2, ch / 2, cw * 0.42, cw / 2, ch / 2, cw * 0.78);
     vigGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
-    vigGrad.addColorStop(0.68, 'rgba(0, 0, 0, 0.35)');
-    vigGrad.addColorStop(1, 'rgba(8, 4, 16, 0.78)');
+    vigGrad.addColorStop(0.75, 'rgba(0, 0, 0, 0.12)');
+    vigGrad.addColorStop(1, 'rgba(8, 4, 16, 0.38)');
     ctx.fillStyle = vigGrad;
     ctx.fillRect(0, 0, cw, ch);
   }
@@ -4448,10 +4615,10 @@ class Background {
 
     // Atmospheric night stars / celestial motes
     this.stars = [];
-    for (let i = 0; i < 85; i++) {
+    for (let i = 0; i < 90; i++) {
       this.stars.push({
         x: rand(0, CANVAS_W),
-        y: rand(0, CANVAS_H * 0.55),
+        y: rand(0, CANVAS_H * 0.60),
         size: rand(1.2, 2.8),
         speed: rand(0.3, 0.9),
         blink: rand(0, Math.PI * 2)
@@ -4474,14 +4641,14 @@ class Background {
 
     // Volumetric purple clouds drifting across sky
     this.clouds = [];
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 14; i++) {
       this.clouds.push({
         x: rand(0, CANVAS_W * 1.5),
-        y: rand(40, CANVAS_H * 0.45),
-        w: rand(180, 360),
-        h: rand(60, 110),
+        y: rand(30, CANVAS_H * 0.48),
+        w: rand(180, 380),
+        h: rand(65, 120),
         speed: rand(4, 12),
-        alpha: rand(0.18, 0.38)
+        alpha: rand(0.22, 0.42)
       });
     }
 
@@ -4528,75 +4695,100 @@ class Background {
   }
 
   draw(ctx, camera, time) {
-    // 1. Deep Midnight-Violet Vampire Sky Gradient (Strictly matching reference image)
+    // 1. Radiant Midnight-Violet Vampire Sky Gradient (Luminous & atmospheric, never muddy!)
     const skyGrad = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
-    skyGrad.addColorStop(0, '#080410');
-    skyGrad.addColorStop(0.3, '#140924');
-    skyGrad.addColorStop(0.65, '#2b1442');
-    skyGrad.addColorStop(1, '#3d1a58');
+    skyGrad.addColorStop(0, '#120826');
+    skyGrad.addColorStop(0.32, '#241040');
+    skyGrad.addColorStop(0.65, '#3e1a5a');
+    skyGrad.addColorStop(1, '#562274');
     ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-    // 2. Volumetric Mauve/Purple Storm Clouds drifting in background
-    for (const cl of this.clouds) {
+    // 2. Background storm clouds behind the moon
+    for (let i = 0; i < this.clouds.length / 2; i++) {
+      const cl = this.clouds[i];
       const cx = ((cl.x - time * cl.speed - camera.x * 0.04) % (CANVAS_W + cl.w * 2)) - cl.w;
       const cy = cl.y - camera.y * 0.03;
-      ctx.fillStyle = `rgba(55, 25, 82, ${cl.alpha})`;
+      ctx.fillStyle = `rgba(68, 30, 96, ${cl.alpha})`;
       ctx.beginPath();
       ctx.ellipse(cx, cy, cl.w * 0.5, cl.h * 0.5, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(cx + cl.w * 0.25, cy - cl.h * 0.2, cl.w * 0.35, cl.h * 0.4, 0, 0, Math.PI * 2);
-      ctx.fill();
     }
 
-    // 3. Eerie Pale Bloodmoon breaking through the storm clouds
+    // 3. Eerie, Radiant Bloodmoon (Clear, bright, and illuminating the scene!)
     const moonX = CANVAS_W * 0.68 - camera.x * 0.02;
     const moonY = 130 - camera.y * 0.02;
 
-    // Radiant outer lavender/mauve halo
-    const halo = ctx.createRadialGradient(moonX, moonY, 15, moonX, moonY, 130);
-    halo.addColorStop(0, 'rgba(180, 140, 240, 0.30)');
-    halo.addColorStop(0.4, 'rgba(120, 60, 180, 0.16)');
+    // Outer radiant moonlight corona
+    const halo = ctx.createRadialGradient(moonX, moonY, 20, moonX, moonY, 180);
+    halo.addColorStop(0, 'rgba(235, 215, 255, 0.42)');
+    halo.addColorStop(0.35, 'rgba(180, 120, 240, 0.22)');
+    halo.addColorStop(0.75, 'rgba(90, 35, 140, 0.08)');
     halo.addColorStop(1, 'rgba(30, 10, 50, 0)');
     ctx.fillStyle = halo;
     ctx.beginPath();
-    ctx.arc(moonX, moonY, 130, 0, Math.PI * 2);
+    ctx.arc(moonX, moonY, 180, 0, Math.PI * 2);
     ctx.fill();
 
     // Pale moon sphere
-    ctx.fillStyle = '#1c152a';
+    ctx.fillStyle = '#2a1a44';
     ctx.beginPath();
-    ctx.arc(moonX, moonY, 46, 0, Math.PI * 2);
+    ctx.arc(moonX, moonY, 52, 0, Math.PI * 2);
     ctx.fill();
 
-    // Glowing lunar crescent rim
-    ctx.strokeStyle = '#dfccff';
-    ctx.lineWidth = 3;
-    ctx.shadowColor = '#b888ff';
-    ctx.shadowBlur = 14;
+    // Soft crater shading on moon surface
+    ctx.fillStyle = 'rgba(20, 10, 35, 0.4)';
     ctx.beginPath();
-    ctx.arc(moonX, moonY, 46, -Math.PI * 0.7, Math.PI * 0.4);
+    ctx.arc(moonX - 12, moonY - 8, 14, 0, Math.PI * 2);
+    ctx.arc(moonX + 10, moonY + 12, 10, 0, Math.PI * 2);
+    ctx.arc(moonX - 4, moonY + 16, 7, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Glowing lunar crescent rim (Bright and crystal clear!)
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 3.5;
+    ctx.shadowColor = '#d9bfff';
+    ctx.shadowBlur = 18;
+    ctx.beginPath();
+    ctx.arc(moonX, moonY, 52, -Math.PI * 0.72, Math.PI * 0.42);
     ctx.stroke();
 
-    // Lunar crater fractures
-    ctx.lineWidth = 1;
+    // Radiant moon crater fractures
+    ctx.strokeStyle = 'rgba(240, 220, 255, 0.65)';
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(moonX - 22, moonY - 14);
-    ctx.lineTo(moonX - 2, moonY + 6);
-    ctx.lineTo(moonX + 16, moonY - 2);
+    ctx.moveTo(moonX - 24, moonY - 16);
+    ctx.lineTo(moonX - 2, moonY + 8);
+    ctx.lineTo(moonX + 18, moonY - 2);
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    // 4. Twinkling celestial motes/stars in upper cavern/sky
+    // 4. Foreground clouds drifting in front of the moon with silver edges
+    for (let i = Math.floor(this.clouds.length / 2); i < this.clouds.length; i++) {
+      const cl = this.clouds[i];
+      const cx = ((cl.x - time * cl.speed - camera.x * 0.04) % (CANVAS_W + cl.w * 2)) - cl.w;
+      const cy = cl.y - camera.y * 0.03;
+      ctx.fillStyle = `rgba(50, 22, 75, ${cl.alpha * 0.85})`;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, cl.w * 0.5, cl.h * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Silver moonlight rim on cloud edge
+      ctx.strokeStyle = `rgba(220, 200, 255, ${cl.alpha * 0.5})`;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(cx, cy - cl.h * 0.2, cl.w * 0.35, -Math.PI * 0.8, -Math.PI * 0.2);
+      ctx.stroke();
+    }
+
+    // 5. Twinkling celestial motes/stars in upper cavern/sky
     for (const s of this.stars) {
-      const a = 0.3 + 0.7 * Math.abs(Math.sin(time * s.speed + s.blink));
-      ctx.fillStyle = `rgba(220, 200, 255, ${a})`;
+      const a = 0.35 + 0.65 * Math.abs(Math.sin(time * s.speed + s.blink));
+      ctx.fillStyle = `rgba(235, 220, 255, ${a})`;
       ctx.fillRect(s.x, s.y, s.size, s.size);
     }
 
-    // 5. Layer 1: Distant Gothic Spires & Cathedral Towers (Parallax X: 0.12, Parallax Y: 0.10)
-    ctx.fillStyle = '#120822';
+    // 6. Layer 1: Distant Gothic Spires & Cathedral Towers (Parallax X: 0.12, Parallax Y: 0.10)
+    ctx.fillStyle = '#140826';
     const baseY1 = CANVAS_H * 0.90 - camera.y * 0.10;
     for (const d of this.distantSpires) {
       const sx = d.x - camera.x * 0.12;
@@ -4631,7 +4823,6 @@ class Background {
         ctx.moveTo(sx - d.w * 0.25, baseTop);
         ctx.lineTo(sx, baseTop - d.spireH);
         ctx.lineTo(sx + d.w * 0.25, baseTop);
-        // Cross finial
         ctx.rect(sx - 1.5, baseTop - d.spireH - 14, 3, 14);
         ctx.rect(sx - 6, baseTop - d.spireH - 10, 12, 3);
       }
@@ -4641,12 +4832,12 @@ class Background {
     // Atmospheric violet haze over Layer 1
     const fog1 = ctx.createLinearGradient(0, CANVAS_H * 0.60, 0, CANVAS_H);
     fog1.addColorStop(0, 'rgba(28, 12, 45, 0)');
-    fog1.addColorStop(1, 'rgba(38, 16, 58, 0.65)');
+    fog1.addColorStop(1, 'rgba(42, 18, 64, 0.6)');
     ctx.fillStyle = fog1;
     ctx.fillRect(0, CANVAS_H * 0.60, CANVAS_W, CANVAS_H * 0.40);
 
-    // 6. Layer 2: Mid-distance Gothic Viaducts & Arched Bridges (Parallax X: 0.28, Parallax Y: 0.22)
-    ctx.fillStyle = '#1a0d30';
+    // 7. Layer 2: Mid-distance Gothic Viaducts & Arched Bridges (Parallax X: 0.28, Parallax Y: 0.22)
+    ctx.fillStyle = '#1c0d33';
     const baseY2 = CANVAS_H * 0.95 - camera.y * 0.22;
     for (const a of this.midArches) {
       const sx = a.x - camera.x * 0.28;
@@ -4670,7 +4861,7 @@ class Background {
       if (a.hasWindow) {
         ctx.fillStyle = a.windowColor;
         ctx.shadowColor = a.windowColor;
-        ctx.shadowBlur = 6;
+        ctx.shadowBlur = 8;
         ctx.beginPath();
         const winX = sx, winY = topY + 28, winW = 16, winH = 36;
         ctx.moveTo(winX - winW / 2, winY + winH);
@@ -4680,30 +4871,29 @@ class Background {
         ctx.closePath();
         ctx.fill();
         ctx.shadowBlur = 0;
-        ctx.fillStyle = '#1a0d30';
+        ctx.fillStyle = '#1c0d33';
       }
 
       // Perched silhouette gargoyle on bridge cornice
       if (a.hasGargoyle) {
-        ctx.fillStyle = '#140a24';
+        ctx.fillStyle = '#120822';
         ctx.beginPath();
         const gx = sx - a.w * 0.35, gy = topY;
-        ctx.ellipse(gx, gy - 8, 6, 5, 0, 0, Math.PI * 2); // body
-        ctx.moveTo(gx - 4, gy - 12); ctx.lineTo(gx - 12, gy - 20); ctx.lineTo(gx - 8, gy - 6); // wing
+        ctx.ellipse(gx, gy - 8, 6, 5, 0, 0, Math.PI * 2);
+        ctx.moveTo(gx - 4, gy - 12); ctx.lineTo(gx - 12, gy - 20); ctx.lineTo(gx - 8, gy - 6);
         ctx.fill();
-        ctx.fillStyle = '#1a0d30';
+        ctx.fillStyle = '#1c0d33';
       }
     }
 
-    // 7. Layer 3: Closer City Skyline - Steep Gables, Chimneys & Battlements (Parallax X: 0.48, Parallax Y: 0.38)
-    ctx.fillStyle = '#241240';
+    // 8. Layer 3: Closer City Skyline - Steep Gables, Chimneys & Battlements (Parallax X: 0.48, Parallax Y: 0.38)
+    ctx.fillStyle = '#261242';
     const baseY3 = CANVAS_H * 1.05 - camera.y * 0.38;
     for (const c of this.nearColumns) {
       const sx = c.x - camera.x * 0.48;
       if (sx + c.w < -100 || sx - c.w > CANVAS_W + 100) continue;
 
       const topY = baseY3 - c.h;
-      // Building facade
       ctx.fillRect(sx - c.w / 2, topY, c.w, c.h + 200);
 
       // Steep slate roof gable
@@ -4720,20 +4910,20 @@ class Background {
         ctx.beginPath();
         ctx.moveTo(sx, topY - c.roofH);
         ctx.lineTo(sx, topY - c.roofH - 18);
-        ctx.strokeStyle = '#241240';
+        ctx.strokeStyle = '#261242';
         ctx.lineWidth = 2;
         ctx.stroke();
       }
     }
 
-    // 8. Ambient Drifting Embers / Spores
+    // 9. Ambient Drifting Embers / Spores
     for (const sp of this.spores) {
       sp.x += sp.vx * 0.016;
       sp.y += Math.sin(time * 2 + sp.phase) * 0.4;
       if (sp.x < 0) sp.x = CANVAS_W + 10;
       if (sp.x > CANVAS_W + 10) sp.x = 0;
 
-      const alpha = 0.4 + 0.5 * Math.sin(time * 3 + sp.phase);
+      const alpha = 0.45 + 0.55 * Math.sin(time * 3 + sp.phase);
       ctx.fillStyle = sp.color;
       ctx.globalAlpha = alpha;
       ctx.beginPath();
@@ -4742,12 +4932,12 @@ class Background {
     }
     ctx.globalAlpha = 1.0;
 
-    // 9. Volumetric Purple Mist in low canyon areas (Strictly matching reference image)
-    const mistY = Math.max(CANVAS_H * 0.62, CANVAS_H * 0.78 - camera.y * 0.25);
+    // 10. Volumetric Purple Mist in low canyon areas
+    const mistY = Math.max(CANVAS_H * 0.65, CANVAS_H * 0.80 - camera.y * 0.25);
     const mistGrad = ctx.createLinearGradient(0, mistY, 0, CANVAS_H);
-    mistGrad.addColorStop(0, 'rgba(38, 16, 58, 0)');
-    mistGrad.addColorStop(0.5, 'rgba(48, 20, 72, 0.40)');
-    mistGrad.addColorStop(1, 'rgba(40, 16, 62, 0.82)');
+    mistGrad.addColorStop(0, 'rgba(42, 18, 64, 0)');
+    mistGrad.addColorStop(0.5, 'rgba(52, 22, 78, 0.35)');
+    mistGrad.addColorStop(1, 'rgba(44, 18, 68, 0.75)');
     ctx.fillStyle = mistGrad;
     ctx.fillRect(0, mistY, CANVAS_W, CANVAS_H - mistY);
   }
@@ -5639,7 +5829,7 @@ class Game {
 
     // 11. 2D Dynamic Lighting & Atmospheric Vignette Pass
     if (this.lighting && (this.gameState === STATE.PLAYING || this.gameState === STATE.BONFIRE)) {
-      this.lighting.render(ctx, this.camera, this.player, this.boss, this.bonfires, this.projectiles, this.props, this.time);
+      this.lighting.render(ctx, this.camera, this.player, this.boss, this.enemies, this.bonfires, this.projectiles, this.props, this.time);
     }
 
     // 12. HUD
