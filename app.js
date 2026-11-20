@@ -1011,6 +1011,7 @@ function buildLevel() {
   const addGargoyle = (x, y, facing = 1, wings = 'spread') => props.push({ type: 'gargoyle', x, y, facing, wings });
   const addGothicWindow = (x, y, w = 32, h = 75, color = '#ffaa33', glow = true) => props.push({ type: 'gothicWindow', x, y, w, h, color, glow });
   const addChandelier = (x, y, w = 150, chainLen = 120) => props.push({ type: 'chandelier', x, y, w, chainLen });
+  const addRoseWindow = (x, y, radius = 60, color = '#ff2255') => props.push({ type: 'roseWindow', x, y, radius, color });
 
   // ==========================================================================
   // ZONE 1: OVERLOOK TERRACE & THE WEST VIADUCT (x: 0 - 1800, y: 500 - 1500)
@@ -1024,6 +1025,7 @@ function buildLevel() {
 
   // Terrace props & overlook architecture
   addArch(180, 680, 180, 200, 'shrine');
+  addRoseWindow(180, 620, 36, '#ffaa33');
   addStreetlamp(340, 880, 55, '#ffaa33');
   addGargoyle(510, 880, 1, 'spread');
   addGothicWindow(60, 640, 34, 75, '#ffaa33', true);
@@ -1097,6 +1099,7 @@ function buildLevel() {
   P(3020, 480, 420, 32);
   bonfires.push(new Bonfire(3220, 450, 1)); // Second Bonfire: Belfry Haven
   addArch(3220, 260, 260, 220, 'shrine');
+  addRoseWindow(3220, 280, 42, '#ff8833');
   addStreetlamp(3070, 480, 55, '#ffaa33');
   addStreetlamp(3370, 480, 55, '#ffaa33');
   addGothicWindow(3220, 350, 36, 85, '#ff9933', true);
@@ -1203,6 +1206,7 @@ function buildLevel() {
   // Third Bonfire: Cathedral Sanctuary Haven
   bonfires.push(new Bonfire(6540, 1230, 2));
   addArch(6540, 960, 240, 300, 'shrine');
+  addRoseWindow(6540, 800, 50, '#9933ff');
   addStreetlamp(6440, 1260, 55, '#ffaa33');
   addStreetlamp(6680, 1260, 55, '#ffaa33');
   addGothicWindow(6540, 820, 36, 85, '#ff9933', true);
@@ -1244,10 +1248,13 @@ function buildLevel() {
   addChandelier(7500, 660, 180, 160);
   addChandelier(7850, 660, 140, 130);
 
-  // Stained glass lancet windows
+  // Stained glass lancet windows & Cologne Cathedral Rose Windows
   addGothicWindow(7150, 760, 46, 120, '#cc44ff', true);
   addGothicWindow(7500, 720, 58, 140, '#ff2255', true);
   addGothicWindow(7850, 760, 46, 120, '#cc44ff', true);
+  addRoseWindow(7500, 770, 82, '#ff2255');
+  addRoseWindow(7150, 750, 46, '#cc44ff');
+  addRoseWindow(7850, 750, 46, '#cc44ff');
 
   // Gargoyles perched on high colonnades
   addGargoyle(7040, 920, 1, 'spread');
@@ -1791,52 +1798,101 @@ class Player {
   }
 
   _drawKnight(ctx, isRolling) {
-    const x = this.x, y = this.y;
-    const cx = x + this.w / 2, cy = y + this.h / 2;
-    const bobY = this.state === 'idle' ? Math.sin(this.animTimer * 2.5) * 2 : 0;
-    const runBob = this.state === 'run' ? Math.sin(this.animFrame * Math.PI) * 3 : 0;
+    const x = Math.round(this.x), y = Math.round(this.y);
+    const cx = Math.round(x + this.w / 2), cy = Math.round(y + this.h / 2);
+    const bobY = this.state === 'idle' ? Math.round(Math.sin(this.animTimer * 2.5) * 2) : 0;
+    const runBob = this.state === 'run' ? Math.round(Math.sin(this.animFrame * Math.PI) * 3) : 0;
     const wpn = this.weapon;
 
     if (isRolling) {
-      ctx.fillStyle = '#223366';
+      ctx.fillStyle = '#1c2244';
       ctx.beginPath(); ctx.arc(cx, cy, 18, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#3a3a4e';
+      ctx.fillStyle = '#313352';
       ctx.beginPath(); ctx.arc(cx, cy, 14, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#555577';
+      ctx.fillStyle = '#556688';
       ctx.beginPath(); ctx.arc(cx + 4, cy - 2, 8, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#99eeff';
-      ctx.fillRect(cx + 6, cy - 4, 5, 3);
+      ctx.fillStyle = '#00f0ff';
+      ctx.fillRect(cx + 6, cy - 4, 6, 3);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(cx + 8, cy - 3, 3, 2);
       ctx.fillStyle = wpn.color;
       ctx.fillRect(cx - 14, cy - 2, 28, 3);
       return;
     }
 
-    // Cape
-    ctx.fillStyle = '#3344aa';
+    // Cape (Royal Midnight Violet/Blue with pixel folds)
+    ctx.fillStyle = '#261b4d';
     ctx.beginPath();
-    ctx.moveTo(x + 6, y + 12 + bobY); ctx.lineTo(x + 2, y + this.h + 4 + runBob);
-    ctx.lineTo(x + 20, y + this.h - 2 + runBob * 0.5); ctx.lineTo(x + 14, y + 12 + bobY);
-    ctx.closePath(); ctx.fill();
+    ctx.moveTo(x + 6, y + 12 + bobY);
+    ctx.lineTo(x - 2, y + this.h + 4 + runBob);
+    ctx.lineTo(x + 18, y + this.h - 2 + Math.round(runBob * 0.5));
+    ctx.lineTo(x + 14, y + 12 + bobY);
+    ctx.closePath();
+    ctx.fill();
 
-    // Body
-    ctx.fillStyle = '#2a2a3a'; ctx.fillRect(x + 6, y + 14 + bobY, 16, 18);
+    ctx.fillStyle = '#3c2b77';
+    ctx.beginPath();
+    ctx.moveTo(x + 8, y + 14 + bobY);
+    ctx.lineTo(x + 2, y + this.h + 2 + runBob);
+    ctx.lineTo(x + 12, y + this.h - 2 + Math.round(runBob * 0.5));
+    ctx.lineTo(x + 14, y + 14 + bobY);
+    ctx.closePath();
+    ctx.fill();
 
-    // Legs
-    const legOff = this.state === 'run' ? Math.sin(this.animFrame * Math.PI) * 5 : 0;
-    ctx.fillStyle = '#222233';
-    ctx.fillRect(x + 7, y + 32 + bobY, 6, 12 + legOff); ctx.fillRect(x + 15, y + 32 + bobY, 6, 12 - legOff);
-    ctx.fillStyle = '#444466';
+    // Body (Gothic Abyssal Plate Armor)
+    ctx.fillStyle = '#1b1b26';
+    ctx.fillRect(x + 6, y + 14 + bobY, 16, 18);
+    // Steel chestplate highlight
+    ctx.fillStyle = '#445577';
+    ctx.fillRect(x + 6, y + 14 + bobY, 16, 2);
+    ctx.fillRect(x + 6, y + 14 + bobY, 2, 18);
+    ctx.fillStyle = '#2a3348';
+    ctx.fillRect(x + 8, y + 18 + bobY, 12, 10);
+
+    // Legs (Armored greaves)
+    const legOff = this.state === 'run' ? Math.round(Math.sin(this.animFrame * Math.PI) * 5) : 0;
+    ctx.fillStyle = '#181824';
+    ctx.fillRect(x + 7, y + 32 + bobY, 6, 12 + legOff);
+    ctx.fillRect(x + 15, y + 32 + bobY, 6, 12 - legOff);
+    ctx.fillStyle = '#556688';
     ctx.fillRect(x + 6, y + 42 + bobY + Math.max(0, legOff), 7, 3);
     ctx.fillRect(x + 15, y + 42 + bobY + Math.max(0, -legOff), 7, 3);
+    ctx.fillStyle = '#8899bb';
+    ctx.fillRect(x + 6, y + 42 + bobY + Math.max(0, legOff), 7, 1);
+    ctx.fillRect(x + 15, y + 42 + bobY + Math.max(0, -legOff), 7, 1);
 
-    // Head
-    ctx.fillStyle = '#555577'; ctx.fillRect(x + 6, y + 2 + bobY, 18, 14);
-    ctx.fillStyle = '#99ccff'; ctx.fillRect(x + 18, y + 6 + bobY, 6, 4);
-    ctx.fillStyle = '#6666aa';
-    ctx.beginPath(); ctx.moveTo(x + 8, y + 2 + bobY); ctx.lineTo(x + 5, y - 6 + bobY); ctx.lineTo(x + 14, y + 2 + bobY); ctx.closePath(); ctx.fill();
+    // Head (Gothic Greathelm / Sallet)
+    ctx.fillStyle = '#334466';
+    ctx.fillRect(x + 6, y + 2 + bobY, 18, 14);
+    ctx.fillStyle = '#667799';
+    ctx.fillRect(x + 6, y + 2 + bobY, 18, 2);
+    ctx.fillRect(x + 6, y + 2 + bobY, 2, 14);
 
-    // Shoulders
-    ctx.fillStyle = '#555577'; ctx.fillRect(x + 2, y + 14 + bobY, 8, 6); ctx.fillRect(x + 18, y + 14 + bobY, 8, 6);
+    // Horned helm crest
+    ctx.fillStyle = '#445577';
+    ctx.beginPath();
+    ctx.moveTo(x + 8, y + 2 + bobY);
+    ctx.lineTo(x + 4, y - 6 + bobY);
+    ctx.lineTo(x + 14, y + 2 + bobY);
+    ctx.closePath();
+    ctx.fill();
+
+    // Glowing Cyan Visor Slit
+    ctx.fillStyle = '#00e5ff';
+    ctx.shadowColor = '#00f0ff';
+    ctx.shadowBlur = 8;
+    ctx.fillRect(x + 16, y + 6 + bobY, 8, 4);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(x + 18, y + 7 + bobY, 4, 2);
+    ctx.shadowBlur = 0;
+
+    // Shoulders (Spiked Pauldrons)
+    ctx.fillStyle = '#445577';
+    ctx.fillRect(x + 2, y + 14 + bobY, 8, 6);
+    ctx.fillRect(x + 18, y + 14 + bobY, 8, 6);
+    ctx.fillStyle = '#7788aa';
+    ctx.fillRect(x + 2, y + 14 + bobY, 8, 2);
+    ctx.fillRect(x + 18, y + 14 + bobY, 8, 2);
 
     // Weapon drawing
     const showDownVisual = this.downSlashVisualTimer > 0;
@@ -3441,123 +3497,361 @@ class EnvironmentRenderer {
         this._drawGothicWindow(ctx, p.x, p.y, p.w, p.h, p.color, p.glow, time);
       } else if (p.type === 'chandelier') {
         this._drawChandelier(ctx, p.x, p.y, p.w, p.chainLen, time);
+      } else if (p.type === 'roseWindow') {
+        this._drawRoseWindow(ctx, p.x, p.y, p.radius, p.color, time);
       }
     }
   }
 
-  _drawGothicArch(ctx, x, y, w, h, style, time) {
+  _drawRoseWindow(ctx, x, y, radius = 60, color = '#ff2255', time) {
     ctx.save();
-    if (style === 'shrine') {
-      // Warm sanctuary shrine arch behind the bonfire
-      ctx.fillStyle = '#161024';
-      ctx.fillRect(x - w / 2, y, 26, h);
-      ctx.fillRect(x + w / 2 - 26, y, 26, h);
-      // Arched top
+    const rx = Math.round(x);
+    const ry = Math.round(y);
+    const r = Math.round(radius);
+
+    // 1. Soft atmospheric stained glass candlelight shafts fanning downward
+    const rayPulse = Math.sin(time * 3 + rx * 0.1) * 0.15 + 0.85;
+    ctx.fillStyle = color === '#ff2255'
+      ? `rgba(255, 40, 80, ${0.12 * rayPulse})`
+      : (color === '#ffaa33' ? `rgba(255, 170, 50, ${0.13 * rayPulse})` : `rgba(180, 70, 255, ${0.12 * rayPulse})`);
+    ctx.beginPath();
+    ctx.moveTo(rx - r * 0.6, ry + r * 0.4);
+    ctx.lineTo(rx - r * 1.8, ry + r * 2.8);
+    ctx.lineTo(rx + r * 1.8, ry + r * 2.8);
+    ctx.lineTo(rx + r * 0.6, ry + r * 0.4);
+    ctx.closePath();
+    ctx.fill();
+
+    // 2. Heavy outer dark stone ashlar rosette frame (Cologne Cathedral Werkstein)
+    ctx.fillStyle = '#0c0617';
+    ctx.beginPath();
+    ctx.arc(rx, ry, r + 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Chiseled stone dentils / crockets around outer ring
+    const numDentils = 24;
+    ctx.fillStyle = '#261b38';
+    for (let i = 0; i < numDentils; i++) {
+      const a = (i / numDentils) * Math.PI * 2;
+      const dx = rx + Math.cos(a) * (r + 7);
+      const dy = ry + Math.sin(a) * (r + 7);
+      ctx.fillRect(Math.round(dx - 2), Math.round(dy - 2), 4, 4);
+    }
+
+    ctx.fillStyle = '#170f28';
+    ctx.beginPath();
+    ctx.arc(rx, ry, r + 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 3. 12 Stained Glass Petals with Jewel-Toned Glazing
+    const numPetals = 12;
+    const petalAngle = (Math.PI * 2) / numPetals;
+    const jewelColors = [
+      '#ff2255', '#ffaa22', '#3388ff', '#bb33ff',
+      '#ff4477', '#ffcc33', '#22bbff', '#9922ee',
+      '#ff3366', '#ff9922', '#4499ff', '#cc44ff'
+    ];
+
+    for (let i = 0; i < numPetals; i++) {
+      const a1 = i * petalAngle - petalAngle * 0.44;
+      const a2 = i * petalAngle + petalAngle * 0.44;
+      const midA = i * petalAngle;
+      const col = jewelColors[i % jewelColors.length];
+
+      // Petal flicker
+      const flk = Math.sin(time * 6 + i * 1.5 + rx * 0.2) * 0.12 + 0.88;
+
+      // Outer lancet petal slice
+      ctx.fillStyle = col;
+      ctx.globalAlpha = 0.82 * flk;
       ctx.beginPath();
-      ctx.moveTo(x - w / 2, y + 60);
-      ctx.quadraticCurveTo(x - w / 4, y - 40, x, y - 60);
-      ctx.quadraticCurveTo(x + w / 4, y - 40, x + w / 2, y + 60);
-      ctx.lineTo(x + w / 2 - 26, y + 60);
-      ctx.quadraticCurveTo(x + w / 4, y - 20, x, y - 36);
-      ctx.quadraticCurveTo(x - w / 4, y - 20, x - w / 2 + 26, y + 60);
-      ctx.closePath();
-      ctx.fillStyle = '#221936';
-      ctx.fill();
-      // Backing silhouette
-      ctx.fillStyle = 'rgba(25, 18, 42, 0.45)';
-      ctx.beginPath();
-      ctx.moveTo(x - w / 2 + 26, y + h);
-      ctx.lineTo(x - w / 2 + 26, y + 60);
-      ctx.quadraticCurveTo(x - w / 4, y - 20, x, y - 36);
-      ctx.quadraticCurveTo(x + w / 4, y - 20, x + w / 2 - 26, y + 60);
-      ctx.lineTo(x + w / 2 - 26, y + h);
-      ctx.closePath();
-      ctx.fill();
-      // Carved shrine circle motif
-      ctx.strokeStyle = '#392858';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(x, y + 40, 24, 0, Math.PI * 2);
-      ctx.stroke();
-    } else if (style === 'arenaThrone') {
-      // Grand Throne Arch in Boss Arena
-      ctx.fillStyle = '#100a1c';
-      ctx.fillRect(x - 24, y, 48, h);
-      // High arches
-      ctx.beginPath();
-      ctx.moveTo(x - w / 2, y + h);
-      ctx.lineTo(x - w / 2, y + 90);
-      ctx.quadraticCurveTo(x - w / 4, y - 20, x, y - 50);
-      ctx.quadraticCurveTo(x + w / 4, y - 20, x + w / 2, y + 90);
-      ctx.lineTo(x + w / 2, y + h);
-      ctx.lineTo(x + w / 2 - 32, y + h);
-      ctx.lineTo(x + w / 2 - 32, y + 95);
-      ctx.quadraticCurveTo(x + w / 4, y + 10, x, y - 18);
-      ctx.quadraticCurveTo(x - w / 4, y + 10, x - w / 2 + 32, y + 95);
-      ctx.lineTo(x - w / 2 + 32, y + h);
-      ctx.closePath();
-      ctx.fillStyle = '#181028';
-      ctx.fill();
-      // Heavy iron chains dangling
-      ctx.strokeStyle = '#221838';
-      ctx.lineWidth = 3.5;
-      ctx.beginPath(); ctx.moveTo(x - 70, y); ctx.lineTo(x - 70, y + h - 120); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(x + 70, y); ctx.lineTo(x + 70, y + h - 120); ctx.stroke();
-    } else if (style === 'arenaColonnade') {
-      // Cathedral colonnade arch
-      ctx.fillStyle = '#140c22';
-      ctx.fillRect(x - w / 2, y, 28, h);
-      ctx.fillRect(x + w / 2 - 28, y, 28, h);
-      ctx.beginPath();
-      ctx.moveTo(x - w / 2, y + 80);
-      ctx.quadraticCurveTo(x - w / 4, y, x, y - 25);
-      ctx.quadraticCurveTo(x + w / 4, y, x + w / 2, y + 80);
-      ctx.lineTo(x + w / 2 - 28, y + 80);
-      ctx.quadraticCurveTo(x + w / 4, y + 20, x, y - 2);
-      ctx.quadraticCurveTo(x - w / 4, y + 20, x - w / 2 + 28, y + 80);
-      ctx.closePath();
-      ctx.fillStyle = '#1e1432';
-      ctx.fill();
-    } else if (style === 'viaductPillar') {
-      // Massive multi-tier arched viaduct pillar crossing misty canyon
-      ctx.fillStyle = '#120d1e';
-      ctx.beginPath();
-      ctx.moveTo(x - w / 2, y + h);
-      ctx.lineTo(x - w / 2, y);
-      ctx.lineTo(x + w / 2, y);
-      ctx.lineTo(x + w / 2, y + h);
-      ctx.lineTo(x + w / 2 - 32, y + h);
-      ctx.lineTo(x + w / 2 - 32, y + 40);
-      ctx.quadraticCurveTo(x, y - 10, x - w / 2 + 32, y + 40);
-      ctx.lineTo(x - w / 2 + 32, y + h);
+      ctx.arc(rx, ry, r, a1, a2);
+      ctx.lineTo(rx + Math.cos(midA) * (r * 0.42), ry + Math.sin(midA) * (r * 0.42));
       ctx.closePath();
       ctx.fill();
 
-      // Stone ashlar bands
-      ctx.strokeStyle = '#221936';
+      // Trefoil tracery cusp highlight inside each petal
+      ctx.fillStyle = '#ffffff';
+      ctx.globalAlpha = 0.45 * flk;
+      const cuspX = rx + Math.cos(midA) * (r * 0.76);
+      const cuspY = ry + Math.sin(midA) * (r * 0.76);
+      ctx.fillRect(Math.round(cuspX - 2), Math.round(cuspY - 2), 4, 4);
+    }
+    ctx.globalAlpha = 1.0;
+
+    // 4. Middle concentric stone ring (binding outer and inner tracery)
+    ctx.strokeStyle = '#120a1f';
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.arc(rx, ry, r * 0.48, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#2d1e44';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(rx, ry, r * 0.48, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // 5. Inner 6-petal rosette
+    const innerPetals = 6;
+    const innerAngle = (Math.PI * 2) / innerPetals;
+    for (let i = 0; i < innerPetals; i++) {
+      const a = i * innerAngle;
+      const flk = Math.sin(time * 7 + i * 2.1) * 0.15 + 0.85;
+      ctx.fillStyle = (i % 2 === 0) ? '#ffcc22' : '#ff3366';
+      ctx.globalAlpha = 0.9 * flk;
+      ctx.beginPath();
+      ctx.arc(rx + Math.cos(a) * (r * 0.26), ry + Math.sin(a) * (r * 0.26), r * 0.14, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1.0;
+
+    // 6. Radiating dark stone mullions / spokes (Maßwerk lace)
+    ctx.strokeStyle = '#0d071a';
+    ctx.lineWidth = 2.5;
+    for (let i = 0; i < numPetals; i++) {
+      const a = i * petalAngle;
+      ctx.beginPath();
+      ctx.moveTo(rx, ry);
+      ctx.lineTo(rx + Math.cos(a) * (r + 4), ry + Math.sin(a) * (r + 4));
+      ctx.stroke();
+    }
+
+    // Molded stone spoke highlight
+    ctx.strokeStyle = '#291b3e';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < numPetals; i++) {
+      const a = i * petalAngle;
+      ctx.beginPath();
+      ctx.moveTo(rx + Math.cos(a) * (r * 0.48), ry + Math.sin(a) * (r * 0.48));
+      ctx.lineTo(rx + Math.cos(a) * r, ry + Math.sin(a) * r);
+      ctx.stroke();
+    }
+
+    // 7. Center Golden Eye / Rosette Boss
+    const centerPulse = Math.sin(time * 4) * 0.15 + 0.85;
+    ctx.fillStyle = '#ffaa11';
+    ctx.shadowColor = '#ffbb22';
+    ctx.shadowBlur = 12 * centerPulse;
+    ctx.beginPath();
+    ctx.arc(rx, ry, r * 0.16, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(rx, ry, r * 0.08, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Outer stone frame chiseled edge
+    ctx.strokeStyle = '#392552';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(rx, ry, r + 10, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  _drawGothicArch(ctx, x, y, w, h, style, time) {
+    ctx.save();
+    const rx = Math.round(x);
+    const ry = Math.round(y);
+    const rw = Math.round(w);
+    const rh = Math.round(h);
+
+    if (style === 'shrine') {
+      // Cologne Cathedral Sanctuary Shrine (Bonfire canopy)
+      // Clustered columns (Bündelpfeiler): three grouped stone shafts on each side
+      ctx.fillStyle = '#100a1c';
+      ctx.fillRect(rx - rw / 2, ry, 12, rh);
+      ctx.fillStyle = '#170f28';
+      ctx.fillRect(rx - rw / 2 + 10, ry, 10, rh);
+      ctx.fillStyle = '#120c20';
+      ctx.fillRect(rx - rw / 2 + 18, ry, 10, rh);
+
+      ctx.fillStyle = '#120c20';
+      ctx.fillRect(rx + rw / 2 - 28, ry, 10, rh);
+      ctx.fillStyle = '#170f28';
+      ctx.fillRect(rx + rw / 2 - 20, ry, 10, rh);
+      ctx.fillStyle = '#100a1c';
+      ctx.fillRect(rx + rw / 2 - 12, ry, 12, rh);
+
+      // Molded plinth bases & capitals
+      ctx.fillStyle = '#261b3c';
+      ctx.fillRect(rx - rw / 2 - 2, ry + rh - 12, 32, 12);
+      ctx.fillRect(rx + rw / 2 - 30, ry + rh - 12, 32, 12);
+      ctx.fillRect(rx - rw / 2 - 2, ry + 56, 32, 8);
+      ctx.fillRect(rx + rw / 2 - 30, ry + 56, 32, 8);
+
+      // Pointed lancet arch with double cusped tracery
+      ctx.beginPath();
+      ctx.moveTo(rx - rw / 2, ry + 56);
+      ctx.quadraticCurveTo(rx - rw / 4, ry - 45, rx, ry - 65);
+      ctx.quadraticCurveTo(rx + rw / 4, ry - 45, rx + rw / 2, ry + 56);
+      ctx.lineTo(rx + rw / 2 - 28, ry + 56);
+      ctx.quadraticCurveTo(rx + rw / 4, ry - 20, rx, ry - 38);
+      ctx.quadraticCurveTo(rx - rw / 4, ry - 20, rx - rw / 2 + 28, ry + 56);
+      ctx.closePath();
+      ctx.fillStyle = '#201635';
+      ctx.fill();
+
+      // Backing tympanum silhouette
+      ctx.fillStyle = 'rgba(20, 13, 34, 0.55)';
+      ctx.beginPath();
+      ctx.moveTo(rx - rw / 2 + 28, ry + rh);
+      ctx.lineTo(rx - rw / 2 + 28, ry + 56);
+      ctx.quadraticCurveTo(rx - rw / 4, ry - 20, rx, ry - 38);
+      ctx.quadraticCurveTo(rx + rw / 4, ry - 20, rx + rw / 2 - 28, ry + 56);
+      ctx.lineTo(rx + rw / 2 - 28, ry + rh);
+      ctx.closePath();
+      ctx.fill();
+
+      // Stone crockets (Krabben) ascending the gable
+      ctx.fillStyle = '#2d1f46';
+      for (let i = 0; i < 5; i++) {
+        const prog = (i + 1) / 6;
+        const lx = rx - rw / 2 + prog * (rw / 2);
+        const ly = ry + 56 - prog * 115;
+        const rxp = rx + rw / 2 - prog * (rw / 2);
+        ctx.fillRect(Math.round(lx - 3), Math.round(ly - 3), 6, 6);
+        ctx.fillRect(Math.round(rxp - 3), Math.round(ly - 3), 6, 6);
+      }
+
+      // Cruciform finial (Kreuzblumen) at the gable peak
+      ctx.fillStyle = '#392858';
+      ctx.fillRect(rx - 3, ry - 78, 6, 16);
+      ctx.fillRect(rx - 8, ry - 74, 16, 5);
+
+      // Carved stone cross in tympanum
+      ctx.fillStyle = '#ffaa33';
+      ctx.shadowColor = '#ff9922';
+      ctx.shadowBlur = 8;
+      ctx.fillRect(rx - 2, ry + 20, 4, 24);
+      ctx.fillRect(rx - 8, ry + 28, 16, 4);
+      ctx.shadowBlur = 0;
+
+      // Candle niches in flanking piers
+      const cFlk1 = Math.sin(time * 10 + rx) * 0.15 + 0.85;
+      const cFlk2 = Math.sin(time * 12 + rx * 2) * 0.15 + 0.85;
+      ctx.fillStyle = '#ffaa33';
+      ctx.fillRect(rx - rw / 2 + 12, ry + rh * 0.45, 4, 6 * cFlk1);
+      ctx.fillRect(rx + rw / 2 - 16, ry + rh * 0.45, 4, 6 * cFlk2);
+    } else if (style === 'arenaThrone') {
+      // Grand High Altar & Throne Arch in Boss Arena (Bloodmoon Cathedral)
+      // Clustered columns (Bündelpfeiler)
+      ctx.fillStyle = '#0a0614';
+      ctx.fillRect(rx - rw / 2, ry, 36, rh);
+      ctx.fillRect(rx + rw / 2 - 36, ry, 36, rh);
+      ctx.fillStyle = '#170f26';
+      ctx.fillRect(rx - rw / 2 + 10, ry, 16, rh);
+      ctx.fillRect(rx + rw / 2 - 26, ry, 16, rh);
+
+      // High pointed lancet arch with double cusped tracery
+      ctx.beginPath();
+      ctx.moveTo(rx - rw / 2, ry + rh);
+      ctx.lineTo(rx - rw / 2, ry + 100);
+      ctx.quadraticCurveTo(rx - rw / 4, ry - 30, rx, ry - 65);
+      ctx.quadraticCurveTo(rx + rw / 4, ry - 30, rx + rw / 2, ry + 100);
+      ctx.lineTo(rx + rw / 2, ry + rh);
+      ctx.lineTo(rx + rw / 2 - 36, ry + rh);
+      ctx.lineTo(rx + rw / 2 - 36, ry + 105);
+      ctx.quadraticCurveTo(rx + rw / 4, ry + 8, rx, ry - 22);
+      ctx.quadraticCurveTo(rx - rw / 4, ry + 8, rx - rw / 2 + 36, ry + 105);
+      ctx.lineTo(rx - rw / 2 + 36, ry + rh);
+      ctx.closePath();
+      ctx.fillStyle = '#160e24';
+      ctx.fill();
+
+      // Grand Rose Window set in the Altar Tympanum!
+      this._drawRoseWindow(ctx, rx, ry + 85, 58, '#ff2255', time);
+
+      // Heavy forged iron chains dangling down from the vaulted ribs
+      ctx.strokeStyle = '#1d142d';
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.moveTo(rx - 80, ry); ctx.lineTo(rx - 80, ry + rh - 120);
+      ctx.moveTo(rx + 80, ry); ctx.lineTo(rx + 80, ry + rh - 120);
+      ctx.stroke();
+
+      // Stone gargoyle corbels at the arch springline
+      this._drawGargoyle(ctx, rx - rw / 2 + 36, ry + 105, 1, 'folded', time);
+      this._drawGargoyle(ctx, rx + rw / 2 - 36, ry + 105, -1, 'folded', time);
+    } else if (style === 'arenaColonnade') {
+      // Cologne Cathedral Great Arcade Nave Colonnade
+      ctx.fillStyle = '#100a1c';
+      ctx.fillRect(rx - rw / 2, ry, 32, rh);
+      ctx.fillRect(rx + rw / 2 - 32, ry, 32, rh);
+      ctx.fillStyle = '#1c132f';
+      ctx.fillRect(rx - rw / 2 + 8, ry, 16, rh);
+      ctx.fillRect(rx + rw / 2 - 24, ry, 16, rh);
+
+      // Pointed arch with triforium arches above
+      ctx.beginPath();
+      ctx.moveTo(rx - rw / 2, ry + 90);
+      ctx.quadraticCurveTo(rx - rw / 4, ry, rx, ry - 30);
+      ctx.quadraticCurveTo(rx + rw / 4, ry, rx + rw / 2, ry + 90);
+      ctx.lineTo(rx + rw / 2 - 32, ry + 90);
+      ctx.quadraticCurveTo(rx + rw / 4, ry + 24, rx, ry - 4);
+      ctx.quadraticCurveTo(rx - rw / 4, ry + 24, rx - rw / 2 + 32, ry + 90);
+      ctx.closePath();
+      ctx.fillStyle = '#1b122e';
+      ctx.fill();
+
+      // Candlelit niches in arcade
+      const nFlk = Math.sin(time * 8 + rx) * 0.12 + 0.88;
+      ctx.fillStyle = `rgba(255, 170, 50, ${0.85 * nFlk})`;
+      ctx.fillRect(rx - 6, ry + 36, 12, 16);
+    } else if (style === 'viaductPillar') {
+      // Massive multi-tier arched viaduct pillar crossing misty canyon (Reference Image Style!)
+      ctx.fillStyle = '#0f091a';
+      ctx.beginPath();
+      ctx.moveTo(rx - rw / 2, ry + rh);
+      ctx.lineTo(rx - rw / 2, ry);
+      ctx.lineTo(rx + rw / 2, ry);
+      ctx.lineTo(rx + rw / 2, ry + rh);
+      ctx.lineTo(rx + rw / 2 - 36, ry + rh);
+      ctx.lineTo(rx + rw / 2 - 36, ry + 45);
+      ctx.quadraticCurveTo(rx, ry - 12, rx - rw / 2 + 36, ry + 45);
+      ctx.lineTo(rx - rw / 2 + 36, ry + rh);
+      ctx.closePath();
+      ctx.fill();
+
+      // Open lancet cutout in the center letting the purple twilight sky show through!
+      ctx.fillStyle = 'rgba(45, 18, 65, 0.45)';
+      ctx.beginPath();
+      ctx.moveTo(rx - 16, ry + rh - 40);
+      ctx.lineTo(rx - 16, ry + 80);
+      ctx.quadraticCurveTo(rx, ry + 50, rx + 16, ry + 80);
+      ctx.lineTo(rx + 16, ry + rh - 40);
+      ctx.closePath();
+      ctx.fill();
+
+      // Ashlar stone masonry bands
+      ctx.strokeStyle = '#221836';
       ctx.lineWidth = 2;
-      for (let ly = y + 40; ly < y + h; ly += 36) {
+      for (let ly = ry + 45; ly < ry + rh; ly += 36) {
         ctx.beginPath();
-        ctx.moveTo(x - w / 2, ly);
-        ctx.lineTo(x - w / 2 + 32, ly);
-        ctx.moveTo(x + w / 2 - 32, ly);
-        ctx.lineTo(x + w / 2, ly);
+        ctx.moveTo(rx - rw / 2, ly);
+        ctx.lineTo(rx - rw / 2 + 36, ly);
+        ctx.moveTo(rx + rw / 2 - 36, ly);
+        ctx.lineTo(rx + rw / 2, ly);
         ctx.stroke();
       }
     } else {
       // Standard ruined gothic arch
-      ctx.fillStyle = '#150f24';
+      ctx.fillStyle = '#130d22';
       ctx.beginPath();
-      ctx.moveTo(x - w / 2, y + h);
-      ctx.lineTo(x - w / 2, y + 50);
-      ctx.quadraticCurveTo(x - w / 4, y - 20, x, y - 35);
-      ctx.quadraticCurveTo(x + w / 4, y - 20, x + w / 2, y + 50);
-      ctx.lineTo(x + w / 2, y + h);
-      ctx.lineTo(x + w / 2 - 20, y + h);
-      ctx.lineTo(x + w / 2 - 20, y + 55);
-      ctx.quadraticCurveTo(x + w / 4, y - 2, x, y - 15);
-      ctx.quadraticCurveTo(x - w / 4, y - 2, x - w / 2 + 20, y + 55);
-      ctx.lineTo(x - w / 2 + 20, y + h);
+      ctx.moveTo(rx - rw / 2, ry + rh);
+      ctx.lineTo(rx - rw / 2, ry + 55);
+      ctx.quadraticCurveTo(rx - rw / 4, ry - 22, rx, ry - 38);
+      ctx.quadraticCurveTo(rx + rw / 4, ry - 22, rx + rw / 2, ry + 55);
+      ctx.lineTo(rx + rw / 2, ry + rh);
+      ctx.lineTo(rx + rw / 2 - 24, ry + rh);
+      ctx.lineTo(rx + rw / 2 - 24, ry + 60);
+      ctx.quadraticCurveTo(rx + rw / 4, ry - 4, rx, ry - 18);
+      ctx.quadraticCurveTo(rx - rw / 4, ry - 4, rx - rw / 2 + 24, ry + 60);
+      ctx.lineTo(rx - rw / 2 + 24, ry + rh);
       ctx.closePath();
       ctx.fill();
     }
@@ -4092,93 +4386,111 @@ class EnvironmentRenderer {
   }
 
   _drawSolid(ctx, p, time) {
-    const { x, y, w, h } = p;
+    const rx = Math.round(p.x);
+    const ry = Math.round(p.y);
+    const rw = Math.round(p.w);
+    const rh = Math.round(p.h);
     ctx.save();
 
-    // 1. Base dark vampire-gothic stone gradient
-    const grad = ctx.createLinearGradient(x, y, x, y + h);
+    // 1. Base dark vampire-gothic stone gradient (Cologne Cathedral basalt/trachyte)
+    const grad = ctx.createLinearGradient(rx, ry, rx, ry + rh);
     grad.addColorStop(0, '#1c152a');
     grad.addColorStop(0.35, '#150f22');
     grad.addColorStop(1, '#0c0715');
     ctx.fillStyle = grad;
-    ctx.fillRect(x, y, w, h);
+    ctx.fillRect(rx, ry, rw, rh);
 
-    // 2. Ashlar Stone Masonry Courses
+    // 2. Ashlar Stone Masonry Courses (Werkstein)
     ctx.strokeStyle = '#090510';
     ctx.lineWidth = 1.5;
     const courseH = 22;
-    const numCourses = Math.floor(h / courseH);
+    const numCourses = Math.floor(rh / courseH);
 
     for (let c = 0; c < numCourses; c++) {
-      const cy = y + (c + 1) * courseH;
-      if (cy >= y + h) break;
+      const cy = ry + (c + 1) * courseH;
+      if (cy >= ry + rh) break;
       ctx.beginPath();
-      ctx.moveTo(x, cy);
-      ctx.lineTo(x + w, cy);
+      ctx.moveTo(rx, cy);
+      ctx.lineTo(rx + rw, cy);
       ctx.stroke();
 
       const offset = (c % 2 === 0) ? 0 : 26;
       const brickW = 52;
-      for (let bx = x + offset; bx < x + w; bx += brickW) {
-        if (bx > x && bx < x + w) {
+      for (let bx = rx + offset; bx < rx + rw; bx += brickW) {
+        if (bx > rx && bx < rx + rw) {
           ctx.beginPath();
           ctx.moveTo(bx, cy - courseH);
           ctx.lineTo(bx, cy);
           ctx.stroke();
 
           // Violet moonlight chisel rim on stone block
-          ctx.fillStyle = 'rgba(75, 55, 105, 0.16)';
+          ctx.fillStyle = 'rgba(75, 55, 105, 0.22)';
           ctx.fillRect(bx + 1, cy - courseH + 1, brickW - 2, 2);
+          ctx.fillRect(bx + 1, cy - courseH + 1, 2, courseH - 2);
         }
       }
     }
 
     // 3. Top Flagstone & Cobblestone Curb
     ctx.fillStyle = '#261d36';
-    ctx.fillRect(x, y, w, 7);
+    ctx.fillRect(rx, ry, rw, 7);
     ctx.fillStyle = '#3c2e55';
-    ctx.fillRect(x, y, w, 2); // Violet stone highlight
+    ctx.fillRect(rx, ry, rw, 2); // Violet stone highlight
     ctx.fillStyle = '#100a1b';
-    ctx.fillRect(x, y + 6, w, 1); // Mortar shadow under curb
+    ctx.fillRect(rx, ry + 6, rw, 1); // Mortar shadow under curb
 
-    // 4. Gothic Balustrade / Battlements on Bridges & Elevated Platforms
-    if (w >= 140 && h <= 50 && y < 1100) {
+    // Alternating 2x2 cobblestone curb texture
+    ctx.fillStyle = '#4c3b6b';
+    for (let cb = rx + 2; cb < rx + rw - 4; cb += 8) {
+      if ((Math.floor(cb / 8) % 2) === 0) {
+        ctx.fillRect(cb, ry + 1, 4, 2);
+      }
+    }
+
+    // 4. Cologne Cathedral Pierced Openwork Balustrades on Bridges & Balconies
+    if (rw >= 140 && rh <= 50 && ry < 1100) {
       ctx.fillStyle = '#1e162d';
       const postStep = 44;
-      for (let px = x + 10; px < x + w - 20; px += postStep) {
-        // Baluster pillar
-        ctx.fillRect(px, y - 10, 8, 10);
+      for (let px = rx + 10; px < rx + rw - 20; px += postStep) {
+        // Baluster pillar body
+        ctx.fillRect(px, ry - 11, 10, 11);
         ctx.fillStyle = '#2e2245';
-        ctx.fillRect(px - 1, y - 12, 10, 2); // Cap
+        ctx.fillRect(px - 1, ry - 13, 12, 2); // Cap
+        ctx.fillStyle = '#1e162d';
+
+        // Pierced lancet openwork cutout (sky visible through stone lace)
+        ctx.fillStyle = '#0b0614';
+        ctx.fillRect(px + 3, ry - 8, 4, 5);
+        ctx.fillRect(px + 4, ry - 9, 2, 1);
         ctx.fillStyle = '#1e162d';
       }
       // Top handrail running along balusters
       ctx.fillStyle = '#241a37';
-      ctx.fillRect(x + 8, y - 12, w - 16, 3);
-      ctx.fillStyle = '#3b2c55';
-      ctx.fillRect(x + 8, y - 12, w - 16, 1);
+      ctx.fillRect(rx + 8, ry - 14, rw - 16, 3);
+      ctx.fillStyle = '#453562';
+      ctx.fillRect(rx + 8, ry - 14, rw - 16, 1);
     }
 
     // 5. Creeping Gothic Brambles / Dark Ivy
-    const seed = (p.ox || x) * 13 + (p.oy || y) * 7;
+    const seed = (p.ox || rx) * 13 + (p.oy || ry) * 7;
     ctx.fillStyle = '#150f1c';
-    for (let gx = 8; gx < w - 8; gx += 20) {
+    for (let gx = 8; gx < rw - 8; gx += 20) {
       const sway = Math.sin(time * 2 + seed + gx * 0.15) * 1.2;
       ctx.beginPath();
-      ctx.moveTo(x + gx, y);
-      ctx.lineTo(x + gx - 3 + sway, y - 5);
-      ctx.lineTo(x + gx + 2, y);
+      ctx.moveTo(rx + gx, ry);
+      ctx.lineTo(rx + gx - 3 + sway, ry - 5);
+      ctx.lineTo(rx + gx + 2, ry);
       ctx.fill();
     }
 
     // 6. Jagged Underside & Carved Stone Corbels (if not floor)
-    if (y + h < 1480 && h <= 60) {
+    if (ry + rh < 1480 && rh <= 60) {
       ctx.fillStyle = '#110b1a';
-      for (let sx = 14; sx < w - 14; sx += 40) {
+      for (let sx = 14; sx < rw - 14; sx += 40) {
         ctx.beginPath();
-        ctx.moveTo(x + sx - 8, y + h);
-        ctx.lineTo(x + sx + 8, y + h);
-        ctx.lineTo(x + sx, y + h + 10);
+        ctx.moveTo(rx + sx - 8, ry + rh);
+        ctx.lineTo(rx + sx + 8, ry + rh);
+        ctx.lineTo(rx + sx, ry + rh + 10);
         ctx.closePath();
         ctx.fill();
       }
@@ -4187,103 +4499,113 @@ class EnvironmentRenderer {
     // 7. Outer stroke for crisp pixel definition
     ctx.strokeStyle = '#08040d';
     ctx.lineWidth = 1.5;
-    ctx.strokeRect(x, y, w, h);
+    ctx.strokeRect(rx, ry, rw, rh);
 
     ctx.restore();
   }
 
   _drawOneWay(ctx, p, time) {
-    const { x, y, w, h } = p;
+    const rx = Math.round(p.x);
+    const ry = Math.round(p.y);
+    const rw = Math.round(p.w);
+    const rh = Math.round(p.h);
     ctx.save();
 
     // Weathered dark carved stone walkway
-    const grad = ctx.createLinearGradient(x, y, x, y + h);
+    const grad = ctx.createLinearGradient(rx, ry, rx, ry + rh);
     grad.addColorStop(0, '#2d2242');
     grad.addColorStop(0.5, '#1e162e');
     grad.addColorStop(1, '#130c1e');
     ctx.fillStyle = grad;
-    ctx.fillRect(x, y, w, h);
+    ctx.fillRect(rx, ry, rw, rh);
 
     // Carved gothic stone corbels (brackets) underneath on left and right
     ctx.fillStyle = '#140c20';
     ctx.beginPath();
-    ctx.moveTo(x, y + h);
-    ctx.lineTo(x, y + h + 14);
-    ctx.lineTo(x + 18, y + h);
+    ctx.moveTo(rx, ry + rh);
+    ctx.lineTo(rx, ry + rh + 14);
+    ctx.lineTo(rx + 18, ry + rh);
     ctx.closePath();
     ctx.fill();
 
     ctx.beginPath();
-    ctx.moveTo(x + w, y + h);
-    ctx.lineTo(x + w, y + h + 14);
-    ctx.lineTo(x + w - 18, y + h);
+    ctx.moveTo(rx + rw, ry + rh);
+    ctx.lineTo(rx + rw, ry + rh + 14);
+    ctx.lineTo(rx + rw - 18, ry + rh);
     ctx.closePath();
     ctx.fill();
 
     // Upper violet stone highlight
     ctx.fillStyle = '#493766';
-    ctx.fillRect(x, y, w, 2);
+    ctx.fillRect(rx, ry, rw, 2);
 
     // Wrought-iron filigree balustrade railing rising above the walkway
     ctx.strokeStyle = '#181126';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(x, y - 8);
-    ctx.lineTo(x + w, y - 8);
+    ctx.moveTo(rx, ry - 8);
+    ctx.lineTo(rx + rw, ry - 8);
     ctx.stroke();
 
-    for (let rx = x + 8; rx < x + w - 4; rx += 14) {
+    for (let bx = rx + 8; bx < rx + rw - 4; bx += 14) {
       ctx.beginPath();
-      ctx.moveTo(rx, y);
-      ctx.lineTo(rx, y - 8);
+      ctx.moveTo(bx, ry);
+      ctx.lineTo(bx, ry - 8);
       ctx.stroke();
+
+      // Fleur-de-lis finial point on each baluster
+      ctx.fillStyle = '#2b1e42';
+      ctx.fillRect(bx - 1, ry - 10, 3, 3);
     }
 
     // Subtle ambient soul runes
-    const runePulse = Math.sin(time * 3 + x) * 0.15 + 0.35;
+    const runePulse = Math.sin(time * 3 + rx) * 0.15 + 0.35;
     ctx.fillStyle = `rgba(180, 100, 255, ${runePulse})`;
-    ctx.fillRect(x + 16, y + h / 2 - 1, w - 32, 2);
+    ctx.fillRect(rx + 16, ry + Math.round(rh / 2) - 1, rw - 32, 2);
 
     ctx.strokeStyle = '#090510';
     ctx.lineWidth = 1;
-    ctx.strokeRect(x, y, w, h);
+    ctx.strokeRect(rx, ry, rw, rh);
 
     ctx.restore();
   }
 
   _drawMoving(ctx, p, time) {
-    const { x, y, w, h } = p;
+    const rx = Math.round(p.x);
+    const ry = Math.round(p.y);
+    const rw = Math.round(p.w);
+    const rh = Math.round(p.h);
     ctx.save();
 
     // Heavy iron chains hanging from above
     ctx.strokeStyle = '#191126';
     ctx.lineWidth = 2.5;
     ctx.beginPath();
-    ctx.moveTo(x + 8, y - 200);
-    ctx.lineTo(x + 8, y);
-    ctx.moveTo(x + w - 8, y - 200);
-    ctx.lineTo(x + w - 8, y);
+    ctx.moveTo(rx + 8, ry - 200);
+    ctx.lineTo(rx + 8, ry);
+    ctx.moveTo(rx + rw - 8, ry - 200);
+    ctx.lineTo(rx + rw - 8, ry);
     ctx.stroke();
 
     // Gothic iron-reinforced stone carriage slab
     ctx.fillStyle = '#1c152a';
-    ctx.fillRect(x, y, w, h);
+    ctx.fillRect(rx, ry, rw, rh);
     ctx.strokeStyle = '#392a54';
     ctx.lineWidth = 2;
-    ctx.strokeRect(x, y, w, h);
+    ctx.strokeRect(rx, ry, rw, rh);
 
     // Side iron brackets
     ctx.fillStyle = '#261b3a';
-    ctx.fillRect(x + 4, y - 4, 8, 4);
-    ctx.fillRect(x + w - 12, y - 4, 8, 4);
+    ctx.fillRect(rx + 4, ry - 4, 8, 4);
+    ctx.fillRect(rx + rw - 12, ry - 4, 8, 4);
 
     // Glowing vampire-runic conduits
     const pulse = Math.sin(time * 5) * 0.2 + 0.8;
     ctx.strokeStyle = `rgba(190, 70, 255, ${0.75 * pulse})`;
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(x + 12, y + h / 2);
-    ctx.lineTo(x + w - 12, y + h / 2);
+    ctx.moveTo(rx + 12, ry + Math.round(rh / 2));
+    ctx.lineTo(rx + rw - 12, ry + Math.round(rh / 2));
     ctx.stroke();
 
     // Center runic glyph
@@ -4291,14 +4613,14 @@ class EnvironmentRenderer {
     ctx.shadowColor = '#bb44ff';
     ctx.shadowBlur = 8 * pulse;
     ctx.font = 'bold 12px monospace';
-    ctx.fillText('❖', x + w / 2 - 6, y + h / 2 + 4);
+    ctx.fillText('❖', rx + Math.round(rw / 2) - 6, ry + Math.round(rh / 2) + 4);
 
     // Ethereal suspension field beneath
     ctx.fillStyle = `rgba(180, 50, 255, ${0.12 * pulse})`;
     ctx.beginPath();
-    ctx.moveTo(x + 10, y + h);
-    ctx.lineTo(x + w - 10, y + h);
-    ctx.lineTo(x + w / 2, y + h + 20);
+    ctx.moveTo(rx + 10, ry + rh);
+    ctx.lineTo(rx + rw - 10, ry + rh);
+    ctx.lineTo(rx + Math.round(rw / 2), ry + rh + 20);
     ctx.closePath();
     ctx.fill();
 
@@ -4306,21 +4628,24 @@ class EnvironmentRenderer {
   }
 
   _drawFogGate(ctx, p, isClosed, time) {
-    const { x, y, w, h } = p;
+    const rx = Math.round(p.x);
+    const ry = Math.round(p.y);
+    const rw = Math.round(p.w);
+    const rh = Math.round(p.h);
     ctx.save();
 
     // Stone gate pillars framing the entrance
     ctx.fillStyle = '#1c2130';
-    ctx.fillRect(x - 8, y - 20, 16, h + 20);
-    ctx.fillRect(x + w - 8, y - 20, 16, h + 20);
+    ctx.fillRect(rx - 8, ry - 20, 16, rh + 20);
+    ctx.fillRect(rx + rw - 8, ry - 20, 16, rh + 20);
     ctx.strokeStyle = '#38455e';
     ctx.lineWidth = 2;
-    ctx.strokeRect(x - 8, y - 20, 16, h + 20);
-    ctx.strokeRect(x + w - 8, y - 20, 16, h + 20);
+    ctx.strokeRect(rx - 8, ry - 20, 16, rh + 20);
+    ctx.strokeRect(rx + rw - 8, ry - 20, 16, rh + 20);
 
     // Arch header
     ctx.fillStyle = '#252d42';
-    ctx.fillRect(x - 12, y - 28, w + 24, 12);
+    ctx.fillRect(rx - 12, ry - 28, rw + 24, 12);
 
     if (isClosed) {
       // Intimidating Swirling Void Fog Gate
@@ -4335,13 +4660,13 @@ class EnvironmentRenderer {
         const fAlpha = (0.28 + i * 0.18) * pulse;
         ctx.fillStyle = i % 2 === 0 ? `rgba(130, 20, 200, ${fAlpha})` : `rgba(70, 10, 160, ${fAlpha})`;
         ctx.beginPath();
-        ctx.moveTo(x, y);
-        for (let py = y; py <= y + h; py += 16) {
+        ctx.moveTo(rx, ry);
+        for (let py = ry; py <= ry + rh; py += 16) {
           const wave = Math.sin(py * 0.08 + time * (4 + i * 2)) * (6 + i * 2);
-          ctx.lineTo(x + w / 2 + wave, py);
+          ctx.lineTo(rx + Math.round(rw / 2) + wave, py);
         }
-        ctx.lineTo(x + w, y + h);
-        ctx.lineTo(x + w, y);
+        ctx.lineTo(rx + rw, ry + rh);
+        ctx.lineTo(rx + rw, ry);
         ctx.closePath();
         ctx.fill();
       }
@@ -4351,19 +4676,19 @@ class EnvironmentRenderer {
       ctx.font = 'bold 16px monospace';
       ctx.shadowColor = '#ffffff';
       ctx.shadowBlur = 10;
-      const runeY1 = y + ((time * 30) % h);
-      const runeY2 = y + (((time * 30) + h / 2) % h);
-      ctx.fillText('✦', x + w / 2 - 6, runeY1);
-      ctx.fillText('✦', x + w / 2 - 6, runeY2);
+      const runeY1 = ry + Math.round((time * 30) % rh);
+      const runeY2 = ry + Math.round(((time * 30) + rh / 2) % rh);
+      ctx.fillText('✦', rx + Math.round(rw / 2) - 6, runeY1);
+      ctx.fillText('✦', rx + Math.round(rw / 2) - 6, runeY2);
 
       // Boundary barrier lines
       ctx.strokeStyle = '#e699ff';
       ctx.lineWidth = 2;
-      ctx.strokeRect(x, y, w, h);
+      ctx.strokeRect(rx, ry, rw, rh);
     } else {
       // Open portal: gentle mist on ground
       ctx.fillStyle = 'rgba(100, 60, 160, 0.2)';
-      ctx.fillRect(x, y + h - 18, w, 18);
+      ctx.fillRect(rx, ry + rh - 18, rw, 18);
     }
 
     ctx.restore();
@@ -4388,6 +4713,12 @@ class LightingSystem {
       this.canvas.width = this.width;
       this.canvas.height = this.height;
       this.ctx = this.canvas.getContext ? this.canvas.getContext('2d') : null;
+      if (this.ctx) {
+        this.ctx.imageSmoothingEnabled = false;
+        this.ctx.webkitImageSmoothingEnabled = false;
+        this.ctx.mozImageSmoothingEnabled = false;
+        this.ctx.msImageSmoothingEnabled = false;
+      }
     }
   }
 
@@ -4395,6 +4726,12 @@ class LightingSystem {
     this.width = w; this.height = h;
     if (this.canvas) {
       this.canvas.width = w; this.canvas.height = h;
+      if (this.ctx) {
+        this.ctx.imageSmoothingEnabled = false;
+        this.ctx.webkitImageSmoothingEnabled = false;
+        this.ctx.mozImageSmoothingEnabled = false;
+        this.ctx.msImageSmoothingEnabled = false;
+      }
     }
   }
 
@@ -4695,66 +5032,70 @@ class Background {
   }
 
   draw(ctx, camera, time) {
-    // 1. Radiant Midnight-Violet Vampire Sky Gradient (Luminous & atmospheric, never muddy!)
+    // 1. Radiant Midnight-Violet Vampire Sky with Stepped Hi-Bit Pixel Art Dither Bands
     const skyGrad = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
-    skyGrad.addColorStop(0, '#120826');
-    skyGrad.addColorStop(0.32, '#241040');
-    skyGrad.addColorStop(0.65, '#3e1a5a');
-    skyGrad.addColorStop(1, '#562274');
+    skyGrad.addColorStop(0, '#0e051c');
+    skyGrad.addColorStop(0.30, '#1c0a34');
+    skyGrad.addColorStop(0.62, '#33134e');
+    skyGrad.addColorStop(1, '#4e1c6e');
     ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+    // Subtle 2x2 ordered pixel dither scanlines for authentic Hi-Bit pixel art texture
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+    for (let y = 0; y < CANVAS_H; y += 2) {
+      ctx.fillRect(0, y, CANVAS_W, 1);
+    }
 
     // 2. Background storm clouds behind the moon
     for (let i = 0; i < this.clouds.length / 2; i++) {
       const cl = this.clouds[i];
-      const cx = ((cl.x - time * cl.speed - camera.x * 0.04) % (CANVAS_W + cl.w * 2)) - cl.w;
-      const cy = cl.y - camera.y * 0.03;
-      ctx.fillStyle = `rgba(68, 30, 96, ${cl.alpha})`;
+      const cx = Math.round(((cl.x - time * cl.speed - camera.x * 0.04) % (CANVAS_W + cl.w * 2)) - cl.w);
+      const cy = Math.round(cl.y - camera.y * 0.03);
+      ctx.fillStyle = `rgba(58, 24, 82, ${cl.alpha})`;
       ctx.beginPath();
-      ctx.ellipse(cx, cy, cl.w * 0.5, cl.h * 0.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(cx, cy, Math.round(cl.w * 0.5), Math.round(cl.h * 0.5), 0, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    // 3. Eerie, Radiant Bloodmoon (Clear, bright, and illuminating the scene!)
-    const moonX = CANVAS_W * 0.68 - camera.x * 0.02;
-    const moonY = 130 - camera.y * 0.02;
+    // 3. Eerie, Radiant Bloodmoon (Hi-Bit Pixel Art Bloodmoon)
+    const moonX = Math.round(CANVAS_W * 0.68 - camera.x * 0.02);
+    const moonY = Math.round(130 - camera.y * 0.02);
 
-    // Outer radiant moonlight corona
-    const halo = ctx.createRadialGradient(moonX, moonY, 20, moonX, moonY, 180);
-    halo.addColorStop(0, 'rgba(235, 215, 255, 0.42)');
-    halo.addColorStop(0.35, 'rgba(180, 120, 240, 0.22)');
-    halo.addColorStop(0.75, 'rgba(90, 35, 140, 0.08)');
-    halo.addColorStop(1, 'rgba(30, 10, 50, 0)');
-    ctx.fillStyle = halo;
-    ctx.beginPath();
-    ctx.arc(moonX, moonY, 180, 0, Math.PI * 2);
-    ctx.fill();
+    // Stepped pixel moonlight corona halo rings
+    ctx.fillStyle = 'rgba(235, 215, 255, 0.08)';
+    ctx.beginPath(); ctx.arc(moonX, moonY, 140, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(195, 140, 255, 0.12)';
+    ctx.beginPath(); ctx.arc(moonX, moonY, 95, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(225, 180, 255, 0.20)';
+    ctx.beginPath(); ctx.arc(moonX, moonY, 68, 0, Math.PI * 2); ctx.fill();
 
     // Pale moon sphere
-    ctx.fillStyle = '#2a1a44';
+    ctx.fillStyle = '#26173e';
     ctx.beginPath();
     ctx.arc(moonX, moonY, 52, 0, Math.PI * 2);
     ctx.fill();
 
-    // Soft crater shading on moon surface
-    ctx.fillStyle = 'rgba(20, 10, 35, 0.4)';
+    // Pixel crater maria (volcanic basalt seas on the moon surface)
+    ctx.fillStyle = '#170c26';
     ctx.beginPath();
-    ctx.arc(moonX - 12, moonY - 8, 14, 0, Math.PI * 2);
-    ctx.arc(moonX + 10, moonY + 12, 10, 0, Math.PI * 2);
-    ctx.arc(moonX - 4, moonY + 16, 7, 0, Math.PI * 2);
+    ctx.arc(moonX - 14, moonY - 10, 15, 0, Math.PI * 2);
+    ctx.arc(moonX + 12, moonY + 14, 11, 0, Math.PI * 2);
+    ctx.arc(moonX - 5, moonY + 18, 8, 0, Math.PI * 2);
+    ctx.arc(moonX + 18, moonY - 12, 7, 0, Math.PI * 2);
     ctx.fill();
 
-    // Glowing lunar crescent rim (Bright and crystal clear!)
+    // Luminous lunar crescent rim (Crisp white and violet highlights)
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 3.5;
     ctx.shadowColor = '#d9bfff';
-    ctx.shadowBlur = 18;
+    ctx.shadowBlur = 14;
     ctx.beginPath();
     ctx.arc(moonX, moonY, 52, -Math.PI * 0.72, Math.PI * 0.42);
     ctx.stroke();
 
     // Radiant moon crater fractures
-    ctx.strokeStyle = 'rgba(240, 220, 255, 0.65)';
+    ctx.strokeStyle = 'rgba(240, 220, 255, 0.75)';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(moonX - 24, moonY - 16);
@@ -4766,67 +5107,138 @@ class Background {
     // 4. Foreground clouds drifting in front of the moon with silver edges
     for (let i = Math.floor(this.clouds.length / 2); i < this.clouds.length; i++) {
       const cl = this.clouds[i];
-      const cx = ((cl.x - time * cl.speed - camera.x * 0.04) % (CANVAS_W + cl.w * 2)) - cl.w;
-      const cy = cl.y - camera.y * 0.03;
-      ctx.fillStyle = `rgba(50, 22, 75, ${cl.alpha * 0.85})`;
+      const cx = Math.round(((cl.x - time * cl.speed - camera.x * 0.04) % (CANVAS_W + cl.w * 2)) - cl.w);
+      const cy = Math.round(cl.y - camera.y * 0.03);
+      ctx.fillStyle = `rgba(42, 18, 62, ${cl.alpha * 0.9})`;
       ctx.beginPath();
-      ctx.ellipse(cx, cy, cl.w * 0.5, cl.h * 0.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(cx, cy, Math.round(cl.w * 0.5), Math.round(cl.h * 0.5), 0, 0, Math.PI * 2);
       ctx.fill();
       // Silver moonlight rim on cloud edge
-      ctx.strokeStyle = `rgba(220, 200, 255, ${cl.alpha * 0.5})`;
+      ctx.strokeStyle = `rgba(220, 200, 255, ${cl.alpha * 0.55})`;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.arc(cx, cy - cl.h * 0.2, cl.w * 0.35, -Math.PI * 0.8, -Math.PI * 0.2);
       ctx.stroke();
     }
 
-    // 5. Twinkling celestial motes/stars in upper cavern/sky
+    // 5. Twinkling celestial motes/stars in upper sky
     for (const s of this.stars) {
       const a = 0.35 + 0.65 * Math.abs(Math.sin(time * s.speed + s.blink));
       ctx.fillStyle = `rgba(235, 220, 255, ${a})`;
-      ctx.fillRect(s.x, s.y, s.size, s.size);
+      ctx.fillRect(Math.round(s.x), Math.round(s.y), Math.round(s.size), Math.round(s.size));
+      if (s.size > 2.2) {
+        // Cross sparkle for bright stars
+        ctx.fillStyle = `rgba(255, 255, 255, ${a * 0.6})`;
+        ctx.fillRect(Math.round(s.x - 2), Math.round(s.y), 5, 1);
+        ctx.fillRect(Math.round(s.x), Math.round(s.y - 2), 1, 5);
+      }
     }
 
-    // 6. Layer 1: Distant Gothic Spires & Cathedral Towers (Parallax X: 0.12, Parallax Y: 0.10)
-    ctx.fillStyle = '#140826';
-    const baseY1 = CANVAS_H * 0.90 - camera.y * 0.10;
+    // 6. Layer 1: Distant Gothic Spires & Cologne Cathedral Skyline (Parallax X: 0.12, Parallax Y: 0.10)
+    ctx.fillStyle = '#120722';
+    const baseY1 = Math.round(CANVAS_H * 0.90 - camera.y * 0.10);
     for (const d of this.distantSpires) {
-      const sx = d.x - camera.x * 0.12;
-      if (sx + d.w < -120 || sx - d.w > CANVAS_W + 120) continue;
+      const sx = Math.round(d.x - camera.x * 0.12);
+      if (sx + d.w < -140 || sx - d.w > CANVAS_W + 140) continue;
 
       const baseTop = baseY1 - d.h;
       ctx.beginPath();
-      ctx.fillRect(sx - d.w / 2, baseTop, d.w, d.h + 200);
+      ctx.fillRect(sx - Math.round(d.w / 2), baseTop, d.w, d.h + 200);
 
-      // Gothic spires
       if (d.type === 0) {
-        // Twin needle spires
-        ctx.moveTo(sx - d.w * 0.35, baseTop);
-        ctx.lineTo(sx - d.w * 0.25, baseTop - d.spireH);
-        ctx.lineTo(sx - d.w * 0.15, baseTop);
-        ctx.moveTo(sx + d.w * 0.15, baseTop);
-        ctx.lineTo(sx + d.w * 0.25, baseTop - d.spireH);
-        ctx.lineTo(sx + d.w * 0.35, baseTop);
+        // ======================================================================
+        // COLOGNE CATHEDRAL (KÖLNER DOM) COLOSSAL TWIN NEEDLE SPIRES
+        // ======================================================================
+        const towerW = Math.round(d.w * 0.28);
+        const tower1X = Math.round(sx - d.w * 0.28);
+        const tower2X = Math.round(sx + d.w * 0.28);
+        const spH = d.spireH;
+
+        // Left Needle Spire
+        ctx.moveTo(tower1X - towerW / 2, baseTop);
+        ctx.lineTo(tower1X, baseTop - spH);
+        ctx.lineTo(tower1X + towerW / 2, baseTop);
+
+        // Right Needle Spire
+        ctx.moveTo(tower2X - towerW / 2, baseTop);
+        ctx.lineTo(tower2X, baseTop - spH);
+        ctx.lineTo(tower2X + towerW / 2, baseTop);
+
+        // Central High Ridge Spire (Dachreiter)
+        ctx.moveTo(sx - 8, baseTop);
+        ctx.lineTo(sx, baseTop - spH * 0.55);
+        ctx.lineTo(sx + 8, baseTop);
+
+        ctx.fill();
+
+        // Pierced Openwork Tracery (sky shines right through the tower lancets!)
+        ctx.fillStyle = '#220d36';
+        ctx.fillRect(tower1X - 3, baseTop - spH * 0.65, 6, 24);
+        ctx.fillRect(tower1X - 3, baseTop - spH * 0.35, 6, 28);
+        ctx.fillRect(tower2X - 3, baseTop - spH * 0.65, 6, 24);
+        ctx.fillRect(tower2X - 3, baseTop - spH * 0.35, 6, 28);
+
+        // Central Rose Window Silhouette between the twin towers
+        ctx.beginPath();
+        ctx.arc(sx, baseTop + 45, 20, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Crockets (Krabben) ascending the twin spires
+        ctx.fillStyle = '#170b2b';
+        for (let k = 1; k < 5; k++) {
+          const kp = k / 5;
+          const kxL = tower1X - (1 - kp) * (towerW / 2);
+          const ky = baseTop - kp * spH;
+          const kxR = tower1X + (1 - kp) * (towerW / 2);
+          ctx.fillRect(Math.round(kxL - 2), Math.round(ky - 2), 4, 3);
+          ctx.fillRect(Math.round(kxR - 2), Math.round(ky - 2), 4, 3);
+
+          const kxL2 = tower2X - (1 - kp) * (towerW / 2);
+          const kxR2 = tower2X + (1 - kp) * (towerW / 2);
+          ctx.fillRect(Math.round(kxL2 - 2), Math.round(ky - 2), 4, 3);
+          ctx.fillRect(Math.round(kxR2 - 2), Math.round(ky - 2), 4, 3);
+        }
+
+        // Cruciform finials (Kreuzblumen) crowning summits
+        ctx.fillStyle = '#261242';
+        ctx.fillRect(tower1X - 2, baseTop - spH - 12, 4, 12);
+        ctx.fillRect(tower1X - 6, baseTop - spH - 8, 12, 3);
+        ctx.fillRect(tower2X - 2, baseTop - spH - 12, 4, 12);
+        ctx.fillRect(tower2X - 6, baseTop - spH - 8, 12, 3);
+
+        ctx.fillStyle = '#120722';
       } else if (d.type === 1) {
-        // Grand cathedral dome & central pinnacle
+        // Grand cathedral dome & central high pinnacle
         ctx.arc(sx, baseTop, d.w * 0.35, Math.PI, 0);
         ctx.moveTo(sx - 8, baseTop - d.w * 0.35);
         ctx.lineTo(sx, baseTop - d.spireH - 30);
         ctx.lineTo(sx + 8, baseTop - d.w * 0.35);
+        ctx.fill();
       } else if (d.type === 2) {
-        // Stepped buttress tower
+        // Stepped buttress tower with pinnacles
         ctx.moveTo(sx - d.w / 2, baseTop);
-        ctx.lineTo(sx, baseTop - d.spireH * 0.8);
+        ctx.lineTo(sx, baseTop - d.spireH * 0.85);
         ctx.lineTo(sx + d.w / 2, baseTop);
+        ctx.fill();
+        // Flanking mini-pinnacles
+        ctx.fillRect(sx - d.w * 0.38 - 3, baseTop - 28, 6, 28);
+        ctx.fillRect(sx + d.w * 0.38 - 3, baseTop - 28, 6, 28);
       } else {
         // Slender needle tower with cathedral cross
         ctx.moveTo(sx - d.w * 0.25, baseTop);
         ctx.lineTo(sx, baseTop - d.spireH);
         ctx.lineTo(sx + d.w * 0.25, baseTop);
-        ctx.rect(sx - 1.5, baseTop - d.spireH - 14, 3, 14);
-        ctx.rect(sx - 6, baseTop - d.spireH - 10, 12, 3);
+        ctx.rect(sx - 2, baseTop - d.spireH - 16, 4, 16);
+        ctx.rect(sx - 7, baseTop - d.spireH - 11, 14, 3);
+        ctx.fill();
       }
-      ctx.fill();
+
+      // Distant warm candlelit lancet windows in the lower cathedral
+      if (Math.sin(sx * 0.1) > 0.1) {
+        ctx.fillStyle = '#ff9922';
+        ctx.fillRect(sx - 4, baseTop + 30, 8, 18);
+        ctx.fillStyle = '#120722';
+      }
     }
 
     // Atmospheric violet haze over Layer 1
@@ -4834,17 +5246,17 @@ class Background {
     fog1.addColorStop(0, 'rgba(28, 12, 45, 0)');
     fog1.addColorStop(1, 'rgba(42, 18, 64, 0.6)');
     ctx.fillStyle = fog1;
-    ctx.fillRect(0, CANVAS_H * 0.60, CANVAS_W, CANVAS_H * 0.40);
+    ctx.fillRect(0, Math.round(CANVAS_H * 0.60), CANVAS_W, Math.round(CANVAS_H * 0.40));
 
-    // 7. Layer 2: Mid-distance Gothic Viaducts & Arched Bridges (Parallax X: 0.28, Parallax Y: 0.22)
-    ctx.fillStyle = '#1c0d33';
-    const baseY2 = CANVAS_H * 0.95 - camera.y * 0.22;
+    // 7. Layer 2: Mid-distance Gothic Viaducts & Arched Bridges (Reference Image Style!)
+    ctx.fillStyle = '#190b2e';
+    const baseY2 = Math.round(CANVAS_H * 0.95 - camera.y * 0.22);
     for (const a of this.midArches) {
-      const sx = a.x - camera.x * 0.28;
+      const sx = Math.round(a.x - camera.x * 0.28);
       if (sx + a.w < -120 || sx - a.w > CANVAS_W + 120) continue;
 
       const topY = baseY2 - a.h;
-      // Main viaduct bridge arch
+      // Main viaduct bridge arch spanning the canyon
       ctx.beginPath();
       ctx.moveTo(sx - a.w / 2, baseY2 + 200);
       ctx.lineTo(sx - a.w / 2, topY);
@@ -4857,13 +5269,13 @@ class Background {
       ctx.closePath();
       ctx.fill();
 
-      // Glowing warm lancet window inside the mid tower
+      // Glowing warm lancet window inside the mid tower (reference image amber glow)
       if (a.hasWindow) {
         ctx.fillStyle = a.windowColor;
         ctx.shadowColor = a.windowColor;
         ctx.shadowBlur = 8;
-        ctx.beginPath();
         const winX = sx, winY = topY + 28, winW = 16, winH = 36;
+        ctx.beginPath();
         ctx.moveTo(winX - winW / 2, winY + winH);
         ctx.lineTo(winX - winW / 2, winY + 10);
         ctx.quadraticCurveTo(winX, winY, winX + winW / 2, winY + 10);
@@ -4871,30 +5283,30 @@ class Background {
         ctx.closePath();
         ctx.fill();
         ctx.shadowBlur = 0;
-        ctx.fillStyle = '#1c0d33';
+        ctx.fillStyle = '#190b2e';
       }
 
       // Perched silhouette gargoyle on bridge cornice
       if (a.hasGargoyle) {
-        ctx.fillStyle = '#120822';
+        ctx.fillStyle = '#10061e';
         ctx.beginPath();
-        const gx = sx - a.w * 0.35, gy = topY;
+        const gx = sx - Math.round(a.w * 0.35), gy = topY;
         ctx.ellipse(gx, gy - 8, 6, 5, 0, 0, Math.PI * 2);
         ctx.moveTo(gx - 4, gy - 12); ctx.lineTo(gx - 12, gy - 20); ctx.lineTo(gx - 8, gy - 6);
         ctx.fill();
-        ctx.fillStyle = '#1c0d33';
+        ctx.fillStyle = '#190b2e';
       }
     }
 
     // 8. Layer 3: Closer City Skyline - Steep Gables, Chimneys & Battlements (Parallax X: 0.48, Parallax Y: 0.38)
-    ctx.fillStyle = '#261242';
-    const baseY3 = CANVAS_H * 1.05 - camera.y * 0.38;
+    ctx.fillStyle = '#220f3b';
+    const baseY3 = Math.round(CANVAS_H * 1.05 - camera.y * 0.38);
     for (const c of this.nearColumns) {
-      const sx = c.x - camera.x * 0.48;
+      const sx = Math.round(c.x - camera.x * 0.48);
       if (sx + c.w < -100 || sx - c.w > CANVAS_W + 100) continue;
 
       const topY = baseY3 - c.h;
-      ctx.fillRect(sx - c.w / 2, topY, c.w, c.h + 200);
+      ctx.fillRect(sx - Math.round(c.w / 2), topY, c.w, c.h + 200);
 
       // Steep slate roof gable
       ctx.beginPath();
@@ -4906,11 +5318,11 @@ class Background {
 
       // Chimney stack & finial
       if (c.hasFinial) {
-        ctx.fillRect(sx + c.w * 0.25 - 4, topY - c.roofH * 0.6 - 16, 8, 16);
+        ctx.fillRect(sx + Math.round(c.w * 0.25) - 4, topY - Math.round(c.roofH * 0.6) - 16, 8, 16);
         ctx.beginPath();
         ctx.moveTo(sx, topY - c.roofH);
         ctx.lineTo(sx, topY - c.roofH - 18);
-        ctx.strokeStyle = '#261242';
+        ctx.strokeStyle = '#220f3b';
         ctx.lineWidth = 2;
         ctx.stroke();
       }
@@ -4927,13 +5339,13 @@ class Background {
       ctx.fillStyle = sp.color;
       ctx.globalAlpha = alpha;
       ctx.beginPath();
-      ctx.arc(sp.x, sp.y, sp.size, 0, Math.PI * 2);
+      ctx.arc(Math.round(sp.x), Math.round(sp.y), Math.round(sp.size), 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.globalAlpha = 1.0;
 
     // 10. Volumetric Purple Mist in low canyon areas
-    const mistY = Math.max(CANVAS_H * 0.65, CANVAS_H * 0.80 - camera.y * 0.25);
+    const mistY = Math.max(Math.round(CANVAS_H * 0.65), Math.round(CANVAS_H * 0.80 - camera.y * 0.25));
     const mistGrad = ctx.createLinearGradient(0, mistY, 0, CANVAS_H);
     mistGrad.addColorStop(0, 'rgba(42, 18, 64, 0)');
     mistGrad.addColorStop(0.5, 'rgba(52, 22, 78, 0.35)');
@@ -5301,6 +5713,28 @@ class Game {
     this.ctx = this.canvas.getContext('2d');
     this.canvas.width = CANVAS_W; this.canvas.height = CANVAS_H;
 
+    // Hi-Bit Pixel Art Rendering Buffer (640x360 scaled 2x to 1280x720)
+    this.pixelW = 640;
+    this.pixelH = 360;
+    if (typeof document !== 'undefined' && document.createElement) {
+      this.pixelCanvas = document.createElement('canvas');
+      this.pixelCanvas.width = this.pixelW;
+      this.pixelCanvas.height = this.pixelH;
+      this.pixelCtx = this.pixelCanvas.getContext ? this.pixelCanvas.getContext('2d') : null;
+      if (this.pixelCtx) {
+        this.pixelCtx.imageSmoothingEnabled = false;
+        this.pixelCtx.webkitImageSmoothingEnabled = false;
+        this.pixelCtx.mozImageSmoothingEnabled = false;
+        this.pixelCtx.msImageSmoothingEnabled = false;
+      }
+    }
+    if (this.ctx) {
+      this.ctx.imageSmoothingEnabled = false;
+      this.ctx.webkitImageSmoothingEnabled = false;
+      this.ctx.mozImageSmoothingEnabled = false;
+      this.ctx.msImageSmoothingEnabled = false;
+    }
+
     this.keyBindings = new KeyBindings();
     this.input = new InputManager(this.keyBindings);
     this.audio = new AudioEngine();
@@ -5332,6 +5766,18 @@ class Game {
     const s = Math.min(window.innerWidth / CANVAS_W, window.innerHeight / CANVAS_H);
     this.canvas.style.width = `${CANVAS_W * s}px`; this.canvas.style.height = `${CANVAS_H * s}px`;
     if (this.lighting) this.lighting.resize(CANVAS_W, CANVAS_H);
+    if (this.ctx) {
+      this.ctx.imageSmoothingEnabled = false;
+      this.ctx.webkitImageSmoothingEnabled = false;
+      this.ctx.mozImageSmoothingEnabled = false;
+      this.ctx.msImageSmoothingEnabled = false;
+    }
+    if (this.pixelCtx) {
+      this.pixelCtx.imageSmoothingEnabled = false;
+      this.pixelCtx.webkitImageSmoothingEnabled = false;
+      this.pixelCtx.mozImageSmoothingEnabled = false;
+      this.pixelCtx.msImageSmoothingEnabled = false;
+    }
   }
 
   _initLevel() {
@@ -5785,10 +6231,30 @@ class Game {
   }
 
   _draw(dt) {
-    const ctx = this.ctx;
-    ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+    const mainCtx = this.ctx;
+    let ctx = mainCtx;
 
-    if (this.gameState === STATE.TITLE) { this.titleScreen.draw(ctx, this.keyBindings); return; }
+    if (this.pixelCtx && this.pixelCanvas) {
+      ctx = this.pixelCtx;
+      ctx.save();
+      ctx.clearRect(0, 0, this.pixelW, this.pixelH);
+      ctx.scale(0.5, 0.5);
+    } else {
+      ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+    }
+
+    if (this.gameState === STATE.TITLE) {
+      this.titleScreen.draw(ctx, this.keyBindings);
+      if (ctx !== mainCtx) {
+        ctx.restore();
+        mainCtx.imageSmoothingEnabled = false;
+        mainCtx.webkitImageSmoothingEnabled = false;
+        mainCtx.mozImageSmoothingEnabled = false;
+        mainCtx.msImageSmoothingEnabled = false;
+        mainCtx.drawImage(this.pixelCanvas, 0, 0, CANVAS_W, CANVAS_H);
+      }
+      return;
+    }
 
     // 1. Multi-layered Parallax Background (Cathedral ruins, broken eclipse, volumetric fog)
     this.background.draw(ctx, this.camera, this.time);
@@ -5843,6 +6309,15 @@ class Game {
 
     // Help overlay
     if (this.showHelp && this.gameState === STATE.PLAYING) this._drawHelp(ctx);
+
+    if (ctx !== mainCtx) {
+      ctx.restore();
+      mainCtx.imageSmoothingEnabled = false;
+      mainCtx.webkitImageSmoothingEnabled = false;
+      mainCtx.mozImageSmoothingEnabled = false;
+      mainCtx.msImageSmoothingEnabled = false;
+      mainCtx.drawImage(this.pixelCanvas, 0, 0, CANVAS_W, CANVAS_H);
+    }
   }
 
   _drawHelp(ctx) {
