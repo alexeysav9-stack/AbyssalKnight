@@ -32,9 +32,9 @@ const DEFAULT_BINDINGS = {
   moveLeft: ['ArrowLeft', 'KeyA'],
   moveRight: ['ArrowRight', 'KeyD'],
   moveDown: ['ArrowDown', 'KeyS'],
-  jump: ['ArrowUp', 'KeyW', 'Space'],
-  attack: ['KeyJ'],
-  dash: ['ShiftLeft', 'ShiftRight', 'KeyK'],
+  jump: ['ArrowUp', 'KeyW', 'Space', 'KeyZ'],
+  attack: ['KeyX', 'KeyJ'],
+  dash: ['ControlLeft', 'ControlRight', 'ShiftLeft', 'KeyK'],
   heal: ['KeyQ'],
   interact: ['KeyF'],
   spell1: ['Digit1'],
@@ -57,7 +57,7 @@ class KeyBindings {
   }
   load() {
     try {
-      const saved = localStorage.getItem('abyssalKnightBindings');
+      const saved = localStorage.getItem('abyssalKnightBindings_v2');
       if (saved) {
         this.bindings = { ...JSON.parse(JSON.stringify(DEFAULT_BINDINGS)), ...JSON.parse(saved) };
         return;
@@ -66,7 +66,7 @@ class KeyBindings {
     this.bindings = JSON.parse(JSON.stringify(DEFAULT_BINDINGS));
   }
   save() {
-    try { localStorage.setItem('abyssalKnightBindings', JSON.stringify(this.bindings)); } catch (e) { }
+    try { localStorage.setItem('abyssalKnightBindings_v2', JSON.stringify(this.bindings)); } catch (e) { }
   }
   reset() {
     this.bindings = JSON.parse(JSON.stringify(DEFAULT_BINDINGS));
@@ -86,7 +86,7 @@ class KeyBindings {
     const labels = {
       moveLeft: 'Move Left', moveRight: 'Move Right', moveDown: 'Aim / Look Down', jump: 'Jump',
       attack: 'Attack', dash: 'Dash', heal: 'Heal', interact: 'Interact',
-      spell1: 'Spell: Fireball', spell2: 'Spell: Ice Nova', spell3: 'Spell: Shadow Bolt',
+      spell1: 'Spell: Pyre Blast', spell2: 'Spell: Frost Nova', spell3: 'Spell: Singularity',
       weapon1: 'Weapon 1', weapon2: 'Weapon 2', weapon3: 'Weapon 3', weapon4: 'Weapon 4',
       weaponNext: 'Next Weapon', pause: 'Pause', help: 'Help', restart: 'Restart',
     };
@@ -95,8 +95,8 @@ class KeyBindings {
   getKeyLabel(code) {
     const map = {
       ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓',
-      Space: 'Space', ShiftLeft: 'LShift', ShiftRight: 'RShift',
-      ControlLeft: 'LCtrl', ControlRight: 'RCtrl', AltLeft: 'LAlt', AltRight: 'RAlt',
+      Space: 'Space', ShiftLeft: 'Shift', ShiftRight: 'Shift',
+      ControlLeft: 'Ctrl', ControlRight: 'Ctrl', AltLeft: 'Alt', AltRight: 'Alt',
       Enter: 'Enter', Backspace: 'Bksp', Tab: 'Tab',
     };
     if (map[code]) return map[code];
@@ -1404,6 +1404,11 @@ function buildLevel() {
   addGothicWindow(60, 640, 34, 75, '#ffaa33', true);
   addGothicWindow(60, 480, 34, 75, '#ff8833', true);
   addCrystal(280, 878, 'purple', 1.1);
+
+  // Ancient carved tutorial tablets in Starting Bastion
+  props.push({ type: 'tutorialTablet', x: 230, y: 880, title: 'MOVEMENT', line1: '[← / →] Move', line2: '[↑] Jump' });
+  props.push({ type: 'tutorialTablet', x: 380, y: 880, title: 'EVASION', line1: '[Ctrl] Dash', line2: 'i-frame roll' });
+  props.push({ type: 'tutorialTablet', x: 530, y: 820, title: 'COMBAT', line1: '[X] Strike', line2: '[Air + ↓ + X] Pogo' });
 
   // Upper overlook balconies
   P(180, 760, 160, 20, 'oneway');
@@ -5471,8 +5476,58 @@ class EnvironmentRenderer {
         this._drawChandelier(ctx, p.x, p.y, p.w, p.chainLen, time);
       } else if (p.type === 'roseWindow') {
         this._drawRoseWindow(ctx, p.x, p.y, p.radius, p.color, time);
+      } else if (p.type === 'tutorialTablet') {
+        this._drawTutorialTablet(ctx, p.x, p.y, p.title, p.line1, p.line2, time);
       }
     }
+  }
+
+  _drawTutorialTablet(ctx, x, y, title, line1, line2, time) {
+    ctx.save();
+    const rx = Math.round(x);
+    const ry = Math.round(y);
+    const tw = 94, th = 48;
+
+    // Stone stele base plinth
+    ctx.fillStyle = '#080512';
+    ctx.fillRect(rx - tw / 2 - 2, ry - 3, tw + 4, 4);
+
+    // Dark gothic stone stele body with lancet pointed top
+    ctx.fillStyle = '#140c24';
+    ctx.beginPath();
+    ctx.moveTo(rx - tw / 2, ry);
+    ctx.lineTo(rx - tw / 2, ry - th + 12);
+    ctx.quadraticCurveTo(rx - tw / 4, ry - th - 3, rx, ry - th);
+    ctx.quadraticCurveTo(rx + tw / 4, ry - th - 3, rx + tw / 2, ry - th + 12);
+    ctx.lineTo(rx + tw / 2, ry);
+    ctx.closePath();
+    ctx.fill();
+
+    // Weathered stone border
+    ctx.strokeStyle = '#2d1e44';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Soft runic glow pulse
+    const glowAlpha = 0.70 + 0.30 * Math.sin(time * 2.5 + rx * 0.1);
+
+    // Title header
+    ctx.fillStyle = `rgba(180, 220, 255, ${glowAlpha})`;
+    ctx.font = 'bold 9px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(title, rx, ry - th + 14);
+
+    // Primary action key
+    ctx.fillStyle = `rgba(255, 220, 120, ${glowAlpha})`;
+    ctx.font = 'bold 10px sans-serif';
+    ctx.fillText(line1, rx, ry - th + 27);
+
+    // Secondary hint
+    ctx.fillStyle = `rgba(170, 190, 220, ${Math.min(1, glowAlpha * 0.9)})`;
+    ctx.font = '9px sans-serif';
+    ctx.fillText(line2, rx, ry - th + 39);
+
+    ctx.restore();
   }
 
   _drawRoseWindow(ctx, x, y, radius = 60, color = '#ff2255', time) {
@@ -8406,6 +8461,48 @@ class Game {
 
     // Player
     this.player.update(dt, this.input, this.level, this.particles, this.camera, this.audio);
+
+    // Dynamic contextual tutorial hints for new players
+    if (!this.tutorialsShown) {
+      this.tutorialsShown = { move: false, dash: false, doubleJump: false, attack: false, heal: false };
+      this.tutorialCooldown = 0.5;
+    }
+    if (this.tutorialCooldown > 0) {
+      this.tutorialCooldown -= dt;
+    } else if (this.hud && this.hud.tipTimer <= 0) {
+      const getK = (action) => {
+        if (!this.keyBindings) return '';
+        const keys = this.keyBindings.getKeys(action);
+        return keys && keys[0] ? this.keyBindings.getKeyLabel(keys[0]) : '';
+      };
+      const moveK = `${getK('moveLeft')}/${getK('moveRight')}` || '←/→';
+      const jumpK = getK('jump') || '↑';
+      const attackK = getK('attack') || 'X';
+      const dashK = getK('dash') || 'Ctrl';
+      const healK = getK('heal') || 'Q';
+
+      if (!this.tutorialsShown.move && this.player.x < 300) {
+        this.tutorialsShown.move = true;
+        this.tutorialCooldown = 4.0;
+        this.hud.showNotification(`[ ${moveK} ] Move   ·   [ ${jumpK} ] Jump`, 3.5);
+      } else if (!this.tutorialsShown.dash && this.player.x >= 300 && this.player.x < 550) {
+        this.tutorialsShown.dash = true;
+        this.tutorialCooldown = 4.0;
+        this.hud.showNotification(`[ ${dashK} ] Dash — Dodge roll with invulnerable i-frames!`, 4.0);
+      } else if (!this.tutorialsShown.attack && this.player.x >= 550 && this.player.x < 850) {
+        this.tutorialsShown.attack = true;
+        this.tutorialCooldown = 4.5;
+        this.hud.showNotification(`[ ${attackK} ] Attack   ·   Air + [ ↓ + ${attackK} ] Pogo Bounce on enemies!`, 4.5);
+      } else if (!this.tutorialsShown.doubleJump && !this.player.onGround && this.player.vy > 40 && this.player.jumpsLeft > 0) {
+        this.tutorialsShown.doubleJump = true;
+        this.tutorialCooldown = 4.0;
+        this.hud.showNotification(`Press [ ${jumpK} ] again in mid-air for Double Jump (Monarch Wings)!`, 3.5);
+      } else if (!this.tutorialsShown.heal && this.player.hp < this.player.maxHp && this.player.soul >= this.player.healCost) {
+        this.tutorialsShown.heal = true;
+        this.tutorialCooldown = 4.5;
+        this.hud.showNotification(`[ ${healK} ] Hold to Focus Soul and Heal HP!`, 4.0);
+      }
+    }
 
     // Weapon switching
     for (let i = 1; i <= 4; i++) {
