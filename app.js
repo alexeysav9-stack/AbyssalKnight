@@ -1233,14 +1233,14 @@ function buildLevel() {
 
   // Upper overlook balconies
   P(180, 760, 160, 20, 'oneway');
-  P(340, 660, 150, 20, 'oneway');
-  addLantern(340, 660, 45, '#ffaa33');
+  P(320, 640, 150, 20, 'oneway');
+  addLantern(320, 640, 45, '#ffaa33');
 
   // Stone ramp step connecting Bastion terrace (y=880) to High Viaduct Bridge (y=820)
   P(440, 850, 60, 30);
 
-  // The Grand High Viaduct Bridge: continuous monumental roadway spanning to Watchtower entrance!
-  // Roadway deck at y=820, thickness 32px
+  // The Grand High Viaduct Bridge: continuous monumental roadway spanning to Gatehouse Watchtower!
+  // Roadway deck at y=820, thickness 32px (bg_viaducts.png shows the arches below naturally)
   P(480, 820, 440, 32);
   P(920, 820, 460, 32);
   addStreetlamp(700, 820, 55, '#ffaa33');
@@ -1253,15 +1253,9 @@ function buildLevel() {
   // Sunken Mist Streets / Canals (Tier 1, y=1340)
   P(200, 1340, 1580, 160);
 
-  // Two Monumental Gothic Viaduct Bridges supporting the High Roadway:
-  // Arch 1: directly connects from bridge underside (y=852) down to canal floor (y=1340, h=488)
-  addArch(700, 852, 280, 488, 'viaductBridge');
-  // Arch 2: directly connects from bridge underside (y=852) down to canal floor (y=1340, h=488)
-  addArch(1150, 852, 280, 488, 'viaductBridge');
-
   // Intermediate descent catwalks / inspection platforms
-  P(480, 1020, 140, 20, 'oneway');
-  P(870, 1140, 160, 20, 'oneway');
+  P(580, 1020, 160, 20, 'oneway');
+  P(900, 1140, 180, 20, 'oneway');
 
   addWaterDrip(700, 852, 1340);
   addWaterDrip(1150, 852, 1340);
@@ -1271,19 +1265,19 @@ function buildLevel() {
   enemies.push({ type: 'guard', x: 820, y: 1290 });
   enemies.push({ type: 'crawler', x: 1240, y: 1300, patrolRange: 110 });
 
-  // Watchtower Ascent (x: 1380 - 1760, vertical climbing shaft from y=1340 up to y=500)
-  // High Viaduct Bridge (y=820) enters west tower wall through arched doorway (y=740..820)!
+  // Gatehouse Watchtower (x: 1380 - 1756, vertical climbing shaft from y=1340 up to y=500)
+  // High Viaduct Bridge (y=820) enters west tower wall through arched doorway (y=720..820)!
   // Sunken Canal (y=1340) enters tower base through gateway arch (y=1220..1340)!
-  P(1380, 500, 36, 240); // Upper west wall (y=500..740)
+  P(1380, 500, 36, 220); // Upper west wall (y=500..720)
   P(1380, 820, 36, 400); // Lower west wall (y=820..1220)
   P(1720, 500, 36, 840); // East fortress wall (y=500..1340)
 
   // Interior climbing ledges
-  P(1420, 1180, 140, 20, 'oneway');
-  P(1560, 1040, 140, 20, 'oneway');
-  P(1420, 900, 140, 20, 'oneway');
-  P(1560, 760, 140, 20, 'oneway');
-  P(1420, 620, 150, 20, 'oneway');
+  P(1420, 1180, 150, 20, 'oneway');
+  P(1550, 1030, 150, 20, 'oneway');
+  P(1420, 880, 150, 20, 'oneway');
+  P(1550, 730, 150, 20, 'oneway');
+  P(1420, 590, 160, 20, 'oneway');
 
   // Watchtower top roof terrace (with central oneway hatch so player can jump through onto the roof!)
   P(1340, 500, 80, 28);
@@ -1307,17 +1301,20 @@ function buildLevel() {
   // ZONE 2: THE SPIRES, BELFRY & HIGH VIADUCTS (x: 1800 - 3600, y: 320 - 1500)
   // ==========================================================================
   // --- Tier 3: High Slate Rooftops & Belfry Haven ---
-  P(1920, 460, 180, 26);
-  P(2180, 400, 160, 20, 'oneway');
-  P(2420, 360, 200, 26);
-  addGargoyle(2430, 360, -1, 'spread');
-  addGargoyle(2610, 360, 1, 'folded');
+  P(1880, 460, 200, 26);
+  P(2140, 400, 180, 20, 'oneway');
+  P(2380, 360, 220, 26);
+  addGargoyle(2400, 360, -1, 'spread');
+  addGargoyle(2580, 360, 1, 'folded');
 
   // Moving Gothic lift between spires
-  platforms.push({ x: 2700, y: 360, w: 140, h: 22, type: 'moving', ox: 2700, oy: 360, mx: 180, my: 60, speed: 75, t: 0 });
+  platforms.push({ x: 2680, y: 360, w: 140, h: 22, type: 'moving', ox: 2680, oy: 360, mx: 180, my: 60, speed: 75, t: 0 });
 
-  // Clocktower Belfry Haven (x: 3000 - 3450, y: 480)
-  P(3020, 480, 420, 32);
+  // Clocktower Belfry Haven (x: 2980 - 3460, y: 480)
+  P(3000, 480, 440, 32); // Belfry floor
+  P(2980, 240, 36, 240); // Left belfry tower pier
+  P(3404, 240, 36, 240); // Right belfry tower pier
+  P(2980, 240, 460, 32); // Overhead vaulted ceiling beam
   bonfires.push(new Bonfire(3220, 450, 1)); // Second Bonfire: Belfry Haven
   addArch(3220, 260, 260, 220, 'shrine');
   addRoseWindow(3220, 280, 42, '#ff8833');
@@ -1330,11 +1327,11 @@ function buildLevel() {
   // --- Tier 2: Mid-level Viaduct Bridges (y: 840 - 900) ---
   P(1900, 880, 280, 32);
   P(2280, 840, 240, 32);
-  P(2620, 900, 240, 32);
+  P(2620, 880, 240, 32);
   P(2960, 860, 280, 32);
   P(3320, 840, 300, 32);
   addStreetlamp(2040, 880, 55, '#ffaa33');
-  addStreetlamp(2730, 900, 55, '#ffaa33');
+  addStreetlamp(2730, 880, 55, '#ffaa33');
   addStreetlamp(3460, 840, 55, '#ffaa33');
   enemies.push({ type: 'crawler', x: 2380, y: 800, patrolRange: 90 });
   enemies.push({ type: 'guard', x: 3060, y: 810 });
@@ -1348,9 +1345,6 @@ function buildLevel() {
   P(2540, 1340, 520, 160);
   // Mist death pit: x=3060 to 3260
   P(3260, 1340, 380, 160);
-  addArch(2040, 912, 280, 428, 'viaductBridge');
-  addArch(2740, 932, 260, 408, 'viaductBridge');
-  addArch(3460, 872, 280, 468, 'viaductBridge');
   enemies.push({ type: 'crawler', x: 2060, y: 1300, patrolRange: 130 });
   enemies.push({ type: 'crawler', x: 2760, y: 1300, patrolRange: 150 });
   enemies.push({ type: 'guard', x: 3400, y: 1290 });
@@ -1360,8 +1354,8 @@ function buildLevel() {
   addCrystal(3300, 1338, 'purple', 1.2);
 
   // Connecting stair ledges between Tier 2 and Tier 3
-  P(3500, 680, 160, 20, 'oneway');
-  P(3560, 540, 160, 20, 'oneway');
+  P(3480, 680, 160, 20, 'oneway');
+  P(3540, 540, 160, 20, 'oneway');
 
   // ==========================================================================
   // ZONE 3: GRAND AQUEDUCT & VAMPIRE CASTLE GAUNTLET (x: 3600 - 5500, y: 380 - 1500)
@@ -1398,9 +1392,6 @@ function buildLevel() {
   P(3740, 1340, 600, 160);
   P(4440, 1340, 560, 160);
   P(5100, 1340, 520, 160);
-  addArch(3910, 772, 280, 568, 'viaductBridge');
-  addArch(4410, 732, 280, 608, 'viaductBridge');
-  addArch(4920, 712, 280, 628, 'viaductBridge');
   enemies.push({ type: 'crawler', x: 3920, y: 1300, patrolRange: 160 });
   enemies.push({ type: 'guard', x: 4680, y: 1290 });
   enemies.push({ type: 'crawler', x: 5260, y: 1300, patrolRange: 130 });
@@ -1439,48 +1430,34 @@ function buildLevel() {
   P(6460, 1120, 160, 18, 'oneway');
 
   // ==========================================================================
-  // ZONE 5: GRAND BLOODMOON CATHEDRAL BOSS ARENA (x: 6800 - 8150, y: 650 - 1360)
+  // ZONE 5: GRAND BLOODMOON CATHEDRAL BOSS ARENA (x: 6800 - 8150, y: 252 - 1360)
   // ==========================================================================
   P(6800, 1260, 1350, 100); // Arena floor from 6800 to 8150
-  P(6800, 660, 1350, 40);   // Arena vaulted ceiling
-  P(8110, 660, 40, 600);    // Right wall (back of cathedral)
-  P(6800, 660, 40, 450);    // Upper left wall (y=660..1110)
+  P(6800, 252, 1350, 40);   // Soaring cathedral vaulted ceiling
+  P(8110, 252, 40, 1008);   // Right wall (gothic iron portcullis)
+  P(6800, 252, 40, 858);    // Upper left wall above fog gate (y=252..1110)
 
   // Dynamic Boss Fog Gate (y=1110..1260, h=150): open before fight, sealed during fight
   platforms.push({ x: 6800, y: 1110, w: 40, h: 150, type: 'solid', isGate: true });
 
   const bossSpawn = { x: 7550, y: 1100 };
-  const bossArena = { x: 6800, y: 660, w: 1350, h: 600 };
-  const bossTrigger = { x: 6940, y: 700, w: 80, h: 560 };
+  const bossArena = { x: 6800, y: 252, w: 1350, h: 1008 };
+  const bossTrigger = { x: 6940, y: 400, w: 80, h: 860 };
 
-  // Multi-tier choir balconies in Boss Arena (Hollow Knight / Dark Souls style!)
-  P(6920, 1080, 200, 20, 'oneway');
-  P(6860, 920, 220, 20, 'oneway');
-  P(7840, 1080, 200, 20, 'oneway');
-  P(7880, 920, 220, 20, 'oneway');
-  P(7380, 840, 200, 20, 'oneway'); // Center organ / chandelier high platform
+  // Choir Balconies & Ledges matching the artwork of bg_1st_boss_arena.jpg:
+  // Lower colonnade ledges (y=920, matching lower arched gallery)
+  P(6860, 920, 240, 20, 'oneway');
+  P(7850, 920, 240, 20, 'oneway');
 
-  // Grand Cathedral Architecture Props
-  addArch(7120, 660, 260, 600, 'arenaColonnade');
-  addArch(7500, 660, 320, 600, 'arenaThrone');
-  addArch(7880, 660, 260, 600, 'arenaColonnade');
+  // Upper grand balconies (y=620, matching upper openwork balustrades)
+  P(6840, 620, 320, 24, 'oneway');
+  P(7790, 620, 320, 24, 'oneway');
 
-  // Vaulted chandeliers hanging from high ceiling
-  addChandelier(7150, 660, 140, 130);
-  addChandelier(7500, 660, 180, 160);
-  addChandelier(7850, 660, 140, 130);
+  // Center chandelier / organ high platform
+  P(7380, 800, 180, 20, 'oneway');
 
-  // Stained glass lancet windows & Cologne Cathedral Rose Windows
-  addGothicWindow(7150, 760, 46, 120, '#cc44ff', true);
-  addGothicWindow(7500, 720, 58, 140, '#ff2255', true);
-  addGothicWindow(7850, 760, 46, 120, '#cc44ff', true);
-  addRoseWindow(7500, 770, 82, '#ff2255');
-  addRoseWindow(7150, 750, 46, '#cc44ff');
-  addRoseWindow(7850, 750, 46, '#cc44ff');
-
-  // Gargoyles perched on high colonnades
-  addGargoyle(7040, 920, 1, 'spread');
-  addGargoyle(7960, 920, -1, 'spread');
+  // Throne dais steps (y=1200, matching the red carpet steps leading up to the throne)
+  P(7430, 1200, 140, 20, 'oneway');
 
   // Abyssal crystals
   addCrystal(6870, 1258, 'purple', 1.5);
@@ -4423,6 +4400,12 @@ class Boss {
 class EnvironmentRenderer {
   constructor() {
     this.dripDroplets = [];
+    this.imgBossArena = typeof Image !== 'undefined' ? new Image() : null;
+    if (this.imgBossArena) this.imgBossArena.src = 'bg_1st_boss_arena.jpg';
+  }
+
+  _isReady(img) {
+    return img && img.complete && (img.naturalWidth > 0 || img.width > 0);
   }
 
   drawBackWalls(ctx, camera, time, level) {
@@ -4481,9 +4464,9 @@ class EnvironmentRenderer {
       this._drawWatchtowerBackWall(ctx, 1380, 500, 376, 840, time);
     }
 
-    // 4. Clocktower Belfry Haven Back Wall (x: 3000 to 3460, y: 240 to 480)
-    if (maxX > 3000 && minX < 3460 && maxY > 240 && minY < 480) {
-      this._drawHavenBackWall(ctx, 3000, 240, 460, 240, time);
+    // 4. Clocktower Belfry Haven Back Wall (x: 2980 to 3460, y: 240 to 480)
+    if (maxX > 2980 && minX < 3460 && maxY > 240 && minY < 480) {
+      this._drawHavenBackWall(ctx, 2980, 240, 480, 240, time);
     }
 
     // 5. Grand Cathedral Antechamber & Nave Back Wall (x: 6380 to 6800, y: 660 to 1260)
@@ -4491,9 +4474,9 @@ class EnvironmentRenderer {
       this._drawCathedralAntechamberWall(ctx, 6380, 660, 420, 600, time);
     }
 
-    // 6. Grand Bloodmoon Cathedral Boss Arena Back Wall (x: 6800 to 8150, y: 660 to 1260)
-    if (maxX > 6800 && minX < 8150 && maxY > 660 && minY < 1260) {
-      this._drawCathedralArenaWall(ctx, 6800, 660, 1350, 600, time);
+    // 6. Grand Bloodmoon Cathedral Boss Arena Back Wall (x: 6800 to 8150, y: 252 to 1260)
+    if (maxX > 6800 && minX < 8150 && maxY > 240 && minY < 1260) {
+      this._drawCathedralArenaWall(ctx, 6800, 252, 1350, 1008, time);
     }
 
     ctx.restore();
@@ -4682,28 +4665,59 @@ class EnvironmentRenderer {
 
   _drawHavenBackWall(ctx, x, y, w, h, time) {
     ctx.save();
-    ctx.fillStyle = '#0d0718';
+    // Solid opaque gothic stone sanctuary backing wall
+    const grad = ctx.createLinearGradient(x, y, x, y + h);
+    grad.addColorStop(0, '#0c0817');
+    grad.addColorStop(0.5, '#150f24');
+    grad.addColorStop(1, '#0e0a1a');
+    ctx.fillStyle = grad;
     ctx.fillRect(x, y, w, h);
-    ctx.strokeStyle = '#08040f';
-    ctx.lineWidth = 1.5;
-    for (let cy = y + 26; cy < y + h; cy += 26) {
+
+    // Weathered ashlar courses
+    ctx.strokeStyle = '#090613';
+    ctx.lineWidth = 1;
+    for (let cy = y + 20; cy < y + h; cy += 20) {
       ctx.beginPath();
       ctx.moveTo(x, cy);
       ctx.lineTo(x + w, cy);
       ctx.stroke();
     }
-    // High decorative Belfry blind arcade
-    ctx.strokeStyle = '#1a112c';
+
+    // High decorative Belfry blind arcade & lancet niches
+    ctx.strokeStyle = '#221738';
     ctx.lineWidth = 2;
-    for (let ax = x + 30; ax < x + w - 20; ax += 50) {
+    for (let ax = x + 40; ax < x + w - 30; ax += 60) {
+      ctx.beginPath();
+      ctx.moveTo(ax - 22, y + h);
+      ctx.lineTo(ax - 22, y + 60);
+      ctx.quadraticCurveTo(ax - 11, y + 20, ax, y + 10);
+      ctx.quadraticCurveTo(ax + 11, y + 20, ax + 22, y + 60);
+      ctx.lineTo(ax + 22, y + h);
+      ctx.stroke();
+
+      // Recessed niche shadow
+      ctx.fillStyle = '#080511';
       ctx.beginPath();
       ctx.moveTo(ax - 18, y + h);
-      ctx.lineTo(ax - 18, y + 40);
-      ctx.quadraticCurveTo(ax - 9, y + 10, ax, y);
-      ctx.quadraticCurveTo(ax + 9, y + 10, ax + 18, y + 40);
+      ctx.lineTo(ax - 18, y + 65);
+      ctx.quadraticCurveTo(ax - 9, y + 28, ax, y + 20);
+      ctx.quadraticCurveTo(ax + 9, y + 28, ax + 18, y + 65);
       ctx.lineTo(ax + 18, y + h);
-      ctx.stroke();
+      ctx.closePath();
+      ctx.fill();
+
+      // Warm candlelit glow inside the niche
+      const flk = Math.sin(time * 9 + ax) * 0.15 + 0.85;
+      ctx.fillStyle = '#ffaa33';
+      ctx.fillRect(ax - 3, y + h - 35, 6, 8 * flk);
     }
+
+    // Vaulted ceiling beam mouldings
+    ctx.fillStyle = '#2d2144';
+    ctx.fillRect(x, y, w, 8);
+    ctx.fillStyle = '#59447d';
+    ctx.fillRect(x, y, w, 1.5);
+
     ctx.restore();
   }
 
@@ -4752,7 +4766,13 @@ class EnvironmentRenderer {
 
   _drawCathedralArenaWall(ctx, x, y, w, h, time) {
     ctx.save();
-    // Grand High Gothic Nave Wall (1350px wide, 600px high - 100% Solid Opaque)
+    if (this._isReady(this.imgBossArena)) {
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(this.imgBossArena, x, y, w, h);
+      ctx.restore();
+      return;
+    }
+    // Grand High Gothic Nave Wall (1350px wide, 1008px high - 100% Solid Opaque fallback)
     const grad = ctx.createLinearGradient(x, y, x, y + h);
     grad.addColorStop(0, '#080410');
     grad.addColorStop(0.35, '#110a1c');
@@ -6066,158 +6086,175 @@ class EnvironmentRenderer {
   _drawGothicStone(ctx, rx, ry, rw, rh, isBridge, hasBalustrade, time) {
     ctx.save();
 
-    // 1. Base dark foundation fill (ensures 100% solid opacity with deep mortar background)
-    ctx.fillStyle = '#0a0512';
+    // 1. Solid opaque stone foundation backing (palette matching bg_viaducts.png)
+    ctx.fillStyle = '#0a0714';
     ctx.fillRect(rx, ry, rw, rh);
 
-    // 2. High-Density Ashlar Masonry Courses (Werkstein) matching bg_viaducts.png
-    // Palette of weathered Cologne trachyte & basalt blocks:
-    const STONE_SHADES = [
-      '#181024', // Deep obsidian slate
-      '#241935', // Weathered basalt mid-dark
-      '#2f2144', // Classic gothic stone violet-grey
-      '#3d2c56', // Highlighted stone block
-      '#4c3769', // Moonlit weathered stone
-      '#211530'  // Dark soot-stained stone
+    const isWall = (rw <= 48 && rh > 48);
+
+    // Weathered gothic stone courses matching bg_viaducts.png & bg_spires.png
+    // Palette of weathered dark slate & basalt:
+    const STONE_COURSES = [
+      { fill: '#161224', hi: '#241c38', sh: '#0b0816' },
+      { fill: '#1b152a', hi: '#2b2140', sh: '#0d0a19' },
+      { fill: '#211933', hi: '#32274d', sh: '#100c1e' },
+      { fill: '#261e3b', hi: '#382b54', sh: '#130f23' },
+      { fill: '#1e172f', hi: '#2e2345', sh: '#0f0b1c' }
     ];
 
-    const isWall = (rw <= 48 && rh > 48);
-    const courseH = isWall ? 20 : 20;
-    const brickW = isWall ? rw : 44;
+    const courseH = isWall ? 20 : 16;
     const numCourses = Math.ceil(rh / courseH);
 
+    // Vertical wall styling: elegant buttress pilasters with base and capital mouldings
+    if (isWall) {
+      // Background stone courses
+      for (let c = 0; c < numCourses; c++) {
+        const cy = ry + c * courseH;
+        const ch = Math.min(courseH, ry + rh - cy);
+        const col = STONE_COURSES[c % STONE_COURSES.length];
+
+        ctx.fillStyle = col.fill;
+        ctx.fillRect(rx, cy, rw, ch);
+
+        // Course mortar seam
+        ctx.fillStyle = col.sh;
+        ctx.fillRect(rx, cy + ch - 1, rw, 1);
+        ctx.fillStyle = col.hi;
+        ctx.fillRect(rx, cy, rw, 1);
+      }
+
+      // Outer pilaster buttress borders (3px left and right)
+      ctx.fillStyle = '#2b2042';
+      ctx.fillRect(rx, ry, 3, rh);
+      ctx.fillStyle = '#0a0714';
+      ctx.fillRect(rx + rw - 3, ry, 3, rh);
+
+      // Capital moulding at top of wall
+      ctx.fillStyle = '#3a2b54';
+      ctx.fillRect(rx - 2, ry, rw + 4, 4);
+      ctx.fillStyle = '#654e8e';
+      ctx.fillRect(rx - 2, ry, rw + 4, 1);
+
+      // Base plinth moulding at bottom of wall
+      ctx.fillStyle = '#1e162f';
+      ctx.fillRect(rx - 2, ry + rh - 6, rw + 4, 6);
+      ctx.fillStyle = '#392a52';
+      ctx.fillRect(rx - 2, ry + rh - 6, rw + 4, 1.5);
+
+      // Occasional horizontal stringcourse band every 80px
+      for (let sy = ry + 80; sy < ry + rh - 30; sy += 80) {
+        ctx.fillStyle = '#2d2244';
+        ctx.fillRect(rx - 1, sy, rw + 2, 4);
+        ctx.fillStyle = '#543f75';
+        ctx.fillRect(rx - 1, sy, rw + 2, 1);
+      }
+
+      ctx.restore();
+      return;
+    }
+
+    // 2. Horizontal Ashlar Courses (Platform & Floor Slabs)
     for (let c = 0; c < numCourses; c++) {
       const cy = ry + c * courseH;
       const ch = Math.min(courseH, ry + rh - cy);
       if (ch <= 0) break;
 
-      const offset = (c % 2 === 0 || isWall) ? 0 : Math.round(brickW * 0.5);
+      const blockW = 44;
+      const offset = (c % 2 === 0) ? 0 : Math.round(blockW * 0.5);
 
-      for (let bx = rx - offset; bx < rx + rw; bx += brickW) {
+      for (let bx = rx - offset; bx < rx + rw; bx += blockW) {
         const drawX = Math.max(rx, bx);
-        const drawR = Math.min(rx + rw, bx + brickW);
+        const drawR = Math.min(rx + rw, bx + blockW);
         const bw = drawR - drawX;
         if (bw <= 0) continue;
 
-        // Deterministic pseudo-random hash for this stone block
-        const h = Math.abs(Math.sin((bx * 13.7 + cy * 29.3)) * 10000);
-        const colorIdx = Math.floor(h) % STONE_SHADES.length;
+        const h = Math.abs(Math.sin((bx * 17.3 + cy * 31.7)) * 10000);
+        const col = STONE_COURSES[Math.floor(h) % STONE_COURSES.length];
 
-        // Fill individual stone block with 1px mortar gap
-        ctx.fillStyle = STONE_SHADES[colorIdx];
-        ctx.fillRect(drawX + 1, cy + 1, Math.max(1, bw - 2), Math.max(1, ch - 2));
+        // Stone block fill
+        ctx.fillStyle = col.fill;
+        ctx.fillRect(drawX + 1, cy + 1, bw - 1, ch - 1);
 
-        // Moonlight Chiseled Bevels (top and left edge of block)
-        ctx.fillStyle = 'rgba(145, 110, 195, 0.32)';
-        ctx.fillRect(drawX + 1, cy + 1, Math.max(1, bw - 2), 1.5);
-        ctx.fillRect(drawX + 1, cy + 1, 1.5, Math.max(1, ch - 2));
+        // Soft moonlit stone bevel (top and left)
+        ctx.fillStyle = col.hi;
+        ctx.fillRect(drawX + 1, cy + 1, bw - 1, 1);
+        ctx.fillRect(drawX + 1, cy + 1, 1, ch - 1);
 
-        // Shadow Chiseled Bevels (bottom and right edge of block)
-        ctx.fillStyle = 'rgba(4, 2, 8, 0.75)';
-        ctx.fillRect(drawX + 1, cy + ch - 2, Math.max(1, bw - 2), 1.5);
-        ctx.fillRect(drawX + bw - 2, cy + 1, 1.5, Math.max(1, ch - 2));
+        // Subtle dark mortar seam (bottom and right)
+        ctx.fillStyle = col.sh;
+        ctx.fillRect(drawX + 1, cy + ch - 1, bw - 1, 1);
+        ctx.fillRect(drawX + bw - 1, cy + 1, 1, ch - 1);
 
-        // Occasional weathered fracture / chiseled mark
-        if (Math.floor(h * 3.7) % 11 === 0 && bw > 14 && ch > 10) {
-          ctx.fillStyle = '#08040e';
-          ctx.fillRect(drawX + 6, cy + 6, Math.min(bw - 10, 5), 1.5);
+        // Occasional stone texture chip / chisel mark
+        if (Math.floor(h * 2.3) % 9 === 0 && bw > 18 && ch > 8) {
+          ctx.fillStyle = '#080512';
+          ctx.fillRect(drawX + 8, cy + 5, 4, 1);
         }
       }
     }
 
-    // 3. Quoins (Corner Stones) on vertical tower & fortress walls
-    if (isWall) {
-      for (let c = 0; c < numCourses; c++) {
-        const cy = ry + c * courseH;
-        const ch = Math.min(courseH, ry + rh - cy);
-        const isLeftQuoin = (c % 2 === 0);
-        ctx.fillStyle = isLeftQuoin ? '#3f2d59' : '#1e142c';
-        ctx.fillRect(rx + 1, cy + 1, Math.min(rw - 2, 10), Math.max(1, ch - 2));
-        ctx.fillStyle = !isLeftQuoin ? '#3f2d59' : '#1e142c';
-        ctx.fillRect(rx + rw - 11, cy + 1, 10, Math.max(1, ch - 2));
+    // 3. Top Roadway / Platform Flagstone Curb (Walking Surface)
+    if (rh >= 14) {
+      // Molded Flagstone Curb slab
+      ctx.fillStyle = '#2c2242';
+      ctx.fillRect(rx, ry, rw, 5);
+
+      // Moonlight top rim glint matching bg_viaducts.png moonlit edges
+      ctx.fillStyle = '#7a649f';
+      ctx.fillRect(rx, ry, rw, 1);
+      ctx.fillStyle = '#4c3a6e';
+      ctx.fillRect(rx, ry + 1, rw, 1);
+
+      // Flagstone vertical paving joints every 24px
+      ctx.fillStyle = '#0c0817';
+      for (let px = rx + 24; px < rx + rw - 6; px += 24) {
+        ctx.fillRect(px, ry, 1, 5);
       }
+
+      // Subtle shadow groove under the flagstone curb
+      ctx.fillStyle = '#07050e';
+      ctx.fillRect(rx, ry + 5, rw, 1);
     }
 
-    // 4. Top Roadway / Platform Flagstone Curb & Cobblestones
-    if (!isWall && rh >= 16) {
-      // Molded Flagstone Curb base
-      ctx.fillStyle = '#2d1f42';
-      ctx.fillRect(rx, ry, rw, 7);
-
-      // Moonlight top rim glint
-      ctx.fillStyle = '#7a5ba8';
-      ctx.fillRect(rx, ry, rw, 1.5);
-      ctx.fillStyle = '#533c74';
-      ctx.fillRect(rx, ry + 1.5, rw, 1.5);
-
-      // Flagstone paving joints every 16px
-      ctx.fillStyle = '#0c0616';
-      for (let px = rx + 16; px < rx + rw - 4; px += 16) {
-        ctx.fillRect(px, ry, 1.5, 7);
-      }
-
-      // Alternating flagstone block tones
-      for (let px = rx; px < rx + rw; px += 16) {
-        const h2 = Math.abs(Math.sin(px * 19.3) * 1000);
-        if (Math.floor(h2) % 2 === 0) {
-          ctx.fillStyle = 'rgba(160, 125, 210, 0.16)';
-          ctx.fillRect(px + 1, ry + 1, Math.min(14, rx + rw - px - 2), 4);
-        }
-      }
-
-      // Mortar shadow crevice under curb
-      ctx.fillStyle = '#08030e';
-      ctx.fillRect(rx, ry + 7, rw, 1.5);
-    }
-
-    // 5. Underside Carved Stone Corbels (Brackets)
-    if (!isWall && rh <= 60 && ry + rh < 1300) {
-      ctx.fillStyle = '#140c22';
-      const corbelStep = 36;
-      for (let sx = rx + 16; sx < rx + rw - 12; sx += corbelStep) {
-        // Carved stepped bracket tapering downward
+    // 4. Underside Carved Stone Corbels (stepped brackets under openwork bridges)
+    if (rh <= 60 && ry + rh < 1300) {
+      const corbelStep = 52;
+      for (let sx = rx + 14; sx <= rx + rw - 14; sx += corbelStep) {
+        // Stepped gothic corbel bracket
+        ctx.fillStyle = '#150f24';
         ctx.beginPath();
-        ctx.moveTo(sx - 7, ry + rh);
-        ctx.lineTo(sx + 7, ry + rh);
-        ctx.lineTo(sx + 3, ry + rh + 10);
-        ctx.lineTo(sx - 3, ry + rh + 10);
+        ctx.moveTo(sx - 8, ry + rh);
+        ctx.lineTo(sx + 8, ry + rh);
+        ctx.lineTo(sx + 4, ry + rh + 9);
+        ctx.lineTo(sx - 4, ry + rh + 9);
         ctx.closePath();
         ctx.fill();
 
-        // Moonlight highlight on left side of corbel
-        ctx.fillStyle = '#36244e';
-        ctx.fillRect(sx - 7, ry + rh, 4, 3);
-        ctx.fillRect(sx - 5, ry + rh + 3, 3, 4);
-        ctx.fillStyle = '#140c22';
+        // Moonlight glint on left edge of corbel
+        ctx.fillStyle = '#392a54';
+        ctx.fillRect(sx - 8, ry + rh, 2, 4);
+        ctx.fillRect(sx - 5, ry + rh + 4, 2, 5);
+
+        // Deep shadow on right edge of corbel
+        ctx.fillStyle = '#080510';
+        ctx.fillRect(sx + 6, ry + rh, 2, 4);
+        ctx.fillRect(sx + 3, ry + rh + 4, 2, 5);
+      }
+
+      // Shallow carved arching corbel table profile between brackets
+      ctx.strokeStyle = '#0a0714';
+      ctx.lineWidth = 1;
+      for (let sx = rx + 14; sx + corbelStep <= rx + rw; sx += corbelStep) {
+        ctx.beginPath();
+        ctx.moveTo(sx + 8, ry + rh);
+        ctx.quadraticCurveTo(sx + corbelStep / 2, ry + rh + 4, sx + corbelStep - 8, ry + rh);
+        ctx.stroke();
       }
     }
 
-    // 6. Pierced Gothic Lancet Balustrades on Walkways and Bridges
-    if (hasBalustrade && rw >= 120 && rh <= 50 && ry < 1200) {
-      const postStep = 40;
-      for (let px = rx + 8; px < rx + rw - 16; px += postStep) {
-        // Baluster pillar body
-        ctx.fillStyle = '#221736';
-        ctx.fillRect(px, ry - 12, 10, 12);
-        // Molded cap
-        ctx.fillStyle = '#3c2b54';
-        ctx.fillRect(px - 1, ry - 14, 12, 2);
-
-        // Pierced lancet openwork cutout (dark recessed void)
-        ctx.fillStyle = '#090412';
-        ctx.fillRect(px + 3, ry - 9, 4, 6);
-        ctx.fillRect(px + 4, ry - 11, 2, 2);
-      }
-      // Molded Handrail running across the top of all balusters
-      ctx.fillStyle = '#261a3a';
-      ctx.fillRect(rx + 6, ry - 15, rw - 12, 3);
-      ctx.fillStyle = '#624784';
-      ctx.fillRect(rx + 6, ry - 15, rw - 12, 1);
-    }
-
-    // 7. Outer crisp pixel boundary stroke
-    ctx.strokeStyle = '#08040e';
-    ctx.lineWidth = 1.5;
+    // 5. Subtle outer boundary definition
+    ctx.strokeStyle = '#090613';
+    ctx.lineWidth = 1;
     ctx.strokeRect(rx, ry, rw, rh);
 
     ctx.restore();
@@ -6228,8 +6265,7 @@ class EnvironmentRenderer {
     const ry = Math.round(p.y);
     const rw = Math.round(p.w);
     const rh = Math.round(p.h);
-    const hasBalustrade = (rw >= 120 && rh <= 50 && ry < 1200 && p.type !== 'solid_interior');
-    this._drawGothicStone(ctx, rx, ry, rw, rh, false, hasBalustrade, time);
+    this._drawGothicStone(ctx, rx, ry, rw, rh, false, false, time);
   }
 
   _drawOneWay(ctx, p, time) {
@@ -6247,62 +6283,62 @@ class EnvironmentRenderer {
     // Left end corbel
     ctx.beginPath();
     ctx.moveTo(rx, ry + rh);
-    ctx.lineTo(rx, ry + rh + 14);
-    ctx.lineTo(rx + 18, ry + rh);
+    ctx.lineTo(rx, ry + rh + 12);
+    ctx.lineTo(rx + 16, ry + rh);
     ctx.closePath();
     ctx.fill();
     ctx.fillStyle = '#3a2752';
-    ctx.fillRect(rx, ry + rh, 4, 8);
+    ctx.fillRect(rx, ry + rh, 3, 7);
 
     // Right end corbel
     ctx.fillStyle = '#140c22';
     ctx.beginPath();
     ctx.moveTo(rx + rw, ry + rh);
-    ctx.lineTo(rx + rw, ry + rh + 14);
-    ctx.lineTo(rx + rw - 18, ry + rh);
+    ctx.lineTo(rx + rw, ry + rh + 12);
+    ctx.lineTo(rx + rw - 16, ry + rh);
     ctx.closePath();
     ctx.fill();
     ctx.fillStyle = '#3a2752';
-    ctx.fillRect(rx + rw - 4, ry + rh, 4, 8);
+    ctx.fillRect(rx + rw - 3, ry + rh, 3, 7);
 
     // Intermediate corbels if long
     if (rw >= 140) {
       const mid = Math.round(rx + rw / 2);
       ctx.fillStyle = '#140c22';
       ctx.beginPath();
-      ctx.moveTo(mid - 8, ry + rh);
-      ctx.lineTo(mid + 8, ry + rh);
-      ctx.lineTo(mid, ry + rh + 12);
+      ctx.moveTo(mid - 7, ry + rh);
+      ctx.lineTo(mid + 7, ry + rh);
+      ctx.lineTo(mid, ry + rh + 10);
       ctx.closePath();
       ctx.fill();
       ctx.fillStyle = '#3a2752';
-      ctx.fillRect(mid - 8, ry + rh, 4, 4);
+      ctx.fillRect(mid - 7, ry + rh, 3, 4);
     }
 
-    // 3. Wrought-Iron / Stone Filigree Balustrade Handrail
+    // 3. Delicate Wrought-Iron Balustrade Handrail (10px high, completely openwork)
     ctx.strokeStyle = '#221736';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    // Handrail
-    ctx.moveTo(rx + 4, ry - 12);
-    ctx.lineTo(rx + rw - 4, ry - 12);
-    // Vertical spindles every 18px
-    for (let bx = rx + 10; bx < rx + rw - 8; bx += 18) {
+    // Handrail top bar
+    ctx.moveTo(rx + 4, ry - 10);
+    ctx.lineTo(rx + rw - 4, ry - 10);
+    // Vertical spindles every 20px
+    for (let bx = rx + 12; bx < rx + rw - 8; bx += 20) {
       ctx.moveTo(bx, ry);
-      ctx.lineTo(bx, ry - 12);
-      // Gothic lancet cusp
-      ctx.moveTo(bx - 3, ry - 4);
-      ctx.lineTo(bx, ry - 8);
-      ctx.lineTo(bx + 3, ry - 4);
+      ctx.lineTo(bx, ry - 10);
+      // Gothic pointed cusp
+      ctx.moveTo(bx - 3, ry - 3);
+      ctx.lineTo(bx, ry - 7);
+      ctx.lineTo(bx + 3, ry - 3);
     }
     ctx.stroke();
 
-    // Handrail violet glint
-    ctx.strokeStyle = '#5a3f7a';
+    // Handrail top moonlit violet glint
+    ctx.strokeStyle = '#624b86';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(rx + 4, ry - 13);
-    ctx.lineTo(rx + rw - 4, ry - 13);
+    ctx.moveTo(rx + 4, ry - 11);
+    ctx.lineTo(rx + rw - 4, ry - 11);
     ctx.stroke();
 
     ctx.restore();
@@ -6478,7 +6514,7 @@ class LightingSystem {
 
     if (isInsideArena) {
       // Inside cathedral: atmospheric enclosed twilight darkness
-      lctx.fillStyle = 'rgba(14, 8, 24, 0.44)';
+      lctx.fillStyle = 'rgba(12, 7, 20, 0.30)';
       lctx.fillRect(0, 0, cw, ch);
     } else {
       // Outdoors: Sky & Moon at top are luminous and completely clear (alpha = 0)!
@@ -6567,6 +6603,21 @@ class LightingSystem {
       addLight(boss.x + boss.w / 2, boss.y + boss.h / 2, 300, 0.92, bFlk);
     }
 
+    // E2. Cathedral Arena Background Torches & Candelabras Light
+    if (isInsideArena) {
+      const arenaTorches = [
+        { x: 7070, y: 1180, r: 150 },
+        { x: 7370, y: 1180, r: 160 },
+        { x: 7580, y: 1180, r: 160 },
+        { x: 7880, y: 1180, r: 150 },
+        { x: 7475, y: 760, r: 240 }
+      ];
+      for (const t of arenaTorches) {
+        const flk = Math.sin(time * 11 + t.x * 0.1) * 0.08;
+        addLight(t.x, t.y, t.r, 0.88, flk);
+      }
+    }
+
     // F. Projectiles
     if (projectiles) {
       for (const p of projectiles) {
@@ -6631,6 +6682,20 @@ class LightingSystem {
         }
       }
     }
+
+    // Cathedral Arena background torches & stained glass colored glow
+    if (isInsideArena) {
+      const arenaTorches = [
+        { x: 7070, y: 1180, r: 130 },
+        { x: 7370, y: 1180, r: 140 },
+        { x: 7580, y: 1180, r: 140 },
+        { x: 7880, y: 1180, r: 130 },
+        { x: 7475, y: 760, r: 220 }
+      ];
+      for (const t of arenaTorches) {
+        addColorGlow(t.x, t.y, t.r, 'rgba(255, 150, 45, 0.22)', 'rgba(255, 75, 10, 0)');
+      }
+    }
     // Pale ethereal soul light on player
     addColorGlow(player.x + player.w / 2, player.y + player.h * 0.35, 115, 'rgba(120, 200, 255, 0.16)', 'rgba(80, 140, 255, 0)');
 
@@ -6693,9 +6758,11 @@ class Background {
     this.imgSky = typeof Image !== 'undefined' ? new Image() : null;
     this.imgSpires = typeof Image !== 'undefined' ? new Image() : null;
     this.imgViaducts = typeof Image !== 'undefined' ? new Image() : null;
+    this.imgBossArena = typeof Image !== 'undefined' ? new Image() : null;
     if (this.imgSky) this.imgSky.src = 'bg_sky.png';
     if (this.imgSpires) this.imgSpires.src = 'bg_spires.png';
     if (this.imgViaducts) this.imgViaducts.src = 'bg_viaducts.png';
+    if (this.imgBossArena) this.imgBossArena.src = 'bg_1st_boss_arena.jpg';
 
     // Atmospheric night stars / celestial motes
     this.stars = [];
