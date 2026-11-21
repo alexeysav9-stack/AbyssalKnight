@@ -1640,7 +1640,7 @@ function buildLevel() {
   const bossArena = { x: 6800, y: 252, w: 1350, h: 1008 };
   const bossTrigger = { x: 6940, y: 400, w: 80, h: 860 };
 
-  // Choir Balconies & Ledges matching the artwork of bg_1st_boss_arena.jpg:
+  // Choir Balconies & Ledges matching the artwork of bg_1st_boss_arena.png:
   // Lower colonnade ledges (y=920, matching lower arched gallery)
   P(6860, 920, 240, 20, 'oneway');
   P(7850, 920, 240, 20, 'oneway');
@@ -4846,7 +4846,7 @@ class EnvironmentRenderer {
   constructor() {
     this.dripDroplets = [];
     this.imgBossArena = typeof Image !== 'undefined' ? new Image() : null;
-    if (this.imgBossArena) this.imgBossArena.src = 'bg_1st_boss_arena.jpg';
+    if (this.imgBossArena) this.imgBossArena.src = 'bg_1st_boss_arena.png';
   }
 
   _isReady(img) {
@@ -5219,7 +5219,36 @@ class EnvironmentRenderer {
       ctx.restore();
       return;
     }
-    // Grand High Gothic Nave Wall (1350px wide, 1008px high - 100% Solid Opaque fallback)
+
+    // Procedural Fallback: Cathedral Nave Wall with transparent lancet window cutouts
+    // Window apertures that reveal the background bloodmoon & sky
+    const windows = [
+      { x: x + w * 0.5, y: y + 80, w: 140, h: 420 }, // High Central Rose & Lancet
+      { x: x + 160, y: y + 150, w: 90, h: 360 },     // Left High Lancet
+      { x: x + 310, y: y + 200, w: 80, h: 310 },     // Left Mid Lancet
+      { x: x + w - 310, y: y + 200, w: 80, h: 310 }, // Right Mid Lancet
+      { x: x + w - 160, y: y + 150, w: 90, h: 360 }, // Right High Lancet
+      { x: x + 110, y: y + 620, w: 120, h: 380 },    // Lower Arcade Passages
+      { x: x + w - 110, y: y + 620, w: 120, h: 380 },
+    ];
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x, y, w, h);
+    for (const win of windows) {
+      const halfW = win.w / 2;
+      const springY = win.y + win.h * 0.35;
+      const sillY = win.y + win.h;
+      ctx.moveTo(win.x - halfW, sillY);
+      ctx.lineTo(win.x - halfW, springY);
+      ctx.quadraticCurveTo(win.x - halfW * 0.5, win.y, win.x, win.y - 2);
+      ctx.quadraticCurveTo(win.x + halfW * 0.5, win.y, win.x + halfW, springY);
+      ctx.lineTo(win.x + halfW, sillY);
+      ctx.closePath();
+    }
+    ctx.clip('evenodd');
+
+    // Grand High Gothic Nave Wall
     const grad = ctx.createLinearGradient(x, y, x, y + h);
     grad.addColorStop(0, '#080410');
     grad.addColorStop(0.35, '#110a1c');
@@ -5253,15 +5282,6 @@ class EnvironmentRenderer {
       ctx.quadraticCurveTo(midX - 30, y + 10, midX, y - 10);
       ctx.quadraticCurveTo(midX + 30, y + 10, px + pierStep - 14, y + 110);
       ctx.stroke();
-
-      // Recessed choir niche
-      ctx.fillStyle = '#06030c';
-      ctx.beginPath();
-      ctx.moveTo(px + 18, y + 110);
-      ctx.quadraticCurveTo(midX - 25, y + 25, midX, y + 10);
-      ctx.quadraticCurveTo(midX + 25, y + 25, px + pierStep - 18, y + 110);
-      ctx.closePath();
-      ctx.fill();
     }
 
     // Cathedral Ashlar Masonry Horizontals
@@ -5278,6 +5298,53 @@ class EnvironmentRenderer {
     ctx.fillStyle = '#211636';
     ctx.fillRect(x, y + 116, w, 6);
     ctx.fillRect(x, y + 326, w, 6);
+
+    ctx.restore(); // end clip
+
+    // Window tracery, stone frames, and delicate glass glimmer
+    for (const win of windows) {
+      const halfW = win.w / 2;
+      const springY = win.y + win.h * 0.35;
+      const sillY = win.y + win.h;
+
+      // Stone moulding surround
+      ctx.strokeStyle = '#22153a';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(win.x - halfW, sillY);
+      ctx.lineTo(win.x - halfW, springY);
+      ctx.quadraticCurveTo(win.x - halfW * 0.5, win.y, win.x, win.y - 2);
+      ctx.quadraticCurveTo(win.x + halfW * 0.5, win.y, win.x + halfW, springY);
+      ctx.lineTo(win.x + halfW, sillY);
+      ctx.stroke();
+
+      // Stone sill
+      ctx.fillStyle = '#1c1130';
+      ctx.fillRect(win.x - halfW - 4, sillY, win.w + 8, 4);
+
+      // Delicate transparent glass sheen
+      const glassGrad = ctx.createLinearGradient(win.x, win.y, win.x, sillY);
+      glassGrad.addColorStop(0, 'rgba(255, 120, 100, 0.08)');
+      glassGrad.addColorStop(0.5, 'rgba(180, 80, 255, 0.04)');
+      glassGrad.addColorStop(1, 'rgba(100, 40, 200, 0.08)');
+      ctx.fillStyle = glassGrad;
+      ctx.beginPath();
+      ctx.moveTo(win.x - halfW, sillY);
+      ctx.lineTo(win.x - halfW, springY);
+      ctx.quadraticCurveTo(win.x - halfW * 0.5, win.y, win.x, win.y - 2);
+      ctx.quadraticCurveTo(win.x + halfW * 0.5, win.y, win.x + halfW, springY);
+      ctx.lineTo(win.x + halfW, sillY);
+      ctx.closePath();
+      ctx.fill();
+
+      // Central stone mullion
+      ctx.strokeStyle = '#150d24';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(win.x, win.y + 16);
+      ctx.lineTo(win.x, sillY);
+      ctx.stroke();
+    }
 
     ctx.restore();
   }
@@ -7312,7 +7379,7 @@ class Background {
     if (this.imgSky) this.imgSky.src = 'bg_sky.png';
     if (this.imgSpires) this.imgSpires.src = 'bg_spires.png';
     if (this.imgViaducts) this.imgViaducts.src = 'bg_viaducts.png';
-    if (this.imgBossArena) this.imgBossArena.src = 'bg_1st_boss_arena.jpg';
+    if (this.imgBossArena) this.imgBossArena.src = 'bg_1st_boss_arena.png';
 
     // Atmospheric night stars / celestial motes
     this.stars = [];
