@@ -223,7 +223,7 @@ class AudioEngine {
     this.targetMusicKey = null;
     this.musicVolumes = { level: 0, boss: 0 };
     this.musicTargets = { level: 0, boss: 0 };
-    this.maxMusicVolumes = { level: 0.45, boss: 0.55 };
+    this.maxMusicVolumes = { level: 0.16, boss: 0.22 };
     this.musicCrossfadeSpeed = 0.9;
     this.musicStarted = false;
 
@@ -287,7 +287,7 @@ class AudioEngine {
           el.play().catch(() => {});
         }
       }
-      this.musicTargets[key] = this.maxMusicVolumes[key] || 0.5;
+      this.musicTargets[key] = this.maxMusicVolumes[key] || 0.18;
     }
 
     for (const k of Object.keys(this.musicTracks)) {
@@ -578,14 +578,20 @@ class AudioEngine {
     if (!this.enabled) return;
     if (!this.playSample('bossRoar', 1.35, 0.03)) {
       this._play((ctx, dest) => {
-        const dur = 0.8;
-        const o = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain();
-        o.type = 'sawtooth'; o2.type = 'square';
-        o.frequency.setValueAtTime(80, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + dur);
-        o2.frequency.setValueAtTime(85, ctx.currentTime); o2.frequency.exponentialRampToValueAtTime(35, ctx.currentTime + dur);
-        g.gain.setValueAtTime(0.4, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
-        o.connect(g); o2.connect(g); g.connect(dest); o.start(); o.stop(ctx.currentTime + dur); o2.start(); o2.stop(ctx.currentTime + dur);
+        const dur = 1.2;
+        const o1 = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain();
+        o1.type = 'sawtooth'; o2.type = 'sine';
+        o1.frequency.setValueAtTime(54, ctx.currentTime);
+        o1.frequency.exponentialRampToValueAtTime(34, ctx.currentTime + dur);
+        o2.frequency.setValueAtTime(36, ctx.currentTime);
+        o2.frequency.exponentialRampToValueAtTime(22, ctx.currentTime + dur);
+        g.gain.setValueAtTime(0.55, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+        o1.connect(g); o2.connect(g); g.connect(dest);
+        o1.start(); o1.stop(ctx.currentTime + dur);
+        o2.start(); o2.stop(ctx.currentTime + dur);
       });
+      this._noise(0.65, 0.45, 1.8);
     }
   }
   fireball() {
@@ -620,47 +626,54 @@ class AudioEngine {
   }
   bossTelegraph() {
     if (!this.enabled) return;
-    if (!this.playSample('bossTelegraph', 0.9, 0.02)) {
+    if (!this.playSample('bossTelegraph', 0.95, 0.02)) {
       this._play((ctx, dest) => {
-        const dur = 0.22;
+        const dur = 0.35;
         const o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = 'sine';
-        o.frequency.setValueAtTime(950, ctx.currentTime);
-        o.frequency.exponentialRampToValueAtTime(1550, ctx.currentTime + dur);
-        g.gain.setValueAtTime(0.28, ctx.currentTime);
+        o.type = 'triangle';
+        o.frequency.setValueAtTime(104, ctx.currentTime);
+        o.frequency.linearRampToValueAtTime(120, ctx.currentTime + dur);
+        g.gain.setValueAtTime(0.01, ctx.currentTime);
+        g.gain.linearRampToValueAtTime(0.35, ctx.currentTime + dur * 0.8);
         g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
         o.connect(g); g.connect(dest); o.start(); o.stop(ctx.currentTime + dur);
       });
+      this._noise(0.2, 0.25, 2.0);
     }
   }
   bossThrustGlint() {
     if (!this.enabled) return;
-    if (!this.playSample('bossThrustGlint', 0.9, 0.03)) {
+    if (!this.playSample('bossThrustGlint', 0.95, 0.03)) {
       this._play((ctx, dest) => {
-        const dur = 0.18;
-        const o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = 'triangle';
-        o.frequency.setValueAtTime(700, ctx.currentTime);
-        o.frequency.exponentialRampToValueAtTime(1350, ctx.currentTime + dur);
-        g.gain.setValueAtTime(0.3, ctx.currentTime);
+        const dur = 0.22;
+        const o = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine'; o2.type = 'triangle';
+        o.frequency.setValueAtTime(1950, ctx.currentTime);
+        o2.frequency.setValueAtTime(3240, ctx.currentTime);
+        g.gain.setValueAtTime(0.35, ctx.currentTime);
         g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
-        o.connect(g); g.connect(dest); o.start(); o.stop(ctx.currentTime + dur);
+        o.connect(g); o2.connect(g); g.connect(dest);
+        o.start(); o.stop(ctx.currentTime + dur);
+        o2.start(); o2.stop(ctx.currentTime + dur);
       });
+      this._noise(0.12, 0.2, 3.5);
     }
   }
   bossVoidCharge() {
     if (!this.enabled) return;
-    if (!this.playSample('bossVoidCharge', 1.0, 0.03)) {
+    if (!this.playSample('bossVoidCharge', 1.05, 0.03)) {
       this._play((ctx, dest) => {
-        const dur = 0.45;
+        const dur = 0.6;
         const o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = 'sawtooth';
-        o.frequency.setValueAtTime(90, ctx.currentTime);
-        o.frequency.linearRampToValueAtTime(260, ctx.currentTime + dur);
-        g.gain.setValueAtTime(0.22, ctx.currentTime);
+        o.type = 'sine';
+        o.frequency.setValueAtTime(32, ctx.currentTime);
+        o.frequency.linearRampToValueAtTime(56, ctx.currentTime + dur);
+        g.gain.setValueAtTime(0.05, ctx.currentTime);
+        g.gain.linearRampToValueAtTime(0.4, ctx.currentTime + dur * 0.85);
         g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
         o.connect(g); g.connect(dest); o.start(); o.stop(ctx.currentTime + dur);
       });
+      this._noise(0.45, 0.35, 1.2);
     }
   }
   footstep() {
@@ -4293,7 +4306,10 @@ class Boss {
             this.stateTimer = 0.4;
             this.stateMaxTimer = 0.4;
             if (camera) camera.shake(12, 0.35);
-            if (audio) audio.hit();
+            if (audio) {
+              if (audio.land) audio.land();
+              if (audio.voidImplode) audio.voidImplode();
+            }
             this.shockwaves.push({ x: this.x + this.w / 2, groundY: p.y, vx: -280, life: 0.85, w: 32, h: 22 });
             this.shockwaves.push({ x: this.x + this.w / 2, groundY: p.y, vx: 280, life: 0.85, w: 32, h: 22 });
             if (particles) {

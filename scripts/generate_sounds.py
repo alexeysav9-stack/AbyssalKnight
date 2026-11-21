@@ -446,40 +446,66 @@ def gen_heal():
     return samples
 
 def gen_boss_roar():
-    """Abyssal Warden roar: terrifying monstrous beast with formant-shaped vocals"""
-    duration = 1.2
+    """Abyssal Warden roar: realistic colossal demonic knight roar with deep guttural vocal formants, sub-bass chest impact, and cathedral acoustics"""
+    duration = 1.35
     n = int(SAMPLE_RATE * duration)
     samples = []
-    bp1 = BandPass(300, q=2.5)
-    bp2 = BandPass(720, q=3.5)
-    bp3 = BandPass(1600, q=5.0)
-    rev = Reverb(decay=0.4, mix=0.2)
+    # Realistic vocal tract acoustic formants (pharyngeal, oral, snarl bite, breath rasp)
+    f_throat = BandPass(190, q=3.0)
+    f_mouth = BandPass(520, q=3.5)
+    f_snarl = BandPass(1180, q=4.5)
+    f_rasp = BandPass(2400, q=5.0)
+    lp_rumble = OnePoleLP(90)
+    rev = Reverb(decay=0.55, mix=0.28)
+
+    phase = 0.0
+    growl_phase = 0.0
+
     for i in range(n):
         t = i / SAMPLE_RATE
         p = i / n
-        # Roar envelope with heavy sustained swell
-        if p < 0.12:
-            env = (p / 0.12) ** 0.8
-        elif p < 0.5:
-            env = 1.0
+        # Organic volume envelope: explosive chest impact, sustained guttural roar, deep rumbling decay
+        if p < 0.08:
+            env = (p / 0.08) ** 0.9
+        elif p < 0.55:
+            env = 1.0 - (p - 0.08) * 0.15
         else:
-            env = math.exp(-(p - 0.5) * 3.5)
+            env = 0.93 * math.exp(-(p - 0.55) * 4.2)
 
-        # Growling detuned sub-oscillators
-        f1 = 60 - 18 * p
-        f2 = 63 - 20 * p
-        f3 = 67 - 22 * p
-        sub = (math.sin(2 * math.pi * f1 * t) * 0.4
-               + math.sin(2 * math.pi * f2 * t) * 0.35
-               + math.sin(2 * math.pi * f3 * t) * 0.25)
-        # Guttural throat rasp with modulation
-        rasp = (random.uniform(-1.0, 1.0) + sub) * (1.0 + 0.6 * math.sin(2 * math.pi * 32 * t))
-        vocal = bp1.process(rasp) * 0.45 + bp2.process(rasp) * 0.35 + bp3.process(rasp) * 0.15
-        # Infrasonic rumble
-        rumble = math.sin(2 * math.pi * 25 * t) * 0.3 * env
+        # Fundamental pitch with organic pitch drop and subtle micro-tremor
+        f0 = (56.0 - 18.0 * (p ** 0.8)) * (1.0 + 0.04 * math.sin(2 * math.pi * 7 * t))
+        phase += (2.0 * math.pi * f0) / SAMPLE_RATE
 
-        s = soft_clip((sub * 0.6 + vocal * 0.75 + rumble) * 2.5) * env
-        samples.append(rev.process(s))
+        # Sub-harmonic ventricular growl flutter (28 Hz)
+        growl_phase += (2.0 * math.pi * 28.0) / SAMPLE_RATE
+        growl_mod = 0.75 + 0.25 * math.sin(growl_phase)
+
+        # Asymmetric glottal pulse train (vocal cords opening and snapping shut)
+        norm_phase = (phase / (2.0 * math.pi)) % 1.0
+        if norm_phase < 0.65:
+            glottal = math.sin(norm_phase / 0.65 * math.pi) ** 1.8
+        else:
+            glottal = -0.15 * math.exp(-(norm_phase - 0.65) * 15.0)
+
+        # Sub-bass core impact and chest vibration (36 Hz)
+        sub = math.sin(2 * math.pi * 36.0 * (1.0 - 0.3 * p) * t) * 0.5
+
+        # Throat turbulence: air rushing violently through vocal tract
+        noise = random.uniform(-1.0, 1.0)
+        throat_air = noise * (0.6 + 0.4 * abs(glottal)) * growl_mod
+        excitation = (glottal * 0.7 + throat_air * 0.6) * growl_mod
+
+        # Formant-filtered roar acoustics
+        vocal = (f_throat.process(excitation) * 0.65 +
+                 f_mouth.process(excitation) * 0.50 +
+                 f_snarl.process(excitation) * 0.30 +
+                 f_rasp.process(throat_air) * 0.15)
+
+        # Low-end rumble
+        rumble = lp_rumble.process(sub + noise * 0.3) * 0.6
+        raw = (vocal * 0.75 + rumble * 0.6 + sub * 0.4) * env
+        sat = soft_clip(raw * 2.2)
+        samples.append(rev.process(sat))
     return samples
 
 def gen_fireball():
@@ -598,63 +624,119 @@ def gen_weapon_switch():
     return samples
 
 def gen_boss_telegraph():
-    """Boss attack anticipation: rising ominous dissonance building dread"""
-    duration = 0.35
+    """Boss attack anticipation: ominous heavy steel blade friction, low resonant iron hum, and menacing air whoosh"""
+    duration = 0.36
     n = int(SAMPLE_RATE * duration)
     samples = []
-    rev = Reverb(decay=0.3, mix=0.15)
+    rev = Reverb(decay=0.35, mix=0.22)
+    bp_scrape = BandPass(850, q=2.8)
+    lp_whoosh = OnePoleLP(160)
+
     for i in range(n):
         t = i / SAMPLE_RATE
         p = i / n
-        env = (p ** 1.6) * 0.85
-        f1 = 850 + 400 * p
-        f2 = 900 + 420 * p  # Tight dissonant interval
-        f3 = 1700 + 600 * p  # Harmonic overtone
-        ring = (math.sin(2 * math.pi * f1 * t) * 0.35
-                + math.sin(2 * math.pi * f2 * t) * 0.35
-                + math.sin(2 * math.pi * f3 * t) * 0.15)
-        # Subtle sub-pulse
-        pulse = math.sin(2 * math.pi * 50 * t) * 0.15 * p
-        samples.append(rev.process((ring + pulse) * env))
+
+        # Swelling anticipation envelope
+        env = (p ** 1.5)
+
+        # 1. Deep ominous resonant steel blade hum (104 Hz base)
+        f0 = 104.0 + 12.0 * p
+        bell = (math.sin(2 * math.pi * f0 * t) * 0.40 +
+                math.sin(2 * math.pi * (f0 * 1.5) * t) * 0.25 +
+                math.sin(2 * math.pi * (f0 * 2.5) * t) * 0.15 +
+                math.sin(2 * math.pi * (f0 * 4.0) * t) * 0.08)
+
+        # 2. Heavy steel friction scrape as weapon draws back
+        noise = random.uniform(-1.0, 1.0)
+        scrape = bp_scrape.process(noise) * (0.35 + 0.25 * math.sin(2 * math.pi * 45 * t))
+
+        # 3. Low-frequency air displacement whoosh
+        whoosh = lp_whoosh.process(noise) * 0.45 * (p ** 1.2)
+
+        # 4. Subtle sub-bass pressure swell (42 Hz)
+        sub = math.sin(2 * math.pi * 42 * t) * 0.25 * p
+
+        raw = (bell * 0.55 + scrape * 0.45 + whoosh * 0.4 + sub * 0.3) * env
+        sat = soft_clip(raw * 2.0)
+        samples.append(rev.process(sat))
     return samples
 
 def gen_boss_thrust_glint():
-    """Lethal weapon glint: razor flash with harmonic overtones"""
-    duration = 0.24
+    """Lethal weapon glint: razor-sharp tempered steel acoustic sing with high-speed air whip"""
+    duration = 0.22
     n = int(SAMPLE_RATE * duration)
     samples = []
-    rev = Reverb(decay=0.25, mix=0.15)
+    rev = Reverb(decay=0.22, mix=0.18)
+    bp_whip = BandPass(3200, q=2.2)
+
     for i in range(n):
         t = i / SAMPLE_RATE
         p = i / n
-        env = math.sin(p * math.pi) ** 1.1
-        f = 1500 + 1400 * (p ** 0.7)
-        glint = (math.sin(2 * math.pi * f * t) * 0.5
-                 + math.sin(2 * math.pi * (f * 2.03) * t) * 0.25
-                 + math.sin(2 * math.pi * (f * 3.1) * t) * 0.1)
-        samples.append(rev.process(glint * env))
+
+        # Sharp strike envelope with ringing tail
+        env_attack = math.sin(p * math.pi) ** 1.8
+        env_ring = math.exp(-t * 22.0)
+
+        # Tempered steel blade resonance (clean acoustic overtones)
+        f1, f2, f3 = 1950.0, 3240.0, 4880.0
+        ring = (math.sin(2 * math.pi * f1 * t) * 0.45 +
+                math.sin(2 * math.pi * f2 * t) * 0.25 +
+                math.sin(2 * math.pi * f3 * t) * 0.12) * env_ring
+
+        # Blade flex ping (480 Hz)
+        flex = math.sin(2 * math.pi * 480 * t) * 0.20 * math.exp(-t * 35.0)
+
+        # High-speed razor air-whip hiss
+        noise = random.uniform(-1.0, 1.0)
+        whip = bp_whip.process(noise) * 0.40 * env_attack
+
+        raw = ring * 0.55 + flex * 0.25 + whip * 0.45
+        sat = soft_clip(raw * 2.2)
+        samples.append(rev.process(sat))
     return samples
 
 def gen_boss_void_charge():
-    """Dark void gravity charge: abyssal vortex collapsing inward with building tension"""
-    duration = 0.70
+    """Dark void gravity charge: abyssal seismic rumble, rushing atmospheric vacuum suction, and dark choral undertone"""
+    duration = 0.65
     n = int(SAMPLE_RATE * duration)
     samples = []
-    lp = OnePoleLP(350)
-    bp = BandPass(200, q=2.0)
-    rev = Reverb(decay=0.35, mix=0.2)
+    rev = Reverb(decay=0.45, mix=0.25)
+    lp_vortex = OnePoleLP(260)
+    bp_vacuum = BandPass(380, q=2.0)
+
     for i in range(n):
         t = i / SAMPLE_RATE
         p = i / n
-        env = p ** 1.4
-        f = 45 + 200 * (p ** 2)
-        vortex = math.sin(2 * math.pi * f * t) * (1.0 + 0.5 * math.sin(2 * math.pi * 16 * t)) * 0.55
-        roar = lp.process(random.uniform(-1.0, 1.0)) * 0.45
-        # Gravity sucking resonance
-        suck = bp.process(random.uniform(-1.0, 1.0)) * 0.3 * p
-        # Building high overtone
-        tension = math.sin(2 * math.pi * (1000 * p) * t) * 0.15 * (p ** 2)
-        samples.append(rev.process((vortex + roar + suck + tension) * env))
+
+        # Building swell envelope with sharp compression cutoff at end
+        if p < 0.88:
+            env = (p / 0.88) ** 1.6
+        else:
+            env = 1.0 - (p - 0.88) / 0.12 * 0.4
+
+        # 1. Seismic sub-bass rumble building from 32 Hz to 56 Hz
+        f_sub = 32.0 + 24.0 * (p ** 1.8)
+        sub = math.sin(2 * math.pi * f_sub * t) * (1.0 + 0.35 * math.sin(2 * math.pi * 14 * t)) * 0.55
+
+        # 2. Dissonant dark void harmonic undertone (tritone 48 Hz & 68 Hz)
+        dark_harm = (math.sin(2 * math.pi * 48 * t) * 0.25 +
+                     math.sin(2 * math.pi * 68 * t) * 0.20 +
+                     math.sin(2 * math.pi * 136 * t) * 0.12) * (p ** 1.2)
+
+        # 3. Violently rushing vacuum air suction
+        noise = random.uniform(-1.0, 1.0)
+        vortex_air = lp_vortex.process(noise) * (0.45 + 0.35 * math.sin(2 * math.pi * 20 * t)) * (p ** 1.1)
+        vacuum_whistle = bp_vacuum.process(noise) * 0.25 * (p ** 2.0)
+
+        # 4. Final pressure compression crack
+        crack = 0.0
+        if p >= 0.85:
+            cp = (p - 0.85) / 0.15
+            crack = math.sin(2 * math.pi * 120 * (1.0 - cp) * t) * math.exp(-cp * 12.0) * 0.45
+
+        raw = (sub * 0.6 + dark_harm * 0.4 + vortex_air * 0.5 + vacuum_whistle * 0.3 + crack * 0.4) * env
+        sat = soft_clip(raw * 2.1)
+        samples.append(rev.process(sat))
     return samples
 
 # ==============================================================================
