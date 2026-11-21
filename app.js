@@ -176,6 +176,7 @@ class AudioEngine {
     this.buffers = {};
     this.loading = false;
     this.loaded = false;
+    this.masterVolume = 1.0;
     this.soundPaths = {
       swing: 'assets/sounds/swing.wav',
       heavySwing: 'assets/sounds/heavy_swing.wav',
@@ -201,6 +202,15 @@ class AudioEngine {
       bossTelegraph: 'assets/sounds/boss_telegraph.wav',
       bossThrustGlint: 'assets/sounds/boss_thrust_glint.wav',
       bossVoidCharge: 'assets/sounds/boss_void_charge.wav',
+      footstep1: 'assets/sounds/footstep_1.wav',
+      footstep2: 'assets/sounds/footstep_2.wav',
+      land: 'assets/sounds/land.wav',
+      fireballHit: 'assets/sounds/fireball_hit.wav',
+      iceShatter: 'assets/sounds/ice_shatter.wav',
+      voidVortex: 'assets/sounds/void_vortex.wav',
+      voidImplode: 'assets/sounds/void_implode.wav',
+      bonfireLit: 'assets/sounds/bonfire_lit.wav',
+      gargoyleSpit: 'assets/sounds/gargoyle_spit.wav',
     };
 
     // Background Music Tracks
@@ -382,8 +392,22 @@ class AudioEngine {
     this.loading = false;
   }
 
+  setMasterVolume(vol) {
+    this.masterVolume = clamp(vol, 0.0, 1.0);
+    if (this.masterGain && this.ctx) {
+      try {
+        this.masterGain.gain.setValueAtTime(this.masterVolume * 0.35, this.ctx.currentTime);
+      } catch (e) {}
+    }
+  }
+
+  playSynthTone(freq, dur = 0.1, type = 'sine', vol = 0.3) {
+    if (!this.enabled || !this.ctx) return;
+    this._tone(freq, freq * 0.8, type, dur, vol);
+  }
+
   playSample(name, vol = 1.0, pitchVariation = 0.08) {
-    if (!this.enabled || !this.ctx) return false;
+    if (!this.enabled || !name || !this.ctx) return false;
     if (this.ctx.state === 'suspended') this.ctx.resume();
 
     const buf = this.buffers[name];
@@ -439,41 +463,49 @@ class AudioEngine {
   }
 
   swing() {
+    if (!this.enabled) return;
     if (!this.playSample('swing', 0.85, 0.08)) {
       this._tone(300, 100, 'sawtooth', 0.08, 0.3);
     }
   }
   heavySwing() {
+    if (!this.enabled) return;
     if (!this.playSample('heavySwing', 1.1, 0.06)) {
       this._tone(200, 50, 'sawtooth', 0.14, 0.4);
     }
   }
   quickSwing() {
+    if (!this.enabled) return;
     if (!this.playSample('quickSwing', 0.8, 0.09)) {
       this._tone(500, 200, 'sawtooth', 0.05, 0.25);
     }
   }
   hit() {
+    if (!this.enabled) return;
     if (!this.playSample('hit', 1.15, 0.07)) {
       this._noise(0.12, 0.5, 2);
     }
   }
   dash() {
+    if (!this.enabled) return;
     if (!this.playSample('dash', 0.85, 0.05)) {
       this._noise(0.15, 0.3, 1.5);
     }
   }
   dodgeRoll() {
+    if (!this.enabled) return;
     if (!this.playSample('dodgeRoll', 0.85, 0.08)) {
       this._noise(0.18, 0.25, 1.2);
     }
   }
   dodgeSuccess() {
+    if (!this.enabled) return;
     if (!this.playSample('dodgeSuccess', 0.9, 0.0)) {
       this._tone(600, 1100, 'sine', 0.2, 0.3);
     }
   }
   nailSlash() {
+    if (!this.enabled) return;
     if (!this.playSample('nailSlash', 0.9, 0.07)) {
       this._play((ctx, dest) => {
         const dur = 0.08;
@@ -490,6 +522,7 @@ class AudioEngine {
     }
   }
   nailHit() {
+    if (!this.enabled) return;
     if (!this.playSample('nailHit', 1.05, 0.06)) {
       this._play((ctx, dest) => {
         const dur = 0.1;
@@ -506,36 +539,43 @@ class AudioEngine {
     }
   }
   pogo() {
+    if (!this.enabled) return;
     if (!this.playSample('pogo', 0.95, 0.04)) {
       this._tone(500, 900, 'sine', 0.12, 0.3);
     }
   }
   jump() {
+    if (!this.enabled) return;
     if (!this.playSample('jump', 0.7, 0.06)) {
       this._tone(200, 500, 'square', 0.12, 0.15);
     }
   }
   doubleJump() {
+    if (!this.enabled) return;
     if (!this.playSample('doubleJump', 0.85, 0.05)) {
       this._tone(350, 750, 'sine', 0.16, 0.25); this._noise(0.1, 0.15, 2);
     }
   }
   enemyDeath() {
+    if (!this.enabled) return;
     if (!this.playSample('enemyDeath', 1.0, 0.07)) {
       this._tone(400, 60, 'square', 0.3, 0.25);
     }
   }
   playerHurt() {
+    if (!this.enabled) return;
     if (!this.playSample('playerHurt', 1.25, 0.05)) {
       this._tone(300, 100, 'sawtooth', 0.2, 0.35);
     }
   }
   heal() {
+    if (!this.enabled) return;
     if (!this.playSample('heal', 0.95, 0.0)) {
       this._tone(400, 800, 'sine', 0.3, 0.2);
     }
   }
   bossRoar() {
+    if (!this.enabled) return;
     if (!this.playSample('bossRoar', 1.35, 0.03)) {
       this._play((ctx, dest) => {
         const dur = 0.8;
@@ -549,31 +589,37 @@ class AudioEngine {
     }
   }
   fireball() {
+    if (!this.enabled) return;
     if (!this.playSample('fireball', 0.9, 0.06)) {
       this._tone(200, 600, 'sawtooth', 0.2, 0.25);
     }
   }
   iceNova() {
+    if (!this.enabled) return;
     if (!this.playSample('iceNova', 0.95, 0.05)) {
       this._tone(800, 200, 'sine', 0.35, 0.3);
     }
   }
   shadowBolt() {
+    if (!this.enabled) return;
     if (!this.playSample('shadowBolt', 0.85, 0.06)) {
       this._tone(100, 400, 'square', 0.15, 0.3);
     }
   }
   bonfire() {
+    if (!this.enabled) return;
     if (!this.playSample('bonfire', 0.9, 0.0)) {
       this._tone(300, 600, 'sine', 0.5, 0.15);
     }
   }
   weaponSwitch() {
+    if (!this.enabled) return;
     if (!this.playSample('weaponSwitch', 0.8, 0.06)) {
       this._tone(600, 800, 'sine', 0.06, 0.1);
     }
   }
   bossTelegraph() {
+    if (!this.enabled) return;
     if (!this.playSample('bossTelegraph', 0.9, 0.02)) {
       this._play((ctx, dest) => {
         const dur = 0.22;
@@ -588,6 +634,7 @@ class AudioEngine {
     }
   }
   bossThrustGlint() {
+    if (!this.enabled) return;
     if (!this.playSample('bossThrustGlint', 0.9, 0.03)) {
       this._play((ctx, dest) => {
         const dur = 0.18;
@@ -602,6 +649,7 @@ class AudioEngine {
     }
   }
   bossVoidCharge() {
+    if (!this.enabled) return;
     if (!this.playSample('bossVoidCharge', 1.0, 0.03)) {
       this._play((ctx, dest) => {
         const dur = 0.45;
@@ -613,6 +661,87 @@ class AudioEngine {
         g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
         o.connect(g); g.connect(dest); o.start(); o.stop(ctx.currentTime + dur);
       });
+    }
+  }
+  footstep() {
+    if (!this.enabled) return;
+    const name = Math.random() < 0.5 ? 'footstep1' : 'footstep2';
+    if (!this.playSample(name, 0.65, 0.08)) {
+      this._noise(0.04, 0.15, 3);
+    }
+  }
+  land() {
+    if (!this.enabled) return;
+    if (!this.playSample('land', 0.8, 0.05)) {
+      this._noise(0.08, 0.25, 2);
+    }
+  }
+  fireballHit() {
+    if (!this.enabled) return;
+    if (!this.playSample('fireballHit', 1.05, 0.05)) {
+      this._play((ctx, dest) => {
+        const dur = 0.25;
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sawtooth';
+        o.frequency.setValueAtTime(140, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + dur);
+        g.gain.setValueAtTime(0.4, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+        o.connect(g); g.connect(dest); o.start(); o.stop(ctx.currentTime + dur);
+      });
+      this._noise(0.2, 0.35, 1.8);
+    }
+  }
+  iceShatter() {
+    if (!this.enabled) return;
+    if (!this.playSample('iceShatter', 1.1, 0.07)) {
+      this._play((ctx, dest) => {
+        const dur = 0.18;
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'triangle';
+        o.frequency.setValueAtTime(1200, ctx.currentTime);
+        o.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + dur);
+        g.gain.setValueAtTime(0.35, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+        o.connect(g); g.connect(dest); o.start(); o.stop(ctx.currentTime + dur);
+      });
+      this._noise(0.12, 0.3, 2.5);
+    }
+  }
+  voidVortex() {
+    if (!this.enabled) return;
+    if (!this.playSample('voidVortex', 0.95, 0.04)) {
+      this._tone(80, 240, 'sine', 0.4, 0.3);
+    }
+  }
+  voidImplode() {
+    if (!this.enabled) return;
+    if (!this.playSample('voidImplode', 1.15, 0.04)) {
+      this._play((ctx, dest) => {
+        const dur = 0.3;
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(60, ctx.currentTime);
+        o.frequency.linearRampToValueAtTime(280, ctx.currentTime + dur * 0.4);
+        o.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + dur);
+        g.gain.setValueAtTime(0.45, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+        o.connect(g); g.connect(dest); o.start(); o.stop(ctx.currentTime + dur);
+      });
+      this._noise(0.25, 0.4, 2.0);
+    }
+  }
+  bonfireLit() {
+    if (!this.enabled) return;
+    if (!this.playSample('bonfireLit', 1.0, 0.0)) {
+      this._tone(220, 660, 'sine', 0.6, 0.35);
+    }
+  }
+  gargoyleSpit() {
+    if (!this.enabled) return;
+    if (!this.playSample('gargoyleSpit', 1.0, 0.05)) {
+      this._noise(0.16, 0.35, 1.8);
+      this._tone(180, 90, 'sawtooth', 0.15, 0.25);
     }
   }
 }
@@ -926,28 +1055,37 @@ const WEAPONS = [
 // ============================================================================
 const SPELLS = [
   {
-    name: 'Fireball',
-    soulCost: 20,
+    name: 'Pyre Blast',
+    soulCost: 25,
     cooldown: 1.0,
+    radius: 80,
+    range: 80,
     icon: '🔥',
     color: '#ff6622',
-    desc: 'Launches a flaming projectile',
+    glowColor: '#ff8833',
+    desc: 'Launches an explosive fire artillery shell. Detonates on impact with enemies or solid platforms, shattering guard shields and dealing AoE splash damage.',
   },
   {
-    name: 'Ice Nova',
-    soulCost: 35,
+    name: 'Frost Nova',
+    soulCost: 30,
     cooldown: 2.0,
+    radius: 140,
+    range: 140,
     icon: '❄',
-    color: '#88ccff',
-    desc: 'AoE frost burst around you',
+    color: '#66ddff',
+    glowColor: '#aae8ff',
+    desc: 'Radial frost burst halting enemies solid for 2.0s and chilling the boss. Striking frozen enemies triggers a devastating Shatter bonus (+2 damage)!',
   },
   {
-    name: 'Shadow Bolt',
-    soulCost: 15,
-    cooldown: 0.6,
+    name: 'Abyssal Singularity',
+    soulCost: 20,
+    cooldown: 1.0,
+    radius: 160,
+    range: 160,
     icon: '🌑',
-    color: '#9955dd',
-    desc: 'Fast dark projectile',
+    color: '#c084fc',
+    glowColor: '#e9d5ff',
+    desc: 'Slowly advancing void vortex that gravitationally sucks in nearby enemies, dealing tick damage before collapsing into a catastrophic implosion.',
   },
 ];
 
@@ -961,7 +1099,16 @@ class Projectile {
     this.type = type; this.owner = owner;
     this.life = 3.0; this.dead = false;
     this.reflected = false;
-    if (type === 'fireball') { this.w = 16; this.h = 16; this.life = 2.5; }
+    if (type === 'pyre_blast' || type === 'fireball') {
+      this.w = 18; this.h = 18; this.life = 2.5;
+      this.blastRadius = 80; this.splashDamage = 3;
+    }
+    if (type === 'void_vortex') {
+      this.w = 24; this.h = 24; this.life = 2.4;
+      this.pullRange = 160; this.pullForce = 750;
+      this.tickInterval = 0.4; this.tickTimer = 0.4;
+      this.implosionDamage = 2; this.blastRadius = 160;
+    }
     if (type === 'shadowbolt') { this.w = 10; this.h = 10; this.life = 2.0; }
     if (type === 'acid_spit') { this.w = 14; this.h = 14; this.life = 3.2; }
     if (type === 'void_wave') { this.w = 28; this.h = 48; this.life = 2.2; }
@@ -973,8 +1120,18 @@ class Projectile {
     this.life -= dt;
     if (this.life <= 0) this.dead = true;
     // Trail
-    if (this.type === 'fireball') particles.fireballTrail(this.x, this.y);
-    if (this.type === 'shadowbolt') particles.shadowTrail(this.x, this.y);
+    if (this.type === 'pyre_blast' || this.type === 'fireball') {
+      if (particles && particles.fireballTrail) particles.fireballTrail(this.x, this.y);
+      else if (particles && particles.add && Math.random() < 0.6) {
+        particles.add(new Particle(this.x + this.w / 2, this.y + this.h / 2, rand(-15, 15), rand(-15, 15), 0.22, '#ff6622', rand(3, 5), 0, true));
+      }
+    }
+    if (this.type === 'void_vortex') {
+      if (particles && particles.add && Math.random() < 0.7) {
+        particles.add(new Particle(this.x + this.w / 2, this.y + this.h / 2, rand(-20, 20), rand(-20, 20), 0.28, '#c084fc', rand(3, 6), 0, true));
+      }
+    }
+    if (this.type === 'shadowbolt' && particles && particles.shadowTrail) particles.shadowTrail(this.x, this.y);
     if (this.type === 'acid_spit') {
       if (Math.random() < 0.45) {
         particles.add(new Particle(this.x + this.w / 2, this.y + this.h / 2, rand(-15, 15), rand(-15, 15), 0.2, this.reflected ? '#38bdf8' : '#c084fc', rand(2, 4), 0, true));
@@ -1001,11 +1158,26 @@ class Projectile {
   draw(ctx) {
     if (this.dead) return;
     ctx.save();
-    if (this.type === 'fireball') {
-      ctx.fillStyle = '#ff6622';
-      ctx.beginPath(); ctx.arc(this.x + this.w / 2, this.y + this.h / 2, 8, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#ffcc44';
-      ctx.beginPath(); ctx.arc(this.x + this.w / 2, this.y + this.h / 2, 4, 0, Math.PI * 2); ctx.fill();
+    if (this.type === 'pyre_blast' || this.type === 'fireball') {
+      ctx.shadowColor = '#ff6622';
+      ctx.shadowBlur = 12;
+      ctx.fillStyle = '#ff4400';
+      ctx.beginPath(); ctx.arc(this.x + this.w / 2, this.y + this.h / 2, 9, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffaa22';
+      ctx.beginPath(); ctx.arc(this.x + this.w / 2, this.y + this.h / 2, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(this.x + this.w / 2, this.y + this.h / 2, 2.5, 0, Math.PI * 2); ctx.fill();
+    } else if (this.type === 'void_vortex') {
+      const cx = this.x + this.w / 2, cy = this.y + this.h / 2;
+      ctx.shadowColor = '#a855f7';
+      ctx.shadowBlur = 16;
+      ctx.fillStyle = 'rgba(168, 85, 247, 0.4)';
+      ctx.beginPath(); ctx.arc(cx, cy, 14, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#c084fc';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(cx, cy, 10, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = '#090314';
+      ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI * 2); ctx.fill();
     } else if (this.type === 'shadowbolt') {
       ctx.fillStyle = '#8833cc';
       ctx.beginPath(); ctx.arc(this.x + this.w / 2, this.y + this.h / 2, 6, 0, Math.PI * 2); ctx.fill();
@@ -1215,11 +1387,13 @@ function buildLevel() {
   // ==========================================================================
   // ZONE 1: THE FORGOTTEN BASTION & HIGH VIADUCT (x: 0 - 1800, y: 480 - 1500)
   // ==========================================================================
-  // Left level boundary fortress wall
-  P(0, 200, 40, 800);
+  // Left level boundary fortress wall (extends to map floor y=1500)
+  P(0, 200, 40, 1300);
 
   // Starting Bastion Rampart (Tier 2, y=880)
-  P(0, 880, 460, 80);
+  // Starting Bastion Rampart terrace (x: 0..320 solid, x: 320..460 oneway overlook hatch)
+  P(0, 880, 320, 80);
+  P(320, 880, 140, 28, 'oneway');
   bonfires.push(new Bonfire(180, 850, 0)); // Starting Bonfire
 
   // Bastion props & overlook architecture
@@ -1251,7 +1425,14 @@ function buildLevel() {
   enemies.push({ type: 'guard', x: 1060, y: 770 });
 
   // Sunken Mist Streets / Canals (Tier 1, y=1340)
-  P(200, 1340, 1580, 160);
+  // Continuous architectural street platform spanning from left fortress wall to gatehouse
+  P(40, 1340, 1740, 32);
+
+  // Two-way ascending return parkour ledges under bastion (x: 80..460)
+  P(80, 1220, 140, 20, 'oneway');
+  P(200, 1100, 140, 20, 'oneway');
+  P(320, 980, 140, 20, 'oneway');
+  P(920, 1240, 140, 20, 'oneway');
 
   // Intermediate descent catwalks / inspection platforms
   P(580, 1020, 160, 20, 'oneway');
@@ -1310,10 +1491,13 @@ function buildLevel() {
   // Moving Gothic lift between spires
   platforms.push({ x: 2680, y: 360, w: 140, h: 22, type: 'moving', ox: 2680, oy: 360, mx: 180, my: 60, speed: 75, t: 0 });
 
+  // Belfry approach landing ledge connecting moving lift arrival to tower entrance
+  P(2920, 480, 80, 24, 'oneway');
+
   // Clocktower Belfry Haven (x: 2980 - 3460, y: 480)
   P(3000, 480, 440, 32); // Belfry floor
-  P(2980, 240, 36, 240); // Left belfry tower pier
-  P(3404, 240, 36, 240); // Right belfry tower pier
+  P(2980, 240, 36, 120); // Left belfry tower pier (opens 120px tall doorway y=360..480)
+  P(3404, 240, 36, 120); // Right belfry tower pier (opens 120px tall doorway y=360..480)
   P(2980, 240, 460, 32); // Overhead vaulted ceiling beam
   bonfires.push(new Bonfire(3220, 450, 1)); // Second Bonfire: Belfry Haven
   addArch(3220, 260, 260, 220, 'shrine');
@@ -1411,6 +1595,13 @@ function buildLevel() {
   addStreetlamp(6120, 880, 55, '#ffaa33');
   addGargoyle(6250, 880, 1, 'spread');
 
+  // Zone 4 Cathedral Sub-Crypt walkway (Tier 1, y: 1340) for Skill 3
+  P(5620, 1340, 560, 32);
+  P(5560, 1180, 140, 20, 'oneway');
+  P(5700, 1040, 140, 20, 'oneway');
+  addCrystal(5850, 1338, 'purple', 1.3);
+  addWaterDrip(5850, 880, 1340);
+
   // Cathedral Antechamber / Sanctuary Haven (Safe resting zone outside boss arena)
   P(6380, 1260, 420, 100); // Floor y=1260..1360
   P(6380, 660, 420, 40);   // Ceiling y=660..700
@@ -1463,9 +1654,67 @@ function buildLevel() {
   addCrystal(6870, 1258, 'purple', 1.5);
   addCrystal(8060, 1258, 'purple', 1.5);
 
+  // Hidden Skill Pickups in bottom corners across the 8200px map
+  const skillPickups = [
+    {
+      id: 0,
+      spellIndex: 0,
+      name: 'Pyre Blast',
+      nameEn: 'Pyre Blast',
+      key: '1',
+      icon: '🔥',
+      color: '#ff6622',
+      glowColor: '#ff8833',
+      x: 160,
+      y: 1300,
+      w: 32,
+      h: 40,
+      collected: false,
+      desc: 'Fiery projectile. Explodes on contact, breaches guard shields, and deals area of effect damage.',
+      hint: 'Key: [1] (Soul Cost: 25)',
+      locationName: 'Sunken Canal (West Dead End)'
+    },
+    {
+      id: 1,
+      spellIndex: 1,
+      name: 'Frost Nova',
+      nameEn: 'Frost Nova',
+      key: '2',
+      icon: '❄',
+      color: '#66ddff',
+      glowColor: '#aae8ff',
+      x: 2850,
+      y: 1300,
+      w: 32,
+      h: 40,
+      collected: false,
+      desc: 'Wave of freezing mist. Freezes enemies and chills the boss. Striking frozen targets triggers Shatter (+2 bonus damage)!',
+      hint: 'Key: [2] (Soul Cost: 30)',
+      locationName: 'Sunken Belfry Ruins'
+    },
+    {
+      id: 2,
+      spellIndex: 2,
+      name: 'Abyssal Singularity',
+      nameEn: 'Abyssal Singularity',
+      key: '3',
+      icon: '🌑',
+      color: '#c084fc',
+      glowColor: '#e9d5ff',
+      x: 5850,
+      y: 1300,
+      w: 32,
+      h: 40,
+      collected: false,
+      desc: 'Void vortex. Pulls nearby enemies within 160px radius, deals periodic damage, and implodes on collapse.',
+      hint: 'Key: [3] (Soul Cost: 20)',
+      locationName: 'Cathedral Sub-Crypt'
+    }
+  ];
+
   return {
     platforms, enemies, bonfires, props, bossSpawn, bossArena, bossTrigger,
-    swordPickup,
+    swordPickup, skillPickups,
     playerStart: { x: 140, y: 836 }, width: 8200, height: 1500
   };
 }
@@ -1501,9 +1750,13 @@ class Player {
     this.attackCooldown = 0; this.attackHitbox = null;
     this.attackBuffer = 0; this.attackBufferMax = 0.14;
     this.attackDir = 'side';
+    this.downSlashCount = 0; // Max 1 down-slash hit per airborne cycle (nerf)
     this.downSlashVisualTimer = 0;
     this.downSlashVisualDur = 0.2;
     this.hasHitThisSwing = new Set();
+    this.castAuraTimer = 0;
+    this.castAuraColor = '#ff6622';
+    this.unlockedSpells = [true, true, true]; // Default true for direct Player unit tests
 
     this.hp = 5; this.maxHp = 5;
     this.invulnTimer = 0; this.invulnDur = 1.2;
@@ -1558,37 +1811,86 @@ class Player {
     return false;
   }
 
-  castSpell(index, projectiles, particles, audio, camera) {
-    if (index < 0 || index >= SPELLS.length) return;
+  castSpell(index, projectiles, particles, audio, camera, enemies = [], boss = null) {
+    if (index < 0 || index >= SPELLS.length) return false;
     const spell = SPELLS[index];
-    if (this.soul < spell.soulCost || this.spellCooldowns[index] > 0 || this.dashing) return;
+    if (this.soul < spell.soulCost || this.spellCooldowns[index] > 0 || this.dashing || (this.hurtTimer && this.hurtTimer > 0)) return false;
 
     this.soul -= spell.soulCost;
     this.spellCooldowns[index] = spell.cooldown;
+    this.castAuraTimer = 0.22;
+    this.castAuraColor = spell.color;
+
+    const spawnX = this.x + this.w / 2 + this.facing * 10;
+    const spawnY = this.y + this.h / 3;
 
     switch (index) {
-      case 0: // Fireball
-        audio.fireball();
-        projectiles.push(new Projectile(
-          this.x + this.w / 2 + this.facing * 10, this.y + this.h / 3,
-          this.facing * 450, 0, 3, 'fireball', 'player'
-        ));
-        camera.shake(3, 0.1);
+      case 0: { // Pyre Blast
+        if (audio && audio.fireball) audio.fireball();
+        const pyre = new Projectile(spawnX, spawnY, this.facing * 520, 0, 4, 'pyre_blast', 'player');
+        pyre.blastRadius = spell.radius || 80;
+        pyre.splashDamage = 3;
+        projectiles.push(pyre);
+        if (camera && camera.shake) camera.shake(5, 0.15);
         break;
-      case 1: // Ice Nova
-        audio.iceNova();
-        particles.iceExplosion(this.x + this.w / 2, this.y + this.h / 2);
-        camera.shake(6, 0.2);
-        // AoE damage handled by game
+      }
+      case 1: { // Frost Nova
+        if (audio && audio.iceNova) audio.iceNova();
+        if (particles && particles.iceExplosion) particles.iceExplosion(this.x + this.w / 2, this.y + this.h / 2);
+        if (camera && camera.shake) camera.shake(6, 0.2);
+        this._justCastNova = true;
+        const novaRadius = spell.radius || 140;
+        const pcx = this.x + this.w / 2, pcy = this.y + this.h / 2;
+        if (enemies && enemies.length > 0) {
+          for (const e of enemies) {
+            if (!e.dead) {
+              const ecx = e.x + e.w / 2, ecy = e.y + e.h / 2;
+              const dist = Math.min(Math.hypot(ecx - pcx, ecy - pcy), Math.hypot(e.x - this.x, e.y - this.y));
+              if (dist <= novaRadius) {
+                if (e instanceof Boss || e.isBoss) {
+                  e.chilled = true;
+                  e.chillTimer = 1.2;
+                  e.freezeTimer = 0;
+                } else {
+                  e.freezeTimer = 2.0;
+                  e.stunned = 2.0;
+                  e.attackHitbox = null;
+                  e.vx = 0;
+                }
+              }
+            }
+          }
+        }
+        if (boss && boss.active && !boss.dead) {
+          const bcx = boss.x + boss.w / 2, bcy = boss.y + boss.h / 2;
+          if (Math.hypot(bcx - pcx, bcy - pcy) <= novaRadius) {
+            boss.chilled = true;
+            boss.chillTimer = 1.2;
+            boss.freezeTimer = 0;
+            boss.takeDamage(2, pcx < bcx ? 1 : -1, particles, camera, audio);
+          }
+        }
         break;
-      case 2: // Shadow Bolt
-        audio.shadowBolt();
-        projectiles.push(new Projectile(
-          this.x + this.w / 2 + this.facing * 10, this.y + this.h / 3,
-          this.facing * 600, 0, 2, 'shadowbolt', 'player'
-        ));
+      }
+      case 2: { // Abyssal Singularity
+        if (audio) {
+          if (audio.voidVortex) audio.voidVortex();
+          else if (audio.shadowBolt) audio.shadowBolt();
+        }
+        const vortex = new Projectile(spawnX, spawnY, this.facing * 190, 0, 1, 'void_vortex', 'player');
+        vortex.life = 2.4;
+        vortex.pullRange = spell.radius || 160;
+        vortex.pullForce = 750;
+        vortex.tickInterval = 0.4;
+        vortex.tickTimer = 0.4;
+        vortex.implosionDamage = 2;
+        vortex.blastRadius = spell.radius || 160;
+        projectiles.push(vortex);
+        if (camera && camera.shake) camera.shake(4, 0.12);
         break;
+      }
     }
+    return true;
   }
 
   update(dt, input, level, particles, camera, audio) {
@@ -1602,11 +1904,13 @@ class Player {
     if (this.jumpBuffer > 0) this.jumpBuffer -= dt;
     if (this.wingsTimer > 0) this.wingsTimer -= dt;
     for (let i = 0; i < this.spellCooldowns.length; i++) {
-      if (this.spellCooldowns[i] > 0) this.spellCooldowns[i] -= dt;
+      if (this.spellCooldowns[i] > 0) this.spellCooldowns[i] = Math.max(0, this.spellCooldowns[i] - dt);
     }
     this.animTimer += dt;
     if (this.recoilTimer > 0) { this.recoilTimer -= dt; this.vx = this.recoilVx; }
     if (this.downSlashVisualTimer > 0) this.downSlashVisualTimer -= dt;
+    if (this.castAuraTimer > 0) this.castAuraTimer -= dt;
+    if (this.onGround) this.downSlashCount = 0;
 
     // DASH / DODGE ROLL
     if (this.dashing) {
@@ -1630,9 +1934,9 @@ class Player {
       }
 
       if (this.isGroundRoll) {
-        particles.rollDust(this.x + this.w / 2, this.y + this.h, this.dashDir);
+        if (particles && particles.rollDust) particles.rollDust(this.x + this.w / 2, this.y + this.h, this.dashDir);
       } else {
-        particles.dashTrail(this.x, this.y, this.w, this.h, this.dashDir);
+        if (particles && particles.dashTrail) particles.dashTrail(this.x, this.y, this.w, this.h, this.dashDir);
       }
       if (this.dashTimer <= 0) { this.dashing = false; this.iFrames = false; this.vx = this.dashDir * this.speed * 0.5; }
     } else {
@@ -1662,9 +1966,14 @@ class Player {
         if (input.up()) {
           this.attackDir = 'up';
         } else if (input.down() && !this.onGround) {
-          this.attackDir = 'down';
-          this.downSlashVisualTimer = wpn.attackDur;
-          this.downSlashVisualDur = wpn.attackDur;
+          if (this.downSlashCount < 1) {
+            this.attackDir = 'down';
+            this.downSlashCount++;
+            this.downSlashVisualTimer = wpn.attackDur;
+            this.downSlashVisualDur = wpn.attackDur;
+          } else {
+            this.attackDir = 'side';
+          }
         } else {
           this.attackDir = 'side';
         }
@@ -1978,6 +2287,41 @@ class Player {
       ctx.fill();
       ctx.stroke();
 
+      ctx.restore();
+    }
+
+    // F11: Player Arcane Casting Aura (expanding magic rune circle at feet)
+    if (this.castAuraTimer > 0) {
+      const auraProg = 1 - Math.max(0, this.castAuraTimer) / 0.22;
+      const alpha = Math.sin(auraProg * Math.PI) * 0.85;
+      const auraRadius = 16 + auraProg * 12;
+      const groundX = this.x + this.w / 2;
+      const groundY = this.y + this.h;
+
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+      ctx.strokeStyle = this.castAuraColor || '#ff6622';
+      ctx.shadowColor = this.castAuraColor || '#ff6622';
+      ctx.shadowBlur = 12;
+      ctx.lineWidth = 2;
+
+      ctx.beginPath();
+      ctx.ellipse(groundX, groundY, auraRadius, auraRadius * 0.45, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.ellipse(groundX, groundY, auraRadius * 0.55, auraRadius * 0.25, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      const angle = auraProg * Math.PI * 2;
+      for (let i = 0; i < 4; i++) {
+        const a = angle + (i * Math.PI) / 2;
+        const gx = groundX + Math.cos(a) * (auraRadius * 0.75);
+        const gy = groundY + Math.sin(a) * (auraRadius * 0.35);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(gx - 1.5, gy - 1.5, 3, 3);
+      }
       ctx.restore();
     }
 
@@ -2562,6 +2906,16 @@ class Enemy {
     this.flashTimer = Math.max(0, this.flashTimer - dt);
     this.animTimer += dt;
 
+    if (this.freezeTimer > 0) {
+      this.freezeTimer = Math.max(0, this.freezeTimer - dt);
+      this.vx = 0;
+      this.attackHitbox = null;
+      if (particles && particles.frostMotes && Math.random() < 0.25) {
+        particles.frostMotes(this.x + this.w / 2, this.y + this.h / 2);
+      }
+      return;
+    }
+
     switch (this.type) {
       case 'crawler': this._updateCrawler(dt, player, particles); break;
       case 'flyer': this._updateFlyer(dt, player, projectiles, audio); break;
@@ -2605,10 +2959,15 @@ class Enemy {
 
     switch (this.state) {
       case 'patrol':
-        this.vx = this.facing * this.speed;
-        this.attackHitbox = null;
-        if (this.x <= this.patrolLeft) { this.facing = 1; this.x = this.patrolLeft; }
-        if (this.x + this.w >= this.patrolRight) { this.facing = -1; this.x = this.patrolRight - this.w; }
+        if (this.origPatrol === 0) {
+          this.vx = 0;
+          this.attackHitbox = null;
+        } else {
+          this.vx = this.facing * this.speed;
+          this.attackHitbox = null;
+          if (this.x <= this.patrolLeft) { this.facing = 1; this.x = this.patrolLeft; }
+          if (this.x + this.w >= this.patrolRight) { this.facing = -1; this.x = this.patrolRight - this.w; }
+        }
         if (inRange && this.cooldown <= 0) {
           this.state = 'aggro';
           this.stateTimer = rand(0.6, 1.2);
@@ -2717,7 +3076,10 @@ class Enemy {
               1, 'acid_spit', 'enemy'
             ));
           }
-          if (audio && audio.shadowBolt) audio.shadowBolt();
+          if (audio) {
+          if (audio.gargoyleSpit) audio.gargoyleSpit();
+          else if (audio.shadowBolt) audio.shadowBolt();
+        }
           this.shootCooldown = rand(2.2, 3.2);
           this.state = 'hover';
         }
@@ -2880,6 +3242,18 @@ class Enemy {
   takeDamage(amount, knockDir, particles, camera, audio, isMagicOrReflect = false, attackY = 0) {
     if (this.dead) return false;
 
+    // F9: Shatter Combat Synergy (Freeze + Melee/Blast)
+    if (this.freezeTimer > 0 && amount > 0) {
+      this.freezeTimer = 0;
+      amount += 2; // +2 bonus shatter damage
+      if (audio && audio.iceShatter) audio.iceShatter();
+      if (particles) {
+        if (particles.iceExplosion) particles.iceExplosion(this.x + this.w / 2, this.y + this.h / 2);
+        if (particles.iceShatterBurst) particles.iceShatterBurst(this.x + this.w / 2, this.y + this.h / 2);
+        if (particles.iceShatter) particles.iceShatter(this.x + this.w / 2, this.y + this.h / 2);
+      }
+    }
+
     const hitFromFront = (knockDir === -this.facing);
 
     // GUARD SHIELD BLOCK:
@@ -2890,9 +3264,9 @@ class Enemy {
         // Blocked cleanly with shield!
         this.flashTimer = 0.08;
         this.vx += knockDir * 60;
-        camera.shake(3, 0.08);
-        audio.hit();
-        particles.sparks(this.x + (this.facing === 1 ? this.w : 0), this.y + 20);
+        if (camera && camera.shake) camera.shake(3, 0.08);
+        if (audio && audio.hit) audio.hit();
+        if (particles && particles.sparks) particles.sparks(this.x + (this.facing === 1 ? this.w : 0), this.y + 20);
         this.blockCount = (this.blockCount || 0) + 1;
         // Counter-attack after 2 blocks!
         if (this.blockCount >= 2) {
@@ -2921,19 +3295,19 @@ class Enemy {
         if (particles && particles.guardBreakBurst) particles.guardBreakBurst(this.x + this.w / 2, this.y + 16);
       }
     }
-    camera.shake(4, 0.15);
-    audio.hit();
-    particles.sparks(this.x + this.w / 2, this.y + this.h / 2);
+    if (camera && camera.shake) camera.shake(4, 0.15);
+    if (audio && audio.hit) audio.hit();
+    if (particles && particles.sparks) particles.sparks(this.x + this.w / 2, this.y + this.h / 2);
     if (this.type === 'flyer' || this.type === 'crawler') {
-      particles.dustLand(this.x + this.w / 2, this.y + this.h / 2);
+      if (particles && particles.dustLand) particles.dustLand(this.x + this.w / 2, this.y + this.h / 2);
     }
     if (this.hp <= 0) {
       this.dead = true;
       if (this.type === 'flyer' || this.type === 'crawler') {
-        if (particles.stoneCrumble) particles.stoneCrumble(this.x + this.w / 2, this.y + this.h / 2);
+        if (particles && particles.stoneCrumble) particles.stoneCrumble(this.x + this.w / 2, this.y + this.h / 2);
       }
-      particles.soulBurst(this.x + this.w / 2, this.y + this.h / 2);
-      audio.enemyDeath();
+      if (particles && particles.soulBurst) particles.soulBurst(this.x + this.w / 2, this.y + this.h / 2);
+      if (audio && audio.enemyDeath) audio.enemyDeath();
     }
     return true;
   }
@@ -2946,6 +3320,26 @@ class Enemy {
       case 'flyer': this._drawFlyer(ctx); break;
       case 'guard': this._drawGuard(ctx); break;
     }
+    if (this.freezeTimer > 0) {
+      this._drawIceShell(ctx);
+    }
+    ctx.restore();
+  }
+
+  _drawIceShell(ctx) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(100, 220, 255, 0.55)';
+    ctx.strokeStyle = '#bbf2f6';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = '#66ddff';
+    ctx.shadowBlur = 10;
+    ctx.fillRect(this.x - 4, this.y - 4, this.w + 8, this.h + 8);
+    ctx.strokeRect(this.x - 4, this.y - 4, this.w + 8, this.h + 8);
+    ctx.beginPath();
+    ctx.moveTo(this.x - 4, this.y + 6);
+    ctx.lineTo(this.x + this.w / 2, this.y - 8);
+    ctx.lineTo(this.x + this.w + 4, this.y + 6);
+    ctx.stroke();
     ctx.restore();
   }
 
@@ -3566,7 +3960,7 @@ class Enemy {
 // BOSS
 // ============================================================================
 // ============================================================================
-// BOSS — VOID LORD (Владыка Бездны)
+// BOSS — VOID LORD
 // High-readability animations, expressive silhouettes & clear telegraphs
 // ============================================================================
 class Boss {
@@ -3586,6 +3980,7 @@ class Boss {
     this.phantomFacing = 1;
     this.pogoHitsAgainst = 0;
     this.pogoDecayTimer = 0;
+    this.isBoss = true;
   }
 
   activate(arena, audio) {
@@ -3596,6 +3991,24 @@ class Boss {
 
   update(dt, player, level, particles, camera, audio, projectiles) {
     if (!this.active || this.dead) return;
+
+    const isChilled = (this.freezeTimer > 0 || this.chillTimer > 0 || this.chilled);
+    if (this.freezeTimer > 0) {
+      this.freezeTimer = Math.max(0, this.freezeTimer - dt);
+    }
+    if (this.chillTimer > 0) {
+      this.chillTimer = Math.max(0, this.chillTimer - dt);
+      this.chilled = (this.chillTimer > 0);
+    } else {
+      this.chilled = false;
+    }
+    if (isChilled) {
+      dt *= 0.5; // Chilled slows boss movement and actions by 50%
+      if (particles && particles.frostMotes && Math.random() < 0.25) {
+        particles.frostMotes(this.x + this.w / 2, this.y + this.h / 2);
+      }
+    }
+
     this.animTimer += dt;
     this.flashTimer = Math.max(0, this.flashTimer - dt);
     if (this.invulnTimer > 0) this.invulnTimer -= dt;
@@ -3938,10 +4351,24 @@ class Boss {
 
   takeDamage(amount, knockDir, particles, camera, audio) {
     if (this.invulnTimer > 0 || this.dead) return;
+
+    if ((this.freezeTimer > 0 || this.chilled || this.chillTimer > 0) && amount > 0) {
+      this.freezeTimer = 0;
+      this.chilled = false;
+      this.chillTimer = 0;
+      amount += 2; // +2 shatter bonus
+      if (audio && audio.iceShatter) audio.iceShatter();
+      if (particles) {
+        if (particles.iceExplosion) particles.iceExplosion(this.x + this.w / 2, this.y + this.h / 2);
+        if (particles.iceShatterBurst) particles.iceShatterBurst(this.x + this.w / 2, this.y + this.h / 2);
+        if (particles.iceShatter) particles.iceShatter(this.x + this.w / 2, this.y + this.h / 2);
+      }
+    }
+
     this.hp -= amount; this.flashTimer = 0.15; this.invulnTimer = 0.2;
-    if (camera) camera.shake(5, 0.15);
-    if (audio) audio.hit();
-    if (particles) particles.sparks(this.x + this.w / 2, this.y + this.h / 3);
+    if (camera && camera.shake) camera.shake(5, 0.15);
+    if (audio && audio.hit) audio.hit();
+    if (particles && particles.sparks) particles.sparks(this.x + this.w / 2, this.y + this.h / 3);
     if (this.hp <= 0) {
       this.hp = 0; this.dead = true;
       if (camera) camera.shake(16, 2.2);
@@ -4365,6 +4792,19 @@ class Boss {
     const hiltX = x + this.w - 12 + swordOffX;
     const hiltY = y + 30 + swordOffY;
     this._drawGreatsword(ctx, hiltX, hiltY, swordAngle, runeColor, isGlint, prog);
+
+    // Chilled frost overlay if frozen/chilled (F8)
+    if (this.freezeTimer > 0 || this.chillTimer > 0 || this.chilled) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(100, 220, 255, 0.35)';
+      ctx.strokeStyle = '#bbf2f6';
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = '#66ddff';
+      ctx.shadowBlur = 12;
+      ctx.fillRect(x - 2, y - 4, this.w + 4, this.h + 6);
+      ctx.strokeRect(x - 2, y - 4, this.w + 4, this.h + 6);
+      ctx.restore();
+    }
   }
 
   _drawSilhouette(ctx, x, y, color, eyeColor, showEyes = true) {
@@ -4419,20 +4859,20 @@ class EnvironmentRenderer {
     // 1. Bedrock & Crypt Sub-floor Foundations across the map (fills solid underground down to y=1500)
     // Preserves open abyss death pits at (2340..2540) and (3060..3260)
     ctx.fillStyle = '#0a0512';
-    if (minX < 2340 && maxY > 1340) {
-      const x1 = Math.max(0, minX);
+    if (minX < 2340 && maxY > 1372) {
+      const x1 = Math.max(40, minX);
       const x2 = Math.min(2340, maxX);
-      if (x2 > x1) ctx.fillRect(x1, 1340, x2 - x1, 160);
+      if (x2 > x1) ctx.fillRect(x1, 1372, x2 - x1, 128);
     }
-    if (maxX > 2540 && minX < 3060 && maxY > 1340) {
+    if (maxX > 2540 && minX < 3060 && maxY > 1372) {
       const x1 = Math.max(2540, minX);
       const x2 = Math.min(3060, maxX);
-      if (x2 > x1) ctx.fillRect(x1, 1340, x2 - x1, 160);
+      if (x2 > x1) ctx.fillRect(x1, 1372, x2 - x1, 128);
     }
-    if (maxX > 3260 && minX < 6380 && maxY > 1340) {
+    if (maxX > 3260 && minX < 6380 && maxY > 1372) {
       const x1 = Math.max(3260, minX);
       const x2 = Math.min(6380, maxX);
-      if (x2 > x1) ctx.fillRect(x1, 1340, x2 - x1, 160);
+      if (x2 > x1) ctx.fillRect(x1, 1372, x2 - x1, 128);
     }
     // Cathedral foundation (from 6380 to 8200, y: 1260 to 1500)
     if (maxX > 6380 && maxY > 1260) {
@@ -4447,13 +4887,15 @@ class EnvironmentRenderer {
     for (let fy = 1380; fy < 1500; fy += 40) {
       if (fy > minY && fy < maxY) {
         ctx.beginPath();
-        ctx.moveTo(Math.max(0, minX), fy);
+        ctx.moveTo(Math.max(40, minX), fy);
         ctx.lineTo(Math.min(8200, maxX), fy);
         ctx.stroke();
       }
     }
 
     // 2. Starting Fortress Left Boundary Wall (x: 0 to 220, y: 180 to 880)
+    // Only spans the fortress upper ramparts above the canal terrace (y: 180 to 880).
+    // Does NOT extend down to 1500, avoiding the awkward black cutoff block in the canal.
     if (minX < 220 && maxY > 180 && minY < 880) {
       this._drawFortressBackWall(ctx, 0, 180, 220, 700);
     }
@@ -4953,6 +5395,59 @@ class EnvironmentRenderer {
     }
 
     ctx.restore();
+  }
+
+  drawSkillPickups(ctx, skillPickups, time) {
+    if (!skillPickups || !skillPickups.length) return;
+    for (const s of skillPickups) {
+      if (s.collected) continue;
+      const cx = s.x + s.w / 2;
+      const cy = s.y + s.h / 2;
+      const bobY = Math.sin(time * 3.5 + s.id) * 5;
+
+      ctx.save();
+      // Stone pedestal
+      ctx.fillStyle = '#1c1428';
+      ctx.strokeStyle = '#3d2b56';
+      ctx.lineWidth = 2;
+      ctx.fillRect(s.x, s.y + s.h - 12, s.w, 12);
+      ctx.strokeRect(s.x, s.y + s.h - 12, s.w, 12);
+      ctx.fillRect(s.x - 4, s.y + s.h - 4, s.w + 8, 4);
+
+      // Light beam pillar
+      const pillarGrad = ctx.createLinearGradient(cx, s.y - 120, cx, s.y + s.h);
+      pillarGrad.addColorStop(0, 'rgba(0,0,0,0)');
+      pillarGrad.addColorStop(0.5, s.glowColor ? s.glowColor + '22' : 'rgba(100,200,255,0.15)');
+      pillarGrad.addColorStop(1, s.glowColor ? s.glowColor + '44' : 'rgba(100,200,255,0.3)');
+      ctx.fillStyle = pillarGrad;
+      ctx.fillRect(cx - 14, s.y - 120, 28, s.h + 120);
+
+      // Levitating orb relic
+      ctx.shadowColor = s.glowColor || '#66ddff';
+      ctx.shadowBlur = 18;
+      ctx.fillStyle = s.color || '#ff8833';
+      ctx.beginPath();
+      ctx.arc(cx, cy - 8 + bobY, 11, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Highlight core
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(cx, cy - 8 + bobY, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Floating header prompt
+      ctx.shadowBlur = 8;
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('[ ' + s.name + ' ]', cx, s.y - 24 + bobY);
+      ctx.fillStyle = s.glowColor || '#ffaa33';
+      ctx.font = 'bold 10px sans-serif';
+      ctx.fillText('KEY [' + s.key + ']', cx, s.y - 12 + bobY);
+
+      ctx.restore();
+    }
   }
 
   drawBackgroundProps(ctx, props, camera, time) {
@@ -7200,10 +7695,21 @@ class HUD {
     this.weaponNotifyName = '';
     this.tipTimer = 0;
     this.tipText = '';
+    this.skillNotification = null;
+    this.skillNotificationTimer = 0;
+    this.skillNotificationDur = 6.0;
   }
 
   showWeaponSwitch(name) { this.weaponNotifyTimer = 2; this.weaponNotifyName = name; }
   showNotification(text) { this.tipTimer = 3; this.tipText = text; }
+  showSkillUnlockNotification(skill) {
+    this.skillNotification = skill;
+    this.skillNotificationTimer = this.skillNotificationDur;
+  }
+  showLockedSpellNotification(spellIndex) {
+    const sp = SPELLS[spellIndex] || { name: 'Spell' };
+    this.showNotification('🔒 ' + sp.name + ' is locked! Discover its ancient relic in the depths.');
+  }
 
   draw(ctx, player, boss, gameState, dt) {
     ctx.save();
@@ -7264,11 +7770,72 @@ class HUD {
       ctx.globalAlpha = 1;
     }
 
-    // Spell slots
+    // Special Epic Skill Discovery Notification Banner
+    if (this.skillNotification && this.skillNotificationTimer > 0) {
+      this.skillNotificationTimer -= dt;
+      const t = this.skillNotificationTimer;
+      const alpha = Math.min(1.0, Math.sin((t / this.skillNotificationDur) * Math.PI) * 1.5);
+      const sk = this.skillNotification;
+
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+      
+      const bw = 640, bh = 82;
+      const bx = CANVAS_W / 2 - bw / 2, by = 48;
+
+      ctx.fillStyle = 'rgba(10, 6, 20, 0.94)';
+      ctx.fillRect(bx, by, bw, bh);
+
+      ctx.strokeStyle = sk.glowColor || '#66ddff';
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = sk.glowColor || '#66ddff';
+      ctx.shadowBlur = 16;
+      ctx.strokeRect(bx, by, bw, bh);
+
+      ctx.strokeStyle = '#2d1b4e';
+      ctx.lineWidth = 1;
+      ctx.shadowBlur = 0;
+      ctx.strokeRect(bx + 4, by + 4, bw - 8, bh - 8);
+
+      ctx.fillStyle = sk.color || '#ffaa33';
+      ctx.font = `bold 16px ${UI_FONT}`;
+      ctx.textAlign = 'center';
+      ctx.fillText(`★ SKILL UNLOCKED: ${sk.name.toUpperCase()} ★`, CANVAS_W / 2, by + 24);
+
+      ctx.fillStyle = '#ffdd44';
+      ctx.font = `bold 14px ${UI_FONT}`;
+      ctx.fillText(`ACTIVATE: [ KEY ${sk.key} ]`, CANVAS_W / 2, by + 45);
+
+      ctx.fillStyle = '#b0c4de';
+      ctx.font = `12px ${UI_FONT}`;
+      ctx.fillText(sk.desc, CANVAS_W / 2, by + 66);
+
+      ctx.restore();
+    }
+
+    // Spell slots (with locked icon support)
     for (let i = 0; i < SPELLS.length; i++) {
       const sx = 30 + i * 44, sy = 110;
       const sp = SPELLS[i];
-      const ready = player.spellCooldowns[i] <= 0 && player.soul >= sp.soulCost;
+      const isUnlocked = !player.unlockedSpells || player.unlockedSpells[i] !== false;
+      const ready = isUnlocked && player.spellCooldowns[i] <= 0 && player.soul >= sp.soulCost;
+
+      if (!isUnlocked) {
+        ctx.fillStyle = '#14121c';
+        ctx.fillRect(sx, sy, 36, 36);
+        ctx.strokeStyle = '#3a2e4c';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(sx, sy, 36, 36);
+        ctx.fillStyle = '#6a5d7e';
+        ctx.font = '14px serif';
+        ctx.fillText('🔒', sx + 10, sy + 24);
+        const keyLabel = this.bindings.getKeyLabel(this.bindings.getKeys('spell' + (i + 1))[0] || (i + 1));
+        ctx.fillStyle = '#443854';
+        ctx.font = `bold 10px ${UI_FONT}`;
+        ctx.fillText(keyLabel, sx + 3, sy + 32);
+        continue;
+      }
+
       ctx.fillStyle = ready ? '#333355' : '#222233';
       ctx.fillRect(sx, sy, 36, 36);
       ctx.strokeStyle = ready ? '#6666aa' : '#333344'; ctx.lineWidth = 1; ctx.strokeRect(sx, sy, 36, 36);
@@ -7656,11 +8223,13 @@ class Game {
     this.props = ld.props || [];
     this.player = new Player(ld.playerStart.x, ld.playerStart.y);
     this.enemyTemplates = ld.enemies;
+    this.player.unlockedSpells = [false, false, false]; // Start locked until picked up
     this.enemies = ld.enemies.map(e => new Enemy(e.x, e.y, e.type, e.patrolRange));
     this.boss = new Boss(ld.bossSpawn.x, ld.bossSpawn.y);
     this.bonfires = ld.bonfires;
     // Radiant Sword on Watchtower roof
     this.swordPickup = ld.swordPickup || { x: 1560, y: 476, w: 28, h: 46, name: 'Old Nail', collected: this.swordCollected || false };
+    this.skillPickups = (ld.skillPickups || []).map(s => Object.assign({}, s));
     this.swordPickup.collected = this.swordCollected || false;
     this.player.unlockedWeapons = [this.swordCollected || false, false, false, false];
     this.player.weaponIndex = this.swordCollected ? 0 : -1;
@@ -7856,28 +8425,58 @@ class Game {
       }
     }
 
-    // Spells
-    if (this.input.spell1Pressed()) this.player.castSpell(0, this.projectiles, this.particles, this.audio, this.camera);
-    if (this.input.spell2Pressed()) this.player.castSpell(1, this.projectiles, this.particles, this.audio, this.camera);
-    if (this.input.spell3Pressed()) this.player.castSpell(2, this.projectiles, this.particles, this.audio, this.camera);
+    // Spells with discovery unlock checks
+    if (this.input.spell1Pressed()) {
+      if (this.player.unlockedSpells && !this.player.unlockedSpells[0]) {
+        this.hud.showLockedSpellNotification(0);
+      } else {
+        this.player.castSpell(0, this.projectiles, this.particles, this.audio, this.camera, this.enemies, this.boss);
+      }
+    }
+    if (this.input.spell2Pressed()) {
+      if (this.player.unlockedSpells && !this.player.unlockedSpells[1]) {
+        this.hud.showLockedSpellNotification(1);
+      } else {
+        this.player.castSpell(1, this.projectiles, this.particles, this.audio, this.camera, this.enemies, this.boss);
+      }
+    }
+    if (this.input.spell3Pressed()) {
+      if (this.player.unlockedSpells && !this.player.unlockedSpells[2]) {
+        this.hud.showLockedSpellNotification(2);
+      } else {
+        this.player.castSpell(2, this.projectiles, this.particles, this.audio, this.camera, this.enemies, this.boss);
+      }
+    }
 
-    // Ice Nova AoE check
-    if (this.input._wasPressed('spell2') && this.player.spellCooldowns[1] > SPELLS[1].cooldown - 0.1) {
-      // Just cast - do AoE
-      const novaRange = 100;
+    // Frost Nova engine resolution (F8)
+    if (this.player._justCastNova) {
+      this.player._justCastNova = false;
+      const novaRadius = SPELLS[1].radius || 140;
       const pcx = this.player.x + this.player.w / 2, pcy = this.player.y + this.player.h / 2;
       for (const e of this.enemies) {
         if (!e.dead) {
           const ecx = e.x + e.w / 2, ecy = e.y + e.h / 2;
-          if (Math.hypot(ecx - pcx, ecy - pcy) < novaRange) {
-            e.takeDamage(2, pcx < ecx ? 1 : -1, this.particles, this.camera, this.audio);
-            if (e.dead) this.player.soul = Math.min(this.player.soul + 15, this.player.maxSoul);
+          const dist = Math.min(Math.hypot(ecx - pcx, ecy - pcy), Math.hypot(e.x - this.player.x, e.y - this.player.y));
+          if (dist <= novaRadius) {
+            if (e instanceof Boss || e.isBoss) {
+              e.chilled = true;
+              e.chillTimer = 1.2;
+              e.freezeTimer = 0;
+            } else {
+              e.freezeTimer = 2.0;
+              e.stunned = 2.0;
+              e.attackHitbox = null;
+              e.vx = 0;
+            }
           }
         }
       }
       if (this.boss.active && !this.boss.dead) {
         const bcx = this.boss.x + this.boss.w / 2, bcy = this.boss.y + this.boss.h / 2;
-        if (Math.hypot(bcx - pcx, bcy - pcy) < novaRange) {
+        if (Math.hypot(bcx - pcx, bcy - pcy) <= novaRadius) {
+          this.boss.chilled = true;
+          this.boss.chillTimer = 1.2;
+          this.boss.freezeTimer = 0;
           this.boss.takeDamage(2, pcx < bcx ? 1 : -1, this.particles, this.camera, this.audio);
         }
       }
@@ -7906,11 +8505,65 @@ class Game {
       }
     }
 
-    // Projectiles
+    // Projectiles & Advanced Spells Mechanics
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
       const proj = this.projectiles[i];
       proj.update(dt, this.level, this.particles);
-      if (proj.dead) { this.projectiles.splice(i, 1); continue; }
+
+      // Void Singularity Gravitational Pull Vector (F10)
+      if (proj.type === 'void_vortex' && !proj.dead) {
+        const pullRange = proj.pullRange || 160;
+        const vcx = proj.x + proj.w / 2, vcy = proj.y + proj.h / 2;
+        proj.tickTimer = (proj.tickTimer || 0.4) - dt;
+        const doTick = proj.tickTimer <= 0;
+        if (doTick) proj.tickTimer = proj.tickInterval || 0.4;
+
+        for (const e of this.enemies) {
+          if (!e.dead) {
+            const ecx = e.x + e.w / 2, ecy = e.y + e.h / 2;
+            const dx = vcx - ecx, dy = vcy - ecy;
+            const dist = Math.min(Math.hypot(dx, dy), Math.hypot(proj.x - e.x, proj.y - e.y));
+            if (dist < pullRange) {
+              const pullFactor = 1.0 - (dist / pullRange);
+              const pull = pullFactor * (proj.pullForce || 750);
+              e.vx = (dx / (dist || 1)) * pull;
+              e.x += (dx / (dist || 1)) * Math.min(Math.abs(dx), (pull + 200) * dt * 1.2);
+              if (doTick) {
+                e.takeDamage(1, dx > 0 ? 1 : -1, this.particles, this.camera, this.audio, true);
+                if (e.dead) this.player.soul = Math.min(this.player.soul + 15, this.player.maxSoul);
+              }
+            }
+          }
+        }
+      }
+
+      // Check Expiration / Implosion for Void Singularity
+      if (proj.dead) {
+        if (proj.type === 'void_vortex') {
+          if (this.audio && this.audio.voidImplode) this.audio.voidImplode();
+          if (this.camera && this.camera.shake) this.camera.shake(5, 0.15);
+          const vcx = proj.x + proj.w / 2, vcy = proj.y + proj.h / 2;
+          const implosionRadius = proj.blastRadius || 160;
+          const implosionDmg = proj.implosionDamage || 2;
+          for (const e of this.enemies) {
+            if (!e.dead) {
+              const dist = Math.hypot(e.x + e.w / 2 - vcx, e.y + e.h / 2 - vcy);
+              if (dist <= implosionRadius) {
+                e.takeDamage(implosionDmg, vcx < e.x ? 1 : -1, this.particles, this.camera, this.audio, true);
+                if (e.dead) this.player.soul = Math.min(this.player.soul + 15, this.player.maxSoul);
+              }
+            }
+          }
+          if (this.boss.active && !this.boss.dead) {
+            const dist = Math.hypot(this.boss.x + this.boss.w / 2 - vcx, this.boss.y + this.boss.h / 2 - vcy);
+            if (dist <= implosionRadius) {
+              this.boss.takeDamage(implosionDmg, vcx < this.boss.x ? 1 : -1, this.particles, this.camera, this.audio);
+            }
+          }
+        }
+        this.projectiles.splice(i, 1);
+        continue;
+      }
 
       // Deflect enemy projectile with Nail attack! (Hollow Knight deflect)
       if (proj.owner === 'enemy' && this.player.attacking && this.player.attackHitbox) {
@@ -7956,23 +8609,72 @@ class Game {
 
       // Hit enemies (player or reflected projectiles)
       if (proj.owner === 'player') {
-        for (const e of this.enemies) {
-          if (!e.dead && rectsOverlap(proj.getBounds(), e.getBounds())) {
-            e.takeDamage(proj.damage, proj.vx > 0 ? 1 : -1, this.particles, this.camera, this.audio, true);
-            if (e.dead) this.player.soul = Math.min(this.player.soul + 15, this.player.maxSoul);
+        let hitSomething = false;
+        if (proj.type === 'pyre_blast' || proj.type === 'fireball') {
+          for (const e of this.enemies) {
+            if (!e.dead && rectsOverlap(proj.getBounds(), e.getBounds())) {
+              hitSomething = true;
+              break;
+            }
+          }
+          if (!hitSomething && this.boss.active && !this.boss.dead && rectsOverlap(proj.getBounds(), this.boss.getBounds())) {
+            hitSomething = true;
+          }
+          if (hitSomething) {
+            proj.dead = true;
+            const cx = proj.x + proj.w / 2, cy = proj.y + proj.h / 2;
+            const blastRadius = proj.blastRadius || 80;
+            if (this.audio && this.audio.fireballHit) this.audio.fireballHit();
+            if (this.camera && this.camera.shake) this.camera.shake(6, 0.2);
+            if (this.particles && this.particles.sparks) this.particles.sparks(cx, cy);
+
+            for (const e of this.enemies) {
+              if (!e.dead) {
+                const ecx = e.x + e.w / 2, ecy = e.y + e.h / 2;
+                const dist = Math.hypot(ecx - cx, ecy - cy);
+                if (dist <= blastRadius) {
+                  const dmg = dist < 24 ? proj.damage : (proj.splashDamage || 3);
+                  if (e.type === 'guard') {
+                    e.shieldUp = false;
+                    e.stunned = Math.max(e.stunned || 0, 1.0);
+                  }
+                  e.takeDamage(dmg, cx < ecx ? 1 : -1, this.particles, this.camera, this.audio, true);
+                  if (e.dead) this.player.soul = Math.min(this.player.soul + 15, this.player.maxSoul);
+                }
+              }
+            }
+            if (this.boss.active && !this.boss.dead) {
+              const bcx = this.boss.x + this.boss.w / 2, bcy = this.boss.y + this.boss.h / 2;
+              const dist = Math.hypot(bcx - cx, bcy - cy);
+              if (dist <= blastRadius) {
+                this.boss.takeDamage(proj.damage, cx < bcx ? 1 : -1, this.particles, this.camera, this.audio);
+                if (this.boss.dead) {
+                  this.player.soul = this.player.maxSoul;
+                  this.audio.playLevelMusic();
+                  setTimeout(() => { this.gameState = STATE.WIN; }, 1500);
+                }
+              }
+            }
+          }
+        } else if (proj.type !== 'void_vortex') {
+          for (const e of this.enemies) {
+            if (!e.dead && rectsOverlap(proj.getBounds(), e.getBounds())) {
+              e.takeDamage(proj.damage, proj.vx > 0 ? 1 : -1, this.particles, this.camera, this.audio, true);
+              if (e.dead) this.player.soul = Math.min(this.player.soul + 15, this.player.maxSoul);
+              proj.dead = true;
+              this.particles.sparks(proj.x, proj.y);
+              break;
+            }
+          }
+          if (!proj.dead && this.boss.active && !this.boss.dead && rectsOverlap(proj.getBounds(), this.boss.getBounds())) {
+            this.boss.takeDamage(proj.damage, proj.vx > 0 ? 1 : -1, this.particles, this.camera, this.audio);
             proj.dead = true;
             this.particles.sparks(proj.x, proj.y);
-            break;
-          }
-        }
-        if (!proj.dead && this.boss.active && !this.boss.dead && rectsOverlap(proj.getBounds(), this.boss.getBounds())) {
-          this.boss.takeDamage(proj.damage, proj.vx > 0 ? 1 : -1, this.particles, this.camera, this.audio);
-          proj.dead = true;
-          this.particles.sparks(proj.x, proj.y);
-          if (this.boss.dead) {
-            this.player.soul = this.player.maxSoul;
-            this.audio.playLevelMusic();
-            setTimeout(() => { this.gameState = STATE.WIN; }, 1500);
+            if (this.boss.dead) {
+              this.player.soul = this.player.maxSoul;
+              this.audio.playLevelMusic();
+              setTimeout(() => { this.gameState = STATE.WIN; }, 1500);
+            }
           }
         }
       }
@@ -7980,7 +8682,7 @@ class Game {
 
     // Player attack vs enemies (Hollow Knight combat)
     if (this.player.attacking && this.player.attackHitbox) {
-      const wpn = this.player.weapon;
+      const wpn = this.player.weapon || UNARMED_ATTACK;
       const p = this.player;
       const hitTargets = (target, isBoss) => {
         if (!p.attackHitbox || target.dead || p.hasHitThisSwing.has(target)) return;
@@ -8143,6 +8845,34 @@ class Game {
       }
     }
 
+    // Hidden Skill Pickups in bottom corners across map (User Request 3)
+    if (this.skillPickups) {
+      const pb = this.player.getBounds();
+      for (const pickup of this.skillPickups) {
+        if (!pickup.collected) {
+          const px = this.player.x + this.player.w / 2;
+          const py = this.player.y + this.player.h / 2;
+          const cx = pickup.x + pickup.w / 2;
+          const cy = pickup.y + pickup.h / 2;
+          const dist = Math.hypot(cx - px, cy - py);
+          if (dist < 48 || rectsOverlap(pb, pickup)) {
+            pickup.collected = true;
+            this.player.unlockedSpells[pickup.spellIndex] = true;
+            if (this.audio) {
+              if (this.audio.bonfireLit) this.audio.bonfireLit();
+              else if (this.audio.dodgeSuccess) this.audio.dodgeSuccess();
+            }
+            if (this.particles) {
+              if (this.particles.soulBurst) this.particles.soulBurst(cx, cy);
+              if (this.particles.sparks) this.particles.sparks(cx, cy);
+            }
+            if (this.camera) this.camera.shake(6, 0.25);
+            this.hud.showSkillUnlockNotification(pickup);
+          }
+        }
+      }
+    }
+
     // Player death
     if (this.player.dead && this.player.deathTimer > 0.5) this.gameState = STATE.DEAD;
 
@@ -8214,6 +8944,11 @@ class Game {
     // 4.5 Radiant Ancient Altar with First Sword on Watchtower Roof
     if (this.envRenderer && this.envRenderer.drawSwordPickup) {
       this.envRenderer.drawSwordPickup(ctx, this.swordPickup, this.time, this.player);
+    }
+
+    // Hidden Skill Pickups in bottom corners
+    if (this.envRenderer && this.envRenderer.drawSkillPickups) {
+      this.envRenderer.drawSkillPickups(ctx, this.skillPickups, this.time);
     }
 
     // 5. Foreground Props (Glowing crystals, water drips)
@@ -8322,5 +9057,20 @@ if (typeof window !== 'undefined' && window.addEventListener) {
   window.addEventListener('load', () => { new Game(); });
 }
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { Player, Enemy, Boss, Particle, ParticleSystem, Projectile, WEAPONS, AudioEngine, Game, EnvironmentRenderer };
+  module.exports = {
+    Player,
+    Enemy,
+    Boss,
+    Particle,
+    ParticleSystem,
+    Projectile,
+    WEAPONS,
+    UNARMED_ATTACK,
+    SPELLS,
+    AudioEngine,
+    Game,
+    EnvironmentRenderer,
+    buildLevel,
+    Bonfire,
+  };
 }
