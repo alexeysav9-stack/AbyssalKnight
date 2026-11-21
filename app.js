@@ -1399,24 +1399,25 @@ function buildLevel() {
   // Bastion props & overlook architecture
   addArch(180, 680, 180, 200, 'shrine');
   addRoseWindow(180, 620, 36, '#ffaa33');
-  addStreetlamp(340, 880, 55, '#ffaa33');
-  addGargoyle(450, 880, 1, 'spread');
   addGothicWindow(60, 640, 34, 75, '#ffaa33', true);
   addGothicWindow(60, 480, 34, 75, '#ff8833', true);
-  addCrystal(280, 878, 'purple', 1.1);
+  addCrystal(80, 878, 'purple', 1.1); // Placed in the far left bastion corner away from tutorial tablets
 
-  // Ancient carved tutorial tablets in Starting Bastion
-  props.push({ type: 'tutorialTablet', x: 230, y: 880, title: 'MOVEMENT', line1: '[← / →] Move', line2: '[↑] Jump' });
-  props.push({ type: 'tutorialTablet', x: 380, y: 880, title: 'EVASION', line1: '[Ctrl] Dash', line2: 'i-frame roll' });
-  props.push({ type: 'tutorialTablet', x: 530, y: 820, title: 'COMBAT', line1: '[X] Strike', line2: '[Air + ↓ + X] Pogo' });
+  // Ancient carved tutorial tablets in Starting Bastion (placed in open spaces with 0 occluding decorations)
+  props.push({ type: 'tutorialTablet', x: 250, y: 880, title: 'MOVEMENT', line1: '[← / →] Move', line2: '[↑] Jump' });
+  props.push({ type: 'tutorialTablet', x: 390, y: 880, title: 'EVASION', line1: '[Ctrl] Dash', line2: 'i-frame roll' });
+  props.push({ type: 'tutorialTablet', x: 560, y: 820, title: 'COMBAT', line1: '[X] Strike', line2: '[Air + ↓ + X] Pogo' });
 
-  // Upper overlook balconies
+  // Upper overlook balconies with perched gargoyles (located high above on ledges, never blocking ground tablets)
   P(180, 760, 160, 20, 'oneway');
   P(320, 640, 150, 20, 'oneway');
   addLantern(320, 640, 45, '#ffaa33');
+  addGargoyle(180, 760, 1, 'spread');
+  addGargoyle(330, 640, -1, 'spread');
 
   // Stone ramp step connecting Bastion terrace (y=880) to High Viaduct Bridge (y=820)
   P(440, 850, 60, 30);
+  addStreetlamp(460, 850, 55, '#ffaa33'); // Illuminates the ascent step from bastion onto viaduct bridge
 
   // The Grand High Viaduct Bridge: continuous monumental roadway spanning to Gatehouse Watchtower!
   // Roadway deck at y=820, thickness 32px (bg_viaducts.png shows the arches below naturally)
@@ -1424,7 +1425,6 @@ function buildLevel() {
   P(920, 820, 460, 32);
   addStreetlamp(700, 820, 55, '#ffaa33');
   addStreetlamp(1150, 820, 55, '#ffaa33');
-  addGargoyle(540, 820, 1, 'folded');
   addGargoyle(1280, 820, -1, 'folded');
   enemies.push({ type: 'crawler', x: 740, y: 790, patrolRange: 100 });
   enemies.push({ type: 'guard', x: 1060, y: 770 });
@@ -5543,8 +5543,6 @@ class EnvironmentRenderer {
         this._drawChandelier(ctx, p.x, p.y, p.w, p.chainLen, time);
       } else if (p.type === 'roseWindow') {
         this._drawRoseWindow(ctx, p.x, p.y, p.radius, p.color, time);
-      } else if (p.type === 'tutorialTablet') {
-        this._drawTutorialTablet(ctx, p.x, p.y, p.title, p.line1, p.line2, time);
       }
     }
   }
@@ -5553,46 +5551,73 @@ class EnvironmentRenderer {
     ctx.save();
     const rx = Math.round(x);
     const ry = Math.round(y);
-    const tw = 94, th = 48;
+    const tw = 120, th = 58;
 
-    // Stone stele base plinth
-    ctx.fillStyle = '#080512';
-    ctx.fillRect(rx - tw / 2 - 2, ry - 3, tw + 4, 4);
+    // Ambient glow pulse
+    const glowPulse = 0.85 + 0.15 * Math.sin(time * 3 + rx * 0.05);
+
+    // Stone stele base plinth (double-tiered carved basalt pedestal)
+    ctx.fillStyle = '#07040e';
+    ctx.fillRect(rx - tw / 2 - 4, ry - 3, tw + 8, 4);
+    ctx.fillStyle = '#1b112c';
+    ctx.fillRect(rx - tw / 2 - 2, ry - 5, tw + 4, 2);
 
     // Dark gothic stone stele body with lancet pointed top
-    ctx.fillStyle = '#140c24';
+    ctx.fillStyle = '#100a1d';
     ctx.beginPath();
-    ctx.moveTo(rx - tw / 2, ry);
-    ctx.lineTo(rx - tw / 2, ry - th + 12);
-    ctx.quadraticCurveTo(rx - tw / 4, ry - th - 3, rx, ry - th);
-    ctx.quadraticCurveTo(rx + tw / 4, ry - th - 3, rx + tw / 2, ry - th + 12);
-    ctx.lineTo(rx + tw / 2, ry);
+    ctx.moveTo(rx - tw / 2, ry - 3);
+    ctx.lineTo(rx - tw / 2, ry - th + 14);
+    ctx.quadraticCurveTo(rx - tw / 4, ry - th - 4, rx, ry - th);
+    ctx.quadraticCurveTo(rx + tw / 4, ry - th - 4, rx + tw / 2, ry - th + 14);
+    ctx.lineTo(rx + tw / 2, ry - 3);
     ctx.closePath();
     ctx.fill();
 
-    // Weathered stone border
-    ctx.strokeStyle = '#2d1e44';
+    // Inner recessed carved tablet plaque (ultra-dark backing for 100% crystal-clear readability)
+    const pad = 4;
+    ctx.fillStyle = 'rgba(7, 4, 15, 0.96)';
+    ctx.beginPath();
+    ctx.moveTo(rx - tw / 2 + pad, ry - 4);
+    ctx.lineTo(rx - tw / 2 + pad, ry - th + 16);
+    ctx.quadraticCurveTo(rx, ry - th + 2, rx + tw / 2 - pad, ry - th + 16);
+    ctx.lineTo(rx + tw / 2 - pad, ry - 4);
+    ctx.closePath();
+    ctx.fill();
+
+    // Weathered runic stone border
+    ctx.strokeStyle = '#432d66';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Soft runic glow pulse
-    const glowAlpha = 0.70 + 0.30 * Math.sin(time * 2.5 + rx * 0.1);
+    // Golden runic apex jewel / crown emblem
+    ctx.fillStyle = `rgba(255, 215, 80, ${glowPulse})`;
+    ctx.beginPath();
+    ctx.arc(rx, ry - th + 8, 2.5, 0, Math.PI * 2);
+    ctx.fill();
 
-    // Title header
-    ctx.fillStyle = `rgba(180, 220, 255, ${glowAlpha})`;
-    ctx.font = 'bold 9px sans-serif';
+    // Text rendering with dark drop-shadow for guaranteed high contrast against any backdrop
     ctx.textAlign = 'center';
-    ctx.fillText(title, rx, ry - th + 14);
 
-    // Primary action key
-    ctx.fillStyle = `rgba(255, 220, 120, ${glowAlpha})`;
+    // 1. Title header
     ctx.font = 'bold 10px sans-serif';
-    ctx.fillText(line1, rx, ry - th + 27);
+    ctx.fillStyle = '#05020a';
+    ctx.fillText(title, rx + 1, ry - th + 20);
+    ctx.fillStyle = `rgba(140, 225, 255, ${glowPulse})`;
+    ctx.fillText(title, rx, ry - th + 19);
 
-    // Secondary hint
-    ctx.fillStyle = `rgba(170, 190, 220, ${Math.min(1, glowAlpha * 0.9)})`;
+    // 2. Primary action key
+    ctx.font = 'bold 11px sans-serif';
+    ctx.fillStyle = '#05020a';
+    ctx.fillText(line1, rx + 1, ry - th + 35);
+    ctx.fillStyle = `rgba(255, 225, 110, ${glowPulse})`;
+    ctx.fillText(line1, rx, ry - th + 34);
+
+    // 3. Secondary hint
     ctx.font = '9px sans-serif';
-    ctx.fillText(line2, rx, ry - th + 39);
+    ctx.fillStyle = '#05020a';
+    ctx.fillText(line2, rx + 1, ry - th + 49);
+    ctx.fillStyle = 'rgba(215, 225, 245, 0.95)';
+    ctx.fillText(line2, rx, ry - th + 48);
 
     ctx.restore();
   }
@@ -6462,7 +6487,9 @@ class EnvironmentRenderer {
 
     for (const p of props) {
       if (p.x < minX || p.x > maxX || p.y < minY || p.y > maxY) continue;
-      if (p.type === 'crystal') {
+      if (p.type === 'tutorialTablet') {
+        this._drawTutorialTablet(ctx, p.x, p.y, p.title, p.line1, p.line2, time);
+      } else if (p.type === 'crystal') {
         this._drawCrystals(ctx, p.x, p.y, p.color, p.scale, time);
       } else if (p.type === 'waterDrip') {
         this._drawWaterDrip(ctx, p, time);
@@ -7261,6 +7288,8 @@ class LightingSystem {
           addLight(pr.x, pr.y + 12, 130, 0.9, lFlk);
         } else if (pr.type === 'crystal') {
           addLight(pr.x, pr.y, 85, 0.7);
+        } else if (pr.type === 'tutorialTablet') {
+          addLight(pr.x, pr.y - 25, 130, 0.95);
         }
       }
     }
@@ -7342,6 +7371,8 @@ class LightingSystem {
           addColorGlow(pr.x, pr.y + (pr.h || 75) / 2, 110, c, 'rgba(200, 80, 20, 0)');
         } else if (pr.type === 'chandelier') {
           addColorGlow(pr.x, pr.y + (pr.chainLen || 120) + 15, 180, 'rgba(255, 150, 40, 0.25)', 'rgba(255, 70, 10, 0)');
+        } else if (pr.type === 'tutorialTablet') {
+          addColorGlow(pr.x, pr.y - 25, 110, 'rgba(140, 210, 255, 0.22)', 'rgba(100, 160, 255, 0)');
         }
       }
     }
