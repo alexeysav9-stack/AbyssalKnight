@@ -135,9 +135,11 @@ except ImportError:
 
 
 def main():
+    default_host = os.environ.get("HOST", "0.0.0.0")
+    default_port = int(os.environ.get("PORT", 8000))
     parser = argparse.ArgumentParser(description="Abyssal Knight Game Server")
-    parser.add_argument("--host", default="0.0.0.0", help="Host address to bind (default: 0.0.0.0)")
-    parser.add_argument("--port", type=int, default=8000, help="Port to listen on (default: 8000)")
+    parser.add_argument("--host", default=default_host, help=f"Host address to bind (default: {default_host})")
+    parser.add_argument("--port", type=int, default=default_port, help=f"Port to listen on (default: {default_port})")
     args = parser.parse_args()
 
     if _HAS_FASTAPI:

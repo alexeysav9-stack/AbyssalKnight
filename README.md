@@ -189,6 +189,30 @@ server {
 }
 ```
 
+### 4. Deploying to Render (render.com)
+
+The project includes pre-configured [render.yaml](render.yaml) for 1-click deployment on [Render](https://render.com):
+
+#### Option A: Web Service (FastAPI ASGI Server)
+1. In Render Dashboard, click **New +** → **Web Service**.
+2. Connect your GitHub repository.
+3. Set the following parameters:
+   - **Runtime**: `Python`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `uvicorn server:app --host 0.0.0.0 --port $PORT`
+   - **Plan**: `Free`
+4. Click **Create Web Service**.
+
+#### Option B: Static Site (Zero Maintenance, Always-On CDN)
+1. In Render Dashboard, click **New +** → **Static Site**.
+2. Connect your GitHub repository.
+3. Leave **Build Command** blank.
+4. Set **Publish Directory** to `.`.
+5. Click **Create Static Site**.
+
+#### Option C: Render Blueprint (Infrastructure as Code)
+Click **New +** → **Blueprint**, select your repository, and Render will automatically provision the service defined in `render.yaml`.
+
 ---
 
 ## Audio Engine & Provenance
