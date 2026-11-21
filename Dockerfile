@@ -18,3 +18,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
 
 # Run server
 CMD ["python", "server.py", "--host", "0.0.0.0", "--port", "8000"]
+
