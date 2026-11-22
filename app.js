@@ -12,7 +12,54 @@ const TILE = 40;
 const GRAVITY = 1800;
 const TERMINAL_VEL = 900;
 const STATE = { TITLE: 0, PLAYING: 1, DEAD: 2, WIN: 3, BONFIRE: 4, REBIND: 5 };
-const ASSET_VERSION = 'v=1.0.2';
+const ASSET_VERSION = 'v=1.0.3';
+
+// ============================================================================
+// ASSET PRELOADING & GLOBAL CACHE
+// ============================================================================
+const ASSET_CACHE = {
+  sky: null,
+  spires: null,
+  viaducts: null,
+  bossArena: null,
+  loadedCount: 0,
+  totalCount: 4,
+  isReady: false,
+};
+
+function preloadGameAssets() {
+  if (typeof Image === 'undefined') return;
+  const v = typeof ASSET_VERSION !== 'undefined' ? '?' + ASSET_VERSION : '?v=1.0.3';
+
+  const loadImage = (webpSrc, pngSrc) => {
+    const img = new Image();
+    const onDone = () => {
+      ASSET_CACHE.loadedCount++;
+      if (ASSET_CACHE.loadedCount >= ASSET_CACHE.totalCount) {
+        ASSET_CACHE.isReady = true;
+      }
+    };
+    img.onload = onDone;
+    img.onerror = () => {
+      if (img.src && !img.src.includes('.png')) {
+        img.src = pngSrc + v;
+      } else {
+        onDone();
+      }
+    };
+    img.src = webpSrc + v;
+    return img;
+  };
+
+  ASSET_CACHE.sky = loadImage('bg_sky.webp', 'bg_sky.png');
+  ASSET_CACHE.spires = loadImage('bg_spires.webp', 'bg_spires.png');
+  ASSET_CACHE.viaducts = loadImage('bg_viaducts.webp', 'bg_viaducts.png');
+  ASSET_CACHE.bossArena = loadImage('bg_1st_boss_arena.webp', 'bg_1st_boss_arena.png');
+}
+
+if (typeof window !== 'undefined') {
+  preloadGameAssets();
+}
 
 // ============================================================================
 // UTILITIES
@@ -4867,8 +4914,12 @@ class Boss {
 class EnvironmentRenderer {
   constructor() {
     this.dripDroplets = [];
-    this.imgBossArena = typeof Image !== 'undefined' ? new Image() : null;
-    if (this.imgBossArena) this.imgBossArena.src = 'bg_1st_boss_arena.png?' + (typeof ASSET_VERSION !== 'undefined' ? ASSET_VERSION : 'v=1.0.2');
+    if (typeof ASSET_CACHE !== 'undefined' && ASSET_CACHE.bossArena) {
+      this.imgBossArena = ASSET_CACHE.bossArena;
+    } else {
+      this.imgBossArena = typeof Image !== 'undefined' ? new Image() : null;
+      if (this.imgBossArena) this.imgBossArena.src = 'bg_1st_boss_arena.webp?' + (typeof ASSET_VERSION !== 'undefined' ? ASSET_VERSION : 'v=1.0.3');
+    }
   }
 
   _isReady(img) {
@@ -7424,16 +7475,23 @@ class Background {
   constructor(levelWidth) {
     this.levelWidth = levelWidth || 8200;
 
-    // Custom Generated Parallax Image Layers (User provided assets)
-    this.imgSky = typeof Image !== 'undefined' ? new Image() : null;
-    this.imgSpires = typeof Image !== 'undefined' ? new Image() : null;
-    this.imgViaducts = typeof Image !== 'undefined' ? new Image() : null;
-    this.imgBossArena = typeof Image !== 'undefined' ? new Image() : null;
-    const v = typeof ASSET_VERSION !== 'undefined' ? '?' + ASSET_VERSION : '?v=1.0.2';
-    if (this.imgSky) this.imgSky.src = 'bg_sky.png' + v;
-    if (this.imgSpires) this.imgSpires.src = 'bg_spires.png' + v;
-    if (this.imgViaducts) this.imgViaducts.src = 'bg_viaducts.png' + v;
-    if (this.imgBossArena) this.imgBossArena.src = 'bg_1st_boss_arena.png' + v;
+    // Custom Generated Parallax Image Layers (Preloaded Instant WebP / PNG)
+    if (typeof ASSET_CACHE !== 'undefined' && ASSET_CACHE.sky) {
+      this.imgSky = ASSET_CACHE.sky;
+      this.imgSpires = ASSET_CACHE.spires;
+      this.imgViaducts = ASSET_CACHE.viaducts;
+      this.imgBossArena = ASSET_CACHE.bossArena;
+    } else {
+      const v = typeof ASSET_VERSION !== 'undefined' ? '?' + ASSET_VERSION : '?v=1.0.3';
+      this.imgSky = typeof Image !== 'undefined' ? new Image() : null;
+      this.imgSpires = typeof Image !== 'undefined' ? new Image() : null;
+      this.imgViaducts = typeof Image !== 'undefined' ? new Image() : null;
+      this.imgBossArena = typeof Image !== 'undefined' ? new Image() : null;
+      if (this.imgSky) this.imgSky.src = 'bg_sky.webp' + v;
+      if (this.imgSpires) this.imgSpires.src = 'bg_spires.webp' + v;
+      if (this.imgViaducts) this.imgViaducts.src = 'bg_viaducts.webp' + v;
+      if (this.imgBossArena) this.imgBossArena.src = 'bg_1st_boss_arena.webp' + v;
+    }
 
     // Atmospheric night stars / celestial motes
     this.stars = [];
@@ -7535,105 +7593,13 @@ class Background {
         ctx.drawImage(this.imgSky, x, skyY, skyW, skyH);
       }
     } else {
-      // Procedural Fallback: Radiant Midnight-Violet Vampire Sky with Stepped Hi-Bit Pixel Art Dither Bands
+      // Atmospheric dark sky gradient matching bg_sky palette (No conflicting moon/dither pop-in)
       const skyGrad = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
-      skyGrad.addColorStop(0, '#0e051c');
-      skyGrad.addColorStop(0.30, '#1c0a34');
-      skyGrad.addColorStop(0.62, '#33134e');
-      skyGrad.addColorStop(1, '#4e1c6e');
+      skyGrad.addColorStop(0, '#060410');
+      skyGrad.addColorStop(0.40, '#0f0820');
+      skyGrad.addColorStop(1, '#1b0e36');
       ctx.fillStyle = skyGrad;
       ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-
-      // Subtle 2x2 ordered pixel dither scanlines for authentic Hi-Bit pixel art texture
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
-      for (let y = 0; y < CANVAS_H; y += 2) {
-        ctx.fillRect(0, y, CANVAS_W, 1);
-      }
-
-      // Background storm clouds behind the moon
-      for (let i = 0; i < this.clouds.length / 2; i++) {
-        const cl = this.clouds[i];
-        const cx = Math.round(((cl.x - time * cl.speed - camera.x * 0.04) % (CANVAS_W + cl.w * 2)) - cl.w);
-        const cy = Math.round(cl.y - camera.y * 0.03);
-        ctx.fillStyle = `rgba(58, 24, 82, ${cl.alpha})`;
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, Math.round(cl.w * 0.5), Math.round(cl.h * 0.5), 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Eerie, Radiant Bloodmoon (Hi-Bit Pixel Art Bloodmoon)
-      const moonX = Math.round(CANVAS_W * 0.68 - camera.x * 0.02);
-      const moonY = Math.round(130 - camera.y * 0.02);
-
-      // Stepped pixel moonlight corona halo rings
-      ctx.fillStyle = 'rgba(235, 215, 255, 0.08)';
-      ctx.beginPath(); ctx.arc(moonX, moonY, 140, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = 'rgba(195, 140, 255, 0.12)';
-      ctx.beginPath(); ctx.arc(moonX, moonY, 95, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = 'rgba(225, 180, 255, 0.20)';
-      ctx.beginPath(); ctx.arc(moonX, moonY, 68, 0, Math.PI * 2); ctx.fill();
-
-      // Pale moon sphere
-      ctx.fillStyle = '#26173e';
-      ctx.beginPath();
-      ctx.arc(moonX, moonY, 52, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Pixel crater maria (volcanic basalt seas on the moon surface)
-      ctx.fillStyle = '#170c26';
-      ctx.beginPath();
-      ctx.arc(moonX - 14, moonY - 10, 15, 0, Math.PI * 2);
-      ctx.arc(moonX + 12, moonY + 14, 11, 0, Math.PI * 2);
-      ctx.arc(moonX - 5, moonY + 18, 8, 0, Math.PI * 2);
-      ctx.arc(moonX + 18, moonY - 12, 7, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Luminous lunar crescent rim
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 3.5;
-      ctx.shadowColor = '#d9bfff';
-      ctx.shadowBlur = 14;
-      ctx.beginPath();
-      ctx.arc(moonX, moonY, 52, -Math.PI * 0.72, Math.PI * 0.42);
-      ctx.stroke();
-
-      // Radiant moon crater fractures
-      ctx.strokeStyle = 'rgba(240, 220, 255, 0.75)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(moonX - 24, moonY - 16);
-      ctx.lineTo(moonX - 2, moonY + 8);
-      ctx.lineTo(moonX + 18, moonY - 2);
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-
-      // Foreground clouds drifting in front of the moon with silver edges
-      for (let i = Math.floor(this.clouds.length / 2); i < this.clouds.length; i++) {
-        const cl = this.clouds[i];
-        const cx = Math.round(((cl.x - time * cl.speed - camera.x * 0.04) % (CANVAS_W + cl.w * 2)) - cl.w);
-        const cy = Math.round(cl.y - camera.y * 0.03);
-        ctx.fillStyle = `rgba(42, 18, 62, ${cl.alpha * 0.9})`;
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, Math.round(cl.w * 0.5), Math.round(cl.h * 0.5), 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = `rgba(220, 200, 255, ${cl.alpha * 0.55})`;
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.arc(cx, cy - cl.h * 0.2, cl.w * 0.35, -Math.PI * 0.8, -Math.PI * 0.2);
-        ctx.stroke();
-      }
-
-      // Twinkling celestial motes/stars in upper sky
-      for (const s of this.stars) {
-        const a = 0.35 + 0.65 * Math.abs(Math.sin(time * s.speed + s.blink));
-        ctx.fillStyle = `rgba(235, 220, 255, ${a})`;
-        ctx.fillRect(Math.round(s.x), Math.round(s.y), Math.round(s.size), Math.round(s.size));
-        if (s.size > 2.2) {
-          ctx.fillStyle = `rgba(255, 255, 255, ${a * 0.6})`;
-          ctx.fillRect(Math.round(s.x - 2), Math.round(s.y), 5, 1);
-          ctx.fillRect(Math.round(s.x), Math.round(s.y - 2), 1, 5);
-        }
-      }
     }
 
     // 2. SPIRES LAYER (Layer 2 - Cologne Cathedral Skyline)
@@ -7645,104 +7611,6 @@ class Background {
       for (let x = startX; x < CANVAS_W; x += spiresW) {
         ctx.drawImage(this.imgSpires, x, spiresY, spiresW, spiresH);
       }
-    } else {
-      // Procedural Fallback: Cologne Cathedral Spires & Skyline
-      ctx.fillStyle = '#120722';
-      const baseY1 = Math.round(CANVAS_H * 0.90 - camera.y * 0.10);
-      for (const d of this.distantSpires) {
-        const sx = Math.round(d.x - camera.x * 0.12);
-        if (sx + d.w < -140 || sx - d.w > CANVAS_W + 140) continue;
-
-        const baseTop = baseY1 - d.h;
-        ctx.beginPath();
-        ctx.fillRect(sx - Math.round(d.w / 2), baseTop, d.w, d.h + 200);
-
-        if (d.type === 0) {
-          const towerW = Math.round(d.w * 0.28);
-          const tower1X = Math.round(sx - d.w * 0.28);
-          const tower2X = Math.round(sx + d.w * 0.28);
-          const spH = d.spireH;
-
-          ctx.moveTo(tower1X - towerW / 2, baseTop);
-          ctx.lineTo(tower1X, baseTop - spH);
-          ctx.lineTo(tower1X + towerW / 2, baseTop);
-
-          ctx.moveTo(tower2X - towerW / 2, baseTop);
-          ctx.lineTo(tower2X, baseTop - spH);
-          ctx.lineTo(tower2X + towerW / 2, baseTop);
-
-          ctx.moveTo(sx - 8, baseTop);
-          ctx.lineTo(sx, baseTop - spH * 0.55);
-          ctx.lineTo(sx + 8, baseTop);
-          ctx.fill();
-
-          ctx.fillStyle = '#220d36';
-          ctx.fillRect(tower1X - 3, baseTop - spH * 0.65, 6, 24);
-          ctx.fillRect(tower1X - 3, baseTop - spH * 0.35, 6, 28);
-          ctx.fillRect(tower2X - 3, baseTop - spH * 0.65, 6, 24);
-          ctx.fillRect(tower2X - 3, baseTop - spH * 0.35, 6, 28);
-
-          ctx.beginPath();
-          ctx.arc(sx, baseTop + 45, 20, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.fillStyle = '#170b2b';
-          for (let k = 1; k < 5; k++) {
-            const kp = k / 5;
-            const kxL = tower1X - (1 - kp) * (towerW / 2);
-            const ky = baseTop - kp * spH;
-            const kxR = tower1X + (1 - kp) * (towerW / 2);
-            ctx.fillRect(Math.round(kxL - 2), Math.round(ky - 2), 4, 3);
-            ctx.fillRect(Math.round(kxR - 2), Math.round(ky - 2), 4, 3);
-
-            const kxL2 = tower2X - (1 - kp) * (towerW / 2);
-            const kxR2 = tower2X + (1 - kp) * (towerW / 2);
-            ctx.fillRect(Math.round(kxL2 - 2), Math.round(ky - 2), 4, 3);
-            ctx.fillRect(Math.round(kxR2 - 2), Math.round(ky - 2), 4, 3);
-          }
-
-          ctx.fillStyle = '#261242';
-          ctx.fillRect(tower1X - 2, baseTop - spH - 12, 4, 12);
-          ctx.fillRect(tower1X - 6, baseTop - spH - 8, 12, 3);
-          ctx.fillRect(tower2X - 2, baseTop - spH - 12, 4, 12);
-          ctx.fillRect(tower2X - 6, baseTop - spH - 8, 12, 3);
-
-          ctx.fillStyle = '#120722';
-        } else if (d.type === 1) {
-          ctx.arc(sx, baseTop, d.w * 0.35, Math.PI, 0);
-          ctx.moveTo(sx - 8, baseTop - d.w * 0.35);
-          ctx.lineTo(sx, baseTop - d.spireH - 30);
-          ctx.lineTo(sx + 8, baseTop - d.w * 0.35);
-          ctx.fill();
-        } else if (d.type === 2) {
-          ctx.moveTo(sx - d.w / 2, baseTop);
-          ctx.lineTo(sx, baseTop - d.spireH * 0.85);
-          ctx.lineTo(sx + d.w / 2, baseTop);
-          ctx.fill();
-          ctx.fillRect(sx - d.w * 0.38 - 3, baseTop - 28, 6, 28);
-          ctx.fillRect(sx + d.w * 0.38 - 3, baseTop - 28, 6, 28);
-        } else {
-          ctx.moveTo(sx - d.w * 0.25, baseTop);
-          ctx.lineTo(sx, baseTop - d.spireH);
-          ctx.lineTo(sx + d.w * 0.25, baseTop);
-          ctx.rect(sx - 2, baseTop - d.spireH - 16, 4, 16);
-          ctx.rect(sx - 7, baseTop - d.spireH - 11, 14, 3);
-          ctx.fill();
-        }
-
-        if (Math.sin(sx * 0.1) > 0.1) {
-          ctx.fillStyle = '#ff9922';
-          ctx.fillRect(sx - 4, baseTop + 30, 8, 18);
-          ctx.fillStyle = '#120722';
-        }
-      }
-
-      // Atmospheric violet haze over Layer 1
-      const fog1 = ctx.createLinearGradient(0, CANVAS_H * 0.60, 0, CANVAS_H);
-      fog1.addColorStop(0, 'rgba(28, 12, 45, 0)');
-      fog1.addColorStop(1, 'rgba(42, 18, 64, 0.6)');
-      ctx.fillStyle = fog1;
-      ctx.fillRect(0, Math.round(CANVAS_H * 0.60), CANVAS_W, Math.round(CANVAS_H * 0.40));
     }
 
     // 3. VIADUCTS LAYER (Layer 3 - Mid-distance Gothic Viaducts & Bridges)
@@ -7753,81 +7621,6 @@ class Background {
       const startX = viaductsX <= 0 ? viaductsX : viaductsX - viaductsW;
       for (let x = startX; x < CANVAS_W; x += viaductsW) {
         ctx.drawImage(this.imgViaducts, x, viaductsY, viaductsW, viaductsH);
-      }
-    } else {
-      // Procedural Fallback: Mid-distance Gothic Viaducts & Arched Bridges
-      ctx.fillStyle = '#190b2e';
-      const baseY2 = Math.round(CANVAS_H * 0.95 - camera.y * 0.22);
-      for (const a of this.midArches) {
-        const sx = Math.round(a.x - camera.x * 0.28);
-        if (sx + a.w < -120 || sx - a.w > CANVAS_W + 120) continue;
-
-        const topY = baseY2 - a.h;
-        ctx.beginPath();
-        ctx.moveTo(sx - a.w / 2, baseY2 + 200);
-        ctx.lineTo(sx - a.w / 2, topY);
-        ctx.lineTo(sx + a.w / 2, topY);
-        ctx.lineTo(sx + a.w / 2, baseY2 + 200);
-        ctx.lineTo(sx + a.w / 2 - a.pillarW, baseY2 + 200);
-        ctx.lineTo(sx + a.w / 2 - a.pillarW, topY + a.h * 0.45);
-        ctx.quadraticCurveTo(sx, topY + a.h * 0.18, sx - a.w / 2 + a.pillarW, topY + a.h * 0.45);
-        ctx.lineTo(sx - a.w / 2 + a.pillarW, baseY2 + 200);
-        ctx.closePath();
-        ctx.fill();
-
-        if (a.hasWindow) {
-          ctx.fillStyle = a.windowColor;
-          ctx.shadowColor = a.windowColor;
-          ctx.shadowBlur = 8;
-          const winX = sx, winY = topY + 28, winW = 16, winH = 36;
-          ctx.beginPath();
-          ctx.moveTo(winX - winW / 2, winY + winH);
-          ctx.lineTo(winX - winW / 2, winY + 10);
-          ctx.quadraticCurveTo(winX, winY, winX + winW / 2, winY + 10);
-          ctx.lineTo(winX + winW / 2, winY + winH);
-          ctx.closePath();
-          ctx.fill();
-          ctx.shadowBlur = 0;
-          ctx.fillStyle = '#190b2e';
-        }
-
-        if (a.hasGargoyle) {
-          ctx.fillStyle = '#10061e';
-          ctx.beginPath();
-          const gx = sx - Math.round(a.w * 0.35), gy = topY;
-          ctx.ellipse(gx, gy - 8, 6, 5, 0, 0, Math.PI * 2);
-          ctx.moveTo(gx - 4, gy - 12); ctx.lineTo(gx - 12, gy - 20); ctx.lineTo(gx - 8, gy - 6);
-          ctx.fill();
-          ctx.fillStyle = '#190b2e';
-        }
-      }
-
-      // Procedural Closer City Skyline
-      ctx.fillStyle = '#220f3b';
-      const baseY3 = Math.round(CANVAS_H * 1.05 - camera.y * 0.38);
-      for (const c of this.nearColumns) {
-        const sx = Math.round(c.x - camera.x * 0.48);
-        if (sx + c.w < -100 || sx - c.w > CANVAS_W + 100) continue;
-
-        const topY = baseY3 - c.h;
-        ctx.fillRect(sx - Math.round(c.w / 2), topY, c.w, c.h + 200);
-
-        ctx.beginPath();
-        ctx.moveTo(sx - c.w / 2 - 6, topY);
-        ctx.lineTo(sx, topY - c.roofH);
-        ctx.lineTo(sx + c.w / 2 + 6, topY);
-        ctx.closePath();
-        ctx.fill();
-
-        if (c.hasFinial) {
-          ctx.fillRect(sx + Math.round(c.w * 0.25) - 4, topY - Math.round(c.roofH * 0.6) - 16, 8, 16);
-          ctx.beginPath();
-          ctx.moveTo(sx, topY - c.roofH);
-          ctx.lineTo(sx, topY - c.roofH - 18);
-          ctx.strokeStyle = '#220f3b';
-          ctx.lineWidth = 2;
-          ctx.stroke();
-        }
       }
     }
 
@@ -8289,9 +8082,10 @@ class TitleScreen {
     ctx.fillStyle = '#556688'; ctx.font = 'italic 22px serif';
     ctx.fillText('Echoes of the Deep', CANVAS_W / 2, CANVAS_H / 2 - 75);
 
+    const ready = typeof ASSET_CACHE !== 'undefined' ? (ASSET_CACHE.isReady || ASSET_CACHE.loadedCount >= ASSET_CACHE.totalCount) : true;
     ctx.globalAlpha = 0.5 + 0.5 * Math.sin(this.time * 3);
     ctx.fillStyle = '#8899bb'; ctx.font = `20px ${UI_FONT}`;
-    ctx.fillText('Press any key to begin', CANVAS_W / 2, CANVAS_H / 2 - 20);
+    ctx.fillText(ready ? 'Press any key to begin' : 'Loading realm...', CANVAS_W / 2, CANVAS_H / 2 - 20);
     ctx.globalAlpha = 1;
 
     ctx.fillStyle = '#8899aa'; ctx.font = `14px ${UI_FONT}`;
@@ -8461,7 +8255,12 @@ class Game {
     switch (this.gameState) {
       case STATE.TITLE:
         this.titleScreen.update(dt);
-        if (this.input.anyKey()) { this.audio.init(); this._initLevel(); }
+        if (this.input.anyKey()) {
+          const ready = typeof ASSET_CACHE !== 'undefined' ? (ASSET_CACHE.isReady || ASSET_CACHE.loadedCount >= ASSET_CACHE.totalCount) : true;
+          if (!ready) break;
+          this.audio.init();
+          this._initLevel();
+        }
         break;
       case STATE.PLAYING:
         this._updatePlaying(dt);

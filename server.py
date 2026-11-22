@@ -113,6 +113,7 @@ def run_builtin_server(host="0.0.0.0", port=8000):
     mimetypes.add_type("audio/wav", ".wav")
     mimetypes.add_type("audio/mpeg", ".mp3")
     mimetypes.add_type("image/png", ".png")
+    mimetypes.add_type("image/webp", ".webp")
 
     class GameRequestHandler(SimpleHTTPRequestHandler):
         def __init__(self, *args, **kwargs):

@@ -34,6 +34,11 @@
     Cache-Control = "public, max-age=604800, immutable"
 
 [[headers]]
+  for = "/*.webp"
+  [headers.values]
+    Cache-Control = "public, max-age=604800, immutable"
+
+[[headers]]
   for = "/*.mp3"
   [headers.values]
     Cache-Control = "public, max-age=604800, immutable"
@@ -42,3 +47,4 @@
   for = "/assets/sounds/*"
   [headers.values]
     Cache-Control = "public, max-age=604800, immutable"
+
