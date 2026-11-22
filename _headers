@@ -1,0 +1,26 @@
+/*
+  X-Content-Type-Options: nosniff
+
+/
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+
+/app.js
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+
+/*.png
+  Cache-Control: public, max-age=604800, immutable
+
+/*.mp3
+  Cache-Control: public, max-age=604800, immutable
+
+/assets/sounds/*
+  Cache-Control: public, max-age=604800, immutable

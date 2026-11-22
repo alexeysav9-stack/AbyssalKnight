@@ -12,6 +12,7 @@ const TILE = 40;
 const GRAVITY = 1800;
 const TERMINAL_VEL = 900;
 const STATE = { TITLE: 0, PLAYING: 1, DEAD: 2, WIN: 3, BONFIRE: 4, REBIND: 5 };
+const ASSET_VERSION = 'v=1.0.2';
 
 // ============================================================================
 // UTILITIES
@@ -215,7 +216,7 @@ class AudioEngine {
 
     // Background Music Tracks
     this.musicTracks = {
-      level: 'MUS_Ambient_ForgottenSouls.wav',
+      level: 'MUS_Ambient_ForgottenSouls.mp3',
       boss: 'short_The Enchanting Haunted Ballroom.mp3',
     };
     this.musicElements = {};
@@ -251,7 +252,10 @@ class AudioEngine {
     if (typeof Audio === 'undefined') return null;
     if (!this.musicElements[key] && this.musicTracks[key]) {
       try {
-        const audio = new Audio(this.musicTracks[key]);
+        const baseSrc = this.musicTracks[key];
+        const v = typeof ASSET_VERSION !== 'undefined' ? ASSET_VERSION : 'v=1.0.2';
+        const src = baseSrc + (baseSrc.includes('?') ? '&' : '?') + v;
+        const audio = new Audio(src);
         audio.loop = true;
         audio.volume = 0;
         audio.preload = 'auto';
@@ -377,9 +381,11 @@ class AudioEngine {
     if (!this.ctx || this.loading || this.loaded) return;
     this.loading = true;
     const entries = Object.entries(this.soundPaths);
+    const v = typeof ASSET_VERSION !== 'undefined' ? ASSET_VERSION : 'v=1.0.2';
     await Promise.all(entries.map(async ([key, url]) => {
       try {
-        const resp = await fetch(url);
+        const versionedUrl = url + (url.includes('?') ? '&' : '?') + v;
+        const resp = await fetch(versionedUrl);
         if (!resp.ok) return;
         const arrayBuf = await resp.arrayBuffer();
         const audioBuf = await this.ctx.decodeAudioData(arrayBuf);
@@ -4862,7 +4868,7 @@ class EnvironmentRenderer {
   constructor() {
     this.dripDroplets = [];
     this.imgBossArena = typeof Image !== 'undefined' ? new Image() : null;
-    if (this.imgBossArena) this.imgBossArena.src = 'bg_1st_boss_arena.png';
+    if (this.imgBossArena) this.imgBossArena.src = 'bg_1st_boss_arena.png?' + (typeof ASSET_VERSION !== 'undefined' ? ASSET_VERSION : 'v=1.0.2');
   }
 
   _isReady(img) {
@@ -7423,10 +7429,11 @@ class Background {
     this.imgSpires = typeof Image !== 'undefined' ? new Image() : null;
     this.imgViaducts = typeof Image !== 'undefined' ? new Image() : null;
     this.imgBossArena = typeof Image !== 'undefined' ? new Image() : null;
-    if (this.imgSky) this.imgSky.src = 'bg_sky.png';
-    if (this.imgSpires) this.imgSpires.src = 'bg_spires.png';
-    if (this.imgViaducts) this.imgViaducts.src = 'bg_viaducts.png';
-    if (this.imgBossArena) this.imgBossArena.src = 'bg_1st_boss_arena.png';
+    const v = typeof ASSET_VERSION !== 'undefined' ? '?' + ASSET_VERSION : '?v=1.0.2';
+    if (this.imgSky) this.imgSky.src = 'bg_sky.png' + v;
+    if (this.imgSpires) this.imgSpires.src = 'bg_spires.png' + v;
+    if (this.imgViaducts) this.imgViaducts.src = 'bg_viaducts.png' + v;
+    if (this.imgBossArena) this.imgBossArena.src = 'bg_1st_boss_arena.png' + v;
 
     // Atmospheric night stars / celestial motes
     this.stars = [];

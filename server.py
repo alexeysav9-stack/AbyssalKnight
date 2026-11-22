@@ -81,7 +81,23 @@ def create_fastapi_app():
         index_path = BASE_DIR / "index.html"
         if not index_path.exists():
             raise HTTPException(status_code=404, detail="index.html not found")
-        return FileResponse(index_path, media_type="text/html")
+        return FileResponse(
+            index_path,
+            media_type="text/html",
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0"
+            }
+        )
+
+    @app.get("/bg_1st_boss_arena.jpg")
+    async def redirect_boss_jpg():
+        return FileResponse(
+            BASE_DIR / "bg_1st_boss_arena.png",
+            media_type="image/png",
+            headers={"Cache-Control": "public, max-age=604800"}
+        )
 
     # Mount static assets
     app.mount("/", StaticFiles(directory=str(BASE_DIR), html=True), name="static")
@@ -95,6 +111,7 @@ def run_builtin_server(host="0.0.0.0", port=8000):
 
     mimetypes.add_type("application/javascript", ".js")
     mimetypes.add_type("audio/wav", ".wav")
+    mimetypes.add_type("audio/mpeg", ".mp3")
     mimetypes.add_type("image/png", ".png")
 
     class GameRequestHandler(SimpleHTTPRequestHandler):
@@ -102,6 +119,11 @@ def run_builtin_server(host="0.0.0.0", port=8000):
             super().__init__(*args, directory=str(BASE_DIR), **kwargs)
 
         def do_GET(self):
+            if self.path.split("?")[0] == "/bg_1st_boss_arena.jpg":
+                self.send_response(301)
+                self.send_header("Location", "/bg_1st_boss_arena.png?v=1.0.2")
+                self.end_headers()
+                return
             if self.path == "/health":
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")
@@ -115,6 +137,14 @@ def run_builtin_server(host="0.0.0.0", port=8000):
                 self.wfile.write(json.dumps(GAME_INFO).encode("utf-8"))
                 return
             super().do_GET()
+
+        def end_headers(self):
+            clean_path = self.path.split("?")[0]
+            if clean_path == "/" or clean_path.endswith(".html") or "app.js" in clean_path:
+                self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+                self.send_header("Pragma", "no-cache")
+                self.send_header("Expires", "0")
+            super().end_headers()
 
     print(f"[Abyssal Knight] Built-in HTTP server listening on http://{host}:{port}")
     httpd = ThreadingHTTPServer((host, port), GameRequestHandler)
